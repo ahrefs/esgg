@@ -34,7 +34,26 @@ let get_aggregations x =
   let open U in
   extract_aggregations x |> fst |> List.map aggregation
 
+let infer_single_aggregation { name; agg_type; field; } sub =
+  let buckets () = `Dict [ "buckets", `List (sub ["key", `Typeof field; "doc_count", `Int]) ] in
+  let (cstr,shape) =
+    match agg_type with
+    | "max" | "min" | "avg" -> [], sub [ "value", `Typeof field ]
+    | "terms" -> [], buckets ()
+    | "histogram" -> [`Is (`Typeof field, `Num)], buckets ()
+    | _ -> Exn.fail "unknown agg_type %S" agg_type
+  in
+  cstr, (name, shape)
+
+let rec infer_aggregation { this; sub } =
+  let (constraints, subs) = List.split @@ List.map infer_aggregation sub in
+  let sub l = `Dict (l @ subs) in
+  let (cstr,desc) = infer_single_aggregation this sub in
+  List.flatten (cstr::constraints), desc
+
 let derive mapping query =
   let properties = U.(mapping |> member "properties" |> to_assoc) in
   let aggs = get_aggregations query in
   ()
+
+let analyze query = List.map infer_aggregation (get_aggregations query)
