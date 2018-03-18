@@ -2,3 +2,5 @@ B _build
 S .
 PKG yojson
 PKG devkit
+PKG atd
+PKG easy-format
