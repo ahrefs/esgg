@@ -69,43 +69,62 @@ let rec resolve_types properties shape =
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Typeof x -> typeof x
-  | `Int as t -> t
+  | `Int | `String as t -> t
   in
   map shape
 
 let newname =
   let nr = ref 0 in
-  fun () -> incr nr; sprintf "helper%02d" !nr
+  fun () -> incr nr; sprintf "t%d" !nr
 
-let derive_atd (name,shape) =
-  let open Atd_ast in
-  let loc = dummy_loc in
-  let list t = `List (loc,t,[]) in
-  let record fields = `Record (loc,fields,[]) in
-  let field n t = `Field (loc, (n, `Required, []), t) in
-  let tname t = `Name (loc,(loc,t,[]),[]) in
-  let typ name t = `Type (loc, (name,[],[]), t) in
+module Gen = struct
+
+  open Atd_ast
+  let loc = dummy_loc
+  let list t = `List (loc,t,[])
+  let record fields = `Record (loc,fields,[])
+  let field n t = `Field (loc, (n, `Required, []), t)
+  let pname t params = `Name (loc,(loc,t,params),[])
+  let tname t = pname t []
+  let tvar t = `Tvar (loc,t)
+  let ptyp name params t = `Type (loc, (name,params,[]), t)
+  let typ name t = ptyp name [] t
+
+end
+
+let atd_of_shape (name,shape) =
+  let open Gen in
   let types = ref [] in
-  let rec map shape =
+  let ref_name t =
+    let name = newname () in
+    tuck types (typ name t);
+    tname name
+  in
+  let rec map ?(push=ref_name) shape =
     match shape with
     | `List t -> list (map t)
     | `Int -> tname "int"
-    | `Dict fields ->
-      let name = newname () in
-      tuck types (typ name (record (List.map (fun (n,t) -> field n (map t)) fields)));
-      tname name
-    | `Typeof x -> tname "int"
+    | `String -> tname "string"
+    | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
+    | `Dict ["buckets", `List t] -> pname "buckets" [map t]
+    | `Dict fields -> push @@ record (List.map (fun (n,t) -> field n (map t)) fields)
   in
-  tuck types (typ name (map shape));
+  tuck types (typ name (map ~push:id shape));
   List.rev !types
 
-let derive_atds query =
-  let types = List.concat @@ List.map derive_atd @@ List.map snd @@ analyze query in
-  let atd = (Atd_ast.dummy_loc,[]),types in
+let derive_atd shapes =
+  let open Gen in
+  let types = List.concat @@ List.map atd_of_shape shapes in
+  let predef = [
+    ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
+    ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
+  ]
+  in
+  let atd = (loc,[]), (predef @ types) in
   print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format atd
 
 let derive mapping query =
-  let _properties = U.(mapping |> member "properties" |> to_assoc) in
+  let properties = U.(mapping |> member "properties" |> to_assoc) in
   let _aggs = get_aggregations query in
-  derive_atds query;
+  derive_atd @@ List.map (fun (n,shape) -> n, resolve_types properties shape) @@ List.map snd @@ analyze query;
   ()
