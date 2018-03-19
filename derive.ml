@@ -123,7 +123,8 @@ module Gen = struct
 
   open Atd_ast
   let loc = dummy_loc
-  let list t = `List (loc,t,[])
+  let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
+  let list ?(annot=[]) t = `List (loc,t,annot)
   let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
   let record fields = `Record (loc,fields,[])
   let field n t = `Field (loc, (n, `Required, []), t)
@@ -178,7 +179,7 @@ let atd_of_shape name (shape:result_type) =
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
     | `Dict fields -> push @@ record (List.map (fun (n,t) -> field n (map t)) fields)
-    | `Assoc (k,v) -> list (tuple [map k; map v])
+    | `Assoc (k,v) -> list ~annot:[annot "json" ["repr","object"]] (tuple [map k; map v])
   in
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
