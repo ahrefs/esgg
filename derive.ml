@@ -1,3 +1,4 @@
+open ExtLib
 open Prelude
 open Printf
 
@@ -9,6 +10,7 @@ type result_type = [
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
   | `Int
+  | `Int64
   | `String
   | `Double
   ]
@@ -95,7 +97,7 @@ let analyze_aggregations query = List.map infer_aggregation (get_aggregations qu
 
 let atd_of_es_type = function
 | "long" -> `Int
-| "keyword" -> `String
+| "keyword" | "text" -> `String
 | s -> Exn.fail "atd_of_es_type: cannot handle %S" s
 
 let resolve_types mapping shape : result_type =
@@ -107,6 +109,7 @@ let resolve_types mapping shape : result_type =
     in
     match find (Stre.nsplitc t '.') mapping with
     | exception _ -> Exn.fail "no such field"
+    | "long" when String.exists t "hash" -> `Int64 (* hack *)
     | a -> atd_of_es_type a
   in
   let rec map = function
@@ -114,7 +117,7 @@ let resolve_types mapping shape : result_type =
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
   | `Typeof x -> (try typeof x with exn -> Exn.fail ~exn "failed to type field %S" x)
-  | `Int | `String | `Double as t -> t
+  | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
 
@@ -127,12 +130,13 @@ module Gen = struct
   open Atd_ast
   let loc = dummy_loc
   let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
-  let list ?(annot=[]) t = `List (loc,t,annot)
+  let annots = List.map (fun (s,l) -> annot s l)
+  let list ?(a=[]) t = `List (loc,t,annots a)
   let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
   let record fields = `Record (loc,fields,[])
   let field n t = `Field (loc, (n, `Required, []), t)
-  let pname t params = `Name (loc,(loc,t,params),[])
-  let tname t = pname t []
+  let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
+  let tname ?a t = pname ?a t []
   let tvar t = `Tvar (loc,t)
   let ptyp name params t = `Type (loc, (name,params,[]), t)
   let typ name t = ptyp name [] t
@@ -177,12 +181,13 @@ let atd_of_shape name (shape:result_type) =
     match shape with
     | `List t -> list (map t)
     | `Int -> tname "int"
+    | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
     | `String -> tname "string"
     | `Double -> tname "float"
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
     | `Dict fields -> push @@ record (List.map (fun (n,t) -> field n (map t)) fields)
-    | `Assoc (k,v) -> list ~annot:[annot "json" ["repr","object"]] (tuple [map k; map v])
+    | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
   in
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
