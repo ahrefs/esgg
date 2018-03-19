@@ -1,0 +1,99 @@
+{
+  "took" : 14,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 100,
+    "successful" : 100,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 8,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "monthlyTraffic" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "ca",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 4.2291251342535606E-8
+          }
+        },
+        {
+          "key" : "cl",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 1.2015204737073258E-8
+          }
+        },
+        {
+          "key" : "co",
+          "doc_count" : 2,
+          "buckets" : {
+            "value" : 1.123955212863555E-8
+          }
+        },
+        {
+          "key" : "mx",
+          "doc_count" : 3,
+          "buckets" : {
+            "value" : 6.009130148485155E-6
+          }
+        },
+        {
+          "key" : "us",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 3.5750372173766035E-8
+          }
+        }
+      ]
+    },
+    "monthlyCost" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 0,
+      "buckets" : [
+        {
+          "key" : "ca",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 1.7339413050439598E-6
+          }
+        },
+        {
+          "key" : "cl",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 0.0
+          }
+        },
+        {
+          "key" : "co",
+          "doc_count" : 2,
+          "buckets" : {
+            "value" : 1.645174003883797E-7
+          }
+        },
+        {
+          "key" : "mx",
+          "doc_count" : 3,
+          "buckets" : {
+            "value" : 0.0
+          }
+        },
+        {
+          "key" : "us",
+          "doc_count" : 1,
+          "buckets" : {
+            "value" : 5.469806942586203E-6
+          }
+        }
+      ]
+    }
+  }
+}

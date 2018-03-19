@@ -1,0 +1,79 @@
+{
+  "sort": [
+    {
+      "volume": {
+        "order": "desc",
+        "missing": 0
+      }
+    }
+  ],
+  "_source": {
+    "excludes": [
+      "serps"
+    ]
+  },
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "terms": {
+            "country": [
+              "es"
+            ]
+          }
+        }
+      ],
+      "should": [
+        [
+          {
+            "bool": {
+              "filter": [
+                {
+                  "match": {
+                    "keyword.search": {
+                      "query": "roberto",
+                      "operator": "and"
+                    }
+                  }
+                },
+                {
+                  "match": {
+                    "keyword.search": {
+                      "query": "torretta",
+                      "operator": "and"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      ],
+      "must_not": [
+        {
+          "term": {
+            "volume": 0
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "aggs": {
+    "totalVolume": {
+      "sum": {
+        "field": "nice_volume"
+      }
+    }
+  },
+  "script_fields": {
+    "serp": {
+      "script": {
+        "id": "keyword_serp",
+        "params": {
+          "user_id": 945628
+        }
+      }
+    }
+  }
+}

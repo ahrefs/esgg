@@ -1,0 +1,43 @@
+{
+    "from": 0,
+    "size": 0,
+    "timeout": "14s",
+    "aggregations": {
+        "competitorsCommonKeywords": {
+            "filters": {
+                "filters": {
+                    "www.labelimage.com.au": {
+                        "term": {
+                            "urls_hashes.exact": "-9117193259448458887"
+                        }
+                    },
+                    "https:\/\/github.com\/tzutalin\/labelImg": {
+                        "term": {
+                            "urls_hashes.exact": "6709060281127049088"
+                        }
+                    }
+                }
+            },
+            "aggs": {
+                "partition": {
+                    "filter": {
+                        "term": {
+                            "urls_hashes.exact": "-9117193259448458887"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "query": {
+        "bool": {
+            "filter": [
+                {
+                    "term": {
+                        "country": "us"
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,733 @@
+{
+  "took": 69,
+  "timed_out": false,
+  "_shards": {
+    "total": 100,
+    "successful": 100,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 175,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "topPerCountry": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "au",
+          "doc_count": 1,
+          "top": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": 3383782043858291000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "5715657e2751f897008e4cb700bc9d28-en-au-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 150,
+                          "serp_features": [
+                            "sitelink",
+                            "image",
+                            "video_th"
+                          ],
+                          "block_pos": 58,
+                          "type": "organic",
+                          "keyword": "ecolighting",
+                          "url": "https://www.ecolighting.com.pl/"
+                        },
+                        "sort": [
+                          8.784312330728956e-05
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0.006412548001432138
+                },
+                "traffic": {
+                  "value": 8.784312330728956e-05
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "gb",
+          "doc_count": 2,
+          "top": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": 3383782043858291000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "ec06628d3424306cfe3c86592ab4408d-en-gb-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 50,
+                          "serp_features": [
+                            "sitelink",
+                            "image",
+                            "knowledge_panel"
+                          ],
+                          "block_pos": 30,
+                          "type": "organic",
+                          "keyword": "ecolighting",
+                          "url": "https://www.ecolighting.com.pl/"
+                        },
+                        "sort": [
+                          0.014459913371377819
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 1.5905904708515601
+                },
+                "traffic": {
+                  "value": 0.014459913371377819
+                }
+              },
+              {
+                "key": -1528127445380589800,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "0fa354d381f184ffd0b8c692bb432630-en-gb-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 90,
+                          "serp_features": [
+                            "image"
+                          ],
+                          "block_pos": 36,
+                          "type": "organic",
+                          "keyword": "kalkulator lumenów",
+                          "url": "https://www.ecolighting.com.pl/calculator"
+                        },
+                        "sort": [
+                          0.006971334612903143
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0
+                },
+                "traffic": {
+                  "value": 0.006971334612903143
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "nl",
+          "doc_count": 1,
+          "top": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": -1528127445380589800,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "42175013db88574b6db3d7a59496829c-nl-nl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 40,
+                          "serp_features": [
+                            "image"
+                          ],
+                          "block_pos": 44,
+                          "type": "organic",
+                          "keyword": "kalkulator lumenów",
+                          "url": "https://www.ecolighting.com.pl/calculator"
+                        },
+                        "sort": [
+                          0.0004960863199884735
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0
+                },
+                "traffic": {
+                  "value": 0.0004960863199884735
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "pl",
+          "doc_count": 165,
+          "top": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 96,
+            "buckets": [
+              {
+                "key": 3383782043858291000,
+                "doc_count": 27,
+                "top": {
+                  "hits": {
+                    "total": 27,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "4338b7959851e3a5b821145bbb17d3a7-pl-pl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 40,
+                          "serp_features": [
+                            "image",
+                            "knowledge_panel"
+                          ],
+                          "block_pos": 1,
+                          "type": "organic",
+                          "keyword": "ecolighting",
+                          "url": "https://www.ecolighting.com.pl/"
+                        },
+                        "sort": [
+                          17.16
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 540.2456238921678
+                },
+                "traffic": {
+                  "value": 43.2269961927641
+                }
+              },
+              {
+                "key": -5371045982510220000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "26119ee15a6a321ba682b757baff4842-pl-pl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 40,
+                          "serp_features": [
+                            "image",
+                            "knowledge_panel"
+                          ],
+                          "block_pos": 2,
+                          "type": "organic",
+                          "keyword": "ecolighting",
+                          "url": "https://www.ecolighting.com.pl/content/kontakt"
+                        },
+                        "sort": [
+                          6.933333333333334
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0
+                },
+                "traffic": {
+                  "value": 6.933333333333334
+                }
+              },
+              {
+                "key": -1528127445380589800,
+                "doc_count": 33,
+                "top": {
+                  "hits": {
+                    "total": 33,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "1487590306b1add16cffb1b96f1005b5-pl-pl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 50,
+                          "serp_features": [
+                            "sitelink",
+                            "image"
+                          ],
+                          "block_pos": 9,
+                          "type": "organic",
+                          "keyword": "kalkulator oświetlenia pomieszczeń",
+                          "url": "https://www.ecolighting.com.pl/calculator"
+                        },
+                        "sort": [
+                          3.1876710400000015
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 2,
+                  "top2": {
+                    "hits": {
+                      "total": 2,
+                      "max_score": null,
+                      "hits": [
+                        {
+                          "_index": "positions-1",
+                          "_type": "doc",
+                          "_id": "1487590306b1add16cffb1b96f1005b5-pl-pl-organic",
+                          "_score": null,
+                          "_routing": "ecolighting.com.pl",
+                          "_source": {
+                            "metrics": {
+                              "refdomains": 1
+                            }
+                          },
+                          "sort": [
+                            1520843676000
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 12.72281217106397
+                },
+                "traffic": {
+                  "value": 6.240243891817676
+                }
+              },
+              {
+                "key": -3120171494206377500,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "ce1b7b1b65b417ea13f0de18531cc9b9-pl-pl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 40,
+                          "serp_features": [
+                            "image",
+                            "knowledge_panel"
+                          ],
+                          "block_pos": 3,
+                          "type": "organic",
+                          "keyword": "ecolighting",
+                          "url": "https://www.ecolighting.com.pl/page/o-nas"
+                        },
+                        "sort": [
+                          5.546666666666667
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0
+                },
+                "traffic": {
+                  "value": 5.546666666666667
+                }
+              },
+              {
+                "key": -6196346554026437000,
+                "doc_count": 7,
+                "top": {
+                  "hits": {
+                    "total": 7,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "01aedd2fafc724fd2275984a09ac3db6-pl-pl-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 30,
+                          "serp_features": [
+                            "image"
+                          ],
+                          "block_pos": 12,
+                          "type": "organic",
+                          "keyword": "bryła fotometryczna",
+                          "url": "https://www.ecolighting.com.pl/page/s%C5%82ownik-techniki-%C5%9Bwietlnej"
+                        },
+                        "sort": [
+                          0.34359738368000026
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 7.229938189073182e-06
+                },
+                "traffic": {
+                  "value": 0.6060530540960792
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "us",
+          "doc_count": 6,
+          "top": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": 3383782043858291000,
+                "doc_count": 3,
+                "top": {
+                  "hits": {
+                    "total": 3,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "4d1d8f8fc0bf32035cdedfc4772f4c40-en-us-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 100,
+                          "serp_features": [
+                            "image",
+                            "video_th"
+                          ],
+                          "block_pos": 23,
+                          "type": "organic",
+                          "keyword": "ecolightings",
+                          "url": "https://www.ecolighting.com.pl/"
+                        },
+                        "sort": [
+                          0.14880373552792392
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 2.090997244400298e-05
+                },
+                "traffic": {
+                  "value": 0.14880426433052668
+                }
+              },
+              {
+                "key": 5839274143079362000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "fc2bd01fcba8de24d764cf4475f4df52-en-us-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 10,
+                          "serp_features": [
+                            "paid_top",
+                            "sitelink",
+                            "video_th",
+                            "image"
+                          ],
+                          "block_pos": 65,
+                          "type": "organic",
+                          "keyword": "soraa brilliant mr16",
+                          "url": "https://www.ecolighting.com.pl/product/01183_ZAROWKA_LED_SORAA_BRILLIANT_MR16_75W_2700K_10D_475lm_SNAP_SYSTEM"
+                        },
+                        "sort": [
+                          1.2842950150601196e-06
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0
+                },
+                "traffic": {
+                  "value": 1.2842950150601196e-06
+                }
+              },
+              {
+                "key": -7028391500450209000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "bff1b38f897e4460fcc2455fcec1d1d4-en-us-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 20,
+                          "serp_features": [
+                            "shopping",
+                            "sitelink",
+                            "image"
+                          ],
+                          "block_pos": 69,
+                          "type": "organic",
+                          "keyword": "soraa led par30",
+                          "url": "https://www.ecolighting.com.pl/product/01151_SORAA_RASTER_AR111PAR30PAR38"
+                        },
+                        "sort": [
+                          1.002600784574073e-06
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 0.00022157477339087013
+                },
+                "traffic": {
+                  "value": 1.002600784574073e-06
+                }
+              },
+              {
+                "key": 8908018506291272000,
+                "doc_count": 1,
+                "top": {
+                  "hits": {
+                    "total": 1,
+                    "max_score": null,
+                    "hits": [
+                      {
+                        "_index": "positions-1",
+                        "_type": "doc",
+                        "_id": "88f0a29240375b291171eb449cb2bc8b-en-us-organic",
+                        "_score": null,
+                        "_routing": "ecolighting.com.pl",
+                        "_source": {
+                          "nice_volume": 10,
+                          "serp_features": [
+                            "shopping",
+                            "paid_top",
+                            "sitelink",
+                            "image"
+                          ],
+                          "block_pos": 77,
+                          "type": "organic",
+                          "keyword": "soraa par 30",
+                          "url": "https://www.ecolighting.com.pl/produkty?title=soraa&sort_by=field_wariacja_produktu_commerce_price_amount_decimal_asc&sort_order=ASC&items_per_page=16"
+                        },
+                        "sort": [
+                          1.1451147480383395e-07
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "have_rd": {
+                  "doc_count": 0,
+                  "top2": {
+                    "hits": {
+                      "total": 0,
+                      "max_score": null,
+                      "hits": []
+                    }
+                  }
+                },
+                "traffic_value": {
+                  "value": 2.5421547406451137e-05
+                },
+                "traffic": {
+                  "value": 1.1451147480383395e-07
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "totalTraffic": {
+      "value": 63.784546282761625
+    }
+  }
+}

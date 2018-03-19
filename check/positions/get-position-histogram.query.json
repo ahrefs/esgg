@@ -1,0 +1,47 @@
+{
+    "from": 0,
+    "size": 0,
+    "timeout": "59s",
+    "aggregations": {
+        "positionHistogram": {
+            "terms": {
+                "size": 170,
+                "field": "country",
+                "order": {
+                    "_count": "desc"
+                }
+            },
+            "aggs": {
+                "buckets": {
+                    "histogram": {
+                        "field": "block_pos",
+                        "interval": 1
+                    }
+                }
+            }
+        }
+    },
+    "query": {
+        "bool": {
+            "filter": [
+                {
+                    "term": {
+                        "url_hash.subdomains": "-1313260220581166673"
+                    }
+                }
+            ],
+            "must_not": [
+                {
+                    "term": {
+                        "type": "paid"
+                    }
+                },
+                {
+                    "term": {
+                        "block_pos": 0
+                    }
+                }
+            ]
+        }
+    }
+}

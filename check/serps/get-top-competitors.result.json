@@ -1,0 +1,672 @@
+{
+  "took": 198,
+  "timed_out": false,
+  "num_reduce_phases": 8,
+  "_shards": {
+    "total": 4000,
+    "successful": 4000,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 4,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "topCompetitors": {
+      "doc_count": 4,
+      "bg_count": 709041787,
+      "buckets": [
+        {
+          "key": 514239001886849150,
+          "doc_count": 3,
+          "score": 132945334.31249999,
+          "bg_count": 3,
+          "hits": {
+            "hits": {
+              "total": 3,
+              "max_score": 1.4e-45,
+              "hits": [
+                {
+                  "_index": "serps-1",
+                  "_type": "doc",
+                  "_id": "2eb1a140f37411ed21441bfc32d3fe91-en-us",
+                  "_score": 0,
+                  "_source": {
+                    "positions": [
+                      {
+                        "url": "https://brooklynseo.net/"
+                      },
+                      {
+                        "url": "http://www.heraldsquareseo.com/brooklyn/"
+                      },
+                      {
+                        "url": "https://www.sagemauk.com/brooklyn-seo/"
+                      },
+                      {
+                        "url": "https://www.digitalcavern.com/brooklyn-seo/"
+                      },
+                      {
+                        "url": "https://www.meetup.com/Brooklyn-SEO/"
+                      },
+                      {
+                        "url": "https://www.designbrooklyn.com/services/online-marketing/SEO-NYC-search-engine-optimization/"
+                      },
+                      {
+                        "url": "https://www.yelp.com/search?find_desc=Seo+Company&find_loc=Brooklyn%2C+NY"
+                      },
+                      {
+                        "url": "http://www.virtualheroics.com/brooklyn-seo/"
+                      },
+                      {
+                        "url": "http://www.pageonedominators.com/"
+                      },
+                      {
+                        "url": "https://brandonmaymediaservices.com/"
+                      },
+                      {
+                        "url": "http://www.mimvi.com/brooklyn-search-engine-optimization/"
+                      },
+                      {
+                        "url": "https://www.alignable.com/brooklyn-ny/page-club"
+                      },
+                      {
+                        "url": "http://www.realresultsseo.com/"
+                      },
+                      {
+                        "url": "https://twitter.com/brooklynseo"
+                      },
+                      {
+                        "url": "https://seoservicesnewyork.org/brooklyn-search-engine-optimization/"
+                      },
+                      {
+                        "url": "https://www.alphafusiondigital.com/"
+                      },
+                      {
+                        "url": "http://www.ingenioussem.com/"
+                      },
+                      {
+                        "url": "https://localmediasolutions.net/Search-Engine-Optimization-Services-Brooklyn-NY.html"
+                      },
+                      {
+                        "url": "https://cdl500.com/brooklyn-seo-expert-services/"
+                      },
+                      {
+                        "url": "https://mackmediagroup.com/search-engine-optimization/seo-company-brooklyn-ny/"
+                      },
+                      {
+                        "url": "https://www.tracemedia.com/"
+                      },
+                      {
+                        "url": "http://allureseo.com/"
+                      },
+                      {
+                        "url": "https://www.mapquest.com/us/new-york/brooklyn-seo-expert-llc-371679921"
+                      },
+                      {
+                        "url": "https://jumpstartman.com/brooklyn-seo/"
+                      },
+                      {
+                        "url": "https://www.yellowpages.com/brooklyn-ny/mip/pod-seo-services-ny-brooklyn-seo-experts-512150364"
+                      },
+                      {
+                        "url": "http://shotgunseo.com/brooklyn-seo-services/"
+                      },
+                      {
+                        "url": "https://www.glassdoor.com/Job/brooklyn-seo-analyst-jobs-SRCH_IL.0,8_IC1132200_KO9,20.htm"
+                      },
+                      {
+                        "url": "http://www.seoscholars.org/"
+                      },
+                      {
+                        "url": "http://greatleapstudios.com/brooklyn-seo-content/"
+                      },
+                      {
+                        "url": "https://www.linkedin.com/jobs/view/vp-seo-at-huge-575873058"
+                      },
+                      {
+                        "url": "https://www.monster.com/jobs/q-seo-marketing-manager-jobs-l-brooklyn,-ny.aspx"
+                      },
+                      {
+                        "url": "https://www.darbyhayesconsulting.com/seo/brooklyn/"
+                      },
+                      {
+                        "url": "https://www.youtube.com/watch?v=Iveoy834TtI"
+                      },
+                      {
+                        "url": "https://www.facebook.com/vigorseorchers/"
+                      },
+                      {
+                        "url": "https://takelessons.com/ny/brooklyn/seo-lessons"
+                      },
+                      {
+                        "url": "http://www.winstondigitalmarketing.com/"
+                      },
+                      {
+                        "url": "https://www.conductor.com/"
+                      },
+                      {
+                        "url": "https://www.tellmeyourgoal.com/"
+                      },
+                      {
+                        "url": "http://www.icdri.org/Brooklyn%20SEO.html"
+                      },
+                      {
+                        "url": "http://brooklynbass.net/"
+                      },
+                      {
+                        "url": "https://www.manta.com/c/mh1s3rx/jumpstartman-brooklyn-seo"
+                      },
+                      {
+                        "url": "https://skytideseo.com/brooklyn-seo-2/"
+                      },
+                      {
+                        "url": "https://www.qcrtechnologies.com/local-seo-services-brooklyn-ny/"
+                      },
+                      {
+                        "url": "http://www.australopitech.com/brooklyn-seo-search-engine-optimization/"
+                      },
+                      {
+                        "url": "https://brooklynpennysaver.net/brooklyn-seo/"
+                      },
+                      {
+                        "url": "https://foursquare.com/v/pod-seo-services-ny--brooklyn-seo-experts/55baeeb4498eea8fd362bd29"
+                      },
+                      {
+                        "url": "https://seocompanylosangeles.us/seo-services-brooklyn/"
+                      },
+                      {
+                        "url": "https://www.marccx.com/"
+                      },
+                      {
+                        "url": "http://www.pravdamedia.com/"
+                      },
+                      {
+                        "url": "http://primehoustonseo.com/brooklyn-seo-expert/"
+                      },
+                      {
+                        "url": "https://www.ziprecruiter.com/jobs/fluent-city-e64f751b/part-time-seo-specialist-9b548510"
+                      },
+                      {
+                        "url": "http://www.downeastexpos.com/brooklyn-seo-company-helping-society/"
+                      },
+                      {
+                        "url": "https://www.superpages.com/bp/brooklyn-ny/brooklyn-seo-expert-llc-L2710151399.htm"
+                      },
+                      {
+                        "url": "http://www.phantomsnet.com/brooklyn-seo-services-results/"
+                      },
+                      {
+                        "url": "http://www.buzzfile.com/business/Brooklyn-Seo-Expert-LLC-347-625-7367"
+                      },
+                      {
+                        "url": "https://www.indeed.com/q-SEO-Internship-l-New-York,-NY-jobs.html"
+                      },
+                      {
+                        "url": "https://www.webcitz.com/new-york-website-design/brooklyn-website-design.html"
+                      },
+                      {
+                        "url": "http://myquickstartup.com/stages-importance-seo/"
+                      },
+                      {
+                        "url": "http://www.ironpaper.com/seo/"
+                      },
+                      {
+                        "url": "http://helpdesk.unitedthemes.com/index.php/Thread/1641-Brooklyn-section-link-SEO/"
+                      },
+                      {
+                        "url": "https://www.jfigphotodesigns.info/seo-in-nyc.html"
+                      },
+                      {
+                        "url": "https://www.hozio.com/long-island-seo-company.php"
+                      },
+                      {
+                        "url": "https://www.ajaxunion.com/"
+                      },
+                      {
+                        "url": "http://www.farmersmarketstoday.com/brooklyn-seo-expert-expectations/"
+                      },
+                      {
+                        "url": "https://www.gvate.com/prestashop-seo-service-ny/"
+                      },
+                      {
+                        "url": "http://www.k-12world.com/top-brooklyn-seo-experts-rank-websites-2016/"
+                      },
+                      {
+                        "url": "https://www.pathinteractive.com/"
+                      },
+                      {
+                        "url": "http://lexingtoninnbrooklynny.com/"
+                      },
+                      {
+                        "url": "http://www.sky7web.com/search-engine-optimization-seo"
+                      },
+                      {
+                        "url": "http://www.greenmarketing.tv/seo/"
+                      },
+                      {
+                        "url": "https://www.bitrix24.com/about/blogs/smart-work/dont-try-to-outsmart-google-seo-for-dummies.php"
+                      },
+                      {
+                        "url": "https://www.smartagesolutions.com/seo/"
+                      },
+                      {
+                        "url": "https://www.theladders.com/job/head-of-seo-global-etsy-brooklyn-ny_36041367"
+                      },
+                      {
+                        "url": "https://www.andycommons.com/"
+                      },
+                      {
+                        "url": "http://www.bestlocalseotools.com/us/seo-company-services/brooklyn/new-york/"
+                      },
+                      {
+                        "url": "http://www.internships.com/marketing/seo-marketing-internship-at-internet-of-things-startup-kisi"
+                      },
+                      {
+                        "url": "https://primedigitalseo.com/"
+                      },
+                      {
+                        "url": "https://sharkbiteseo.com/resources-brooklyn-mls/"
+                      },
+                      {
+                        "url": "http://www.fumin2.com/brooklyn-seo-agencies-triple-downloads-with-instagram-marketing/"
+                      },
+                      {
+                        "url": "https://us.mullenlowe.com/jobs/2722/"
+                      },
+                      {
+                        "url": "https://brooklynrail.org/2006/7/art/seo-bo-park"
+                      },
+                      {
+                        "url": "https://siaseo.com/"
+                      },
+                      {
+                        "url": "http://webnus.biz/themes/easyweb/seo/home-2/"
+                      },
+                      {
+                        "url": "http://seo-arch.com/"
+                      },
+                      {
+                        "url": "https://www.simplyhired.com/search?q=seo&l=new+york%2C+ny"
+                      },
+                      {
+                        "url": "https://generalassemb.ly/education/search-engine-optimization-101-a-practical-introduction-to-seo"
+                      },
+                      {
+                        "url": "http://www.seo-usa.org/"
+                      },
+                      {
+                        "url": "http://www.simianllc.com/"
+                      },
+                      {
+                        "url": "https://www.tbh.org/physician/suk-seo"
+                      },
+                      {
+                        "url": "https://www.definemg.com/"
+                      },
+                      {
+                        "url": "https://cuit.columbia.edu/seo"
+                      },
+                      {
+                        "url": "https://us.searchlaboratory.com/"
+                      },
+                      {
+                        "url": "http://fuzeseo.co/"
+                      },
+                      {
+                        "url": "https://bostonseoservices.org/our-local-seo-areas/nyc/"
+                      },
+                      {
+                        "url": "https://seotec.us/"
+                      },
+                      {
+                        "url": "https://vivatraffic.com/brooklyn-seo/"
+                      },
+                      {
+                        "url": "https://www.promediacorp.com/"
+                      },
+                      {
+                        "url": "http://www.pinoleartisans.org/brooklyn-seo-companies-worth-money/"
+                      },
+                      {
+                        "url": "http://www.directorysnob.com/"
+                      },
+                      {
+                        "url": "https://seowebdesigners.net/ny/"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "key": 7082579815086290000,
+          "doc_count": 3,
+          "score": 132945334.31249999,
+          "bg_count": 3,
+          "hits": {
+            "hits": {
+              "total": 3,
+              "max_score": 1.4e-45,
+              "hits": [
+                {
+                  "_index": "serps-1",
+                  "_type": "doc",
+                  "_id": "1322c781e162fe6964f83269b687df0c-en-us",
+                  "_score": 0,
+                  "_source": {
+                    "positions": [
+                      {
+                        "url": "https://shermansquaremarketing.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "https://www.linkedin.com/company/manhattan-ny-seo"
+                      },
+                      {
+                        "url": "http://yourprofitweb.com/ny/seo-manhattan/"
+                      },
+                      {
+                        "url": "http://www.heraldsquareseo.com/"
+                      },
+                      {
+                        "url": "http://sosemo.com/"
+                      },
+                      {
+                        "url": "https://www.overthetopseo.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "http://www.mimvi.com/manhattan-search-engine-optimization/"
+                      },
+                      {
+                        "url": "http://www.getmeontop.com/"
+                      },
+                      {
+                        "url": "http://mackmediagroup.com/search-engine-optimization/seo-company-manhattan-ny/"
+                      },
+                      {
+                        "url": "http://newbostoncreative.com/blog/2013/11/04/get-your-website-found-local-search-seo"
+                      },
+                      {
+                        "url": "https://thriveagency.com/manhattan-digital-marketing/"
+                      },
+                      {
+                        "url": "https://www.yelp.com/biz/seo-new-york-manhattan-2"
+                      },
+                      {
+                        "url": "https://www.yelp.com/search?find_desc=seo+company&find_loc=Manhattan%2C+NY"
+                      },
+                      {
+                        "url": "https://firstpageadvantage.com/seo-company-in-manhattan-new-york/"
+                      },
+                      {
+                        "url": "http://www.benjaminmarc.net/manhattan-seo.php"
+                      },
+                      {
+                        "url": "https://www.thumbtack.com/ks/manhattan/seo/"
+                      },
+                      {
+                        "url": "https://seocompanylosangeles.us/seo-services-manhattan-new-york/"
+                      },
+                      {
+                        "url": "https://moderninfluence.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "https://frozenlemonseo.com/"
+                      },
+                      {
+                        "url": "https://primemediaconsulting.com/services/search-engine-optimization/seo-agency/seo-marketing-manhattan-beach-ca/"
+                      },
+                      {
+                        "url": "https://10tier.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "http://greatleapstudios.com/manhattan-seo-content/"
+                      },
+                      {
+                        "url": "https://www.youtube.com/watch?v=uzPcdWspdYI"
+                      },
+                      {
+                        "url": "http://eminenceseoconsulting.com/"
+                      },
+                      {
+                        "url": "https://seoimage.com/new-york-seo/"
+                      },
+                      {
+                        "url": "https://www.indeed.com/q-SEO-Manager-l-Manhattan,-NY-jobs.html"
+                      },
+                      {
+                        "url": "https://www.indeed.com/q-SEO-Authority-l-Manhattan,-NY-jobs.html"
+                      },
+                      {
+                        "url": "https://seoservicesnewyork.org/"
+                      },
+                      {
+                        "url": "https://www.monster.com/jobs/c-thomas-industrial-network-inc-q-seo-specialist-jobs-l-manhattan,-ny.aspx"
+                      },
+                      {
+                        "url": "http://www.web-design-hosting-4u.com/tag/manhattan-law-firm-seo"
+                      },
+                      {
+                        "url": "http://www.bluchipseocompany.com/"
+                      },
+                      {
+                        "url": "https://ifttt.com/applets/350187p-manhattan-seo-via-cl"
+                      },
+                      {
+                        "url": "http://shotgunseo.com/manhattan-seo-services/"
+                      },
+                      {
+                        "url": "https://www.huddainfotech.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "https://generalassemb.ly/education/seo-training-for-startups-beginners/new-york-city"
+                      },
+                      {
+                        "url": "http://www.webteammanagement.com/"
+                      },
+                      {
+                        "url": "http://www.briodigital.com/manhattan/"
+                      },
+                      {
+                        "url": "http://seoinitiative.com/manhattan-seo/"
+                      },
+                      {
+                        "url": "http://emaximize.com/seo-agency-los-angeles-manhattan-beach/"
+                      },
+                      {
+                        "url": "http://upfrontconsultants.com/seo-manhattan/"
+                      },
+                      {
+                        "url": "http://seo-arch.com/"
+                      },
+                      {
+                        "url": "https://www.180fusion.com/blog/press-release/180fusions-seo-services-receives-2012-best-of-manhattan-award/"
+                      },
+                      {
+                        "url": "https://www.180fusion.com/blog/press-release/180fusion-receives-2013-best-of-manhattan-award-for-best-in-class-seo-services/"
+                      },
+                      {
+                        "url": "https://www.conceptualizeddesign.com/"
+                      },
+                      {
+                        "url": "https://www.jm-seo.org/news/new-york-seo.html"
+                      },
+                      {
+                        "url": "http://www.wmcactionnews5.com/story/36562011/manhattan-ny-reputation-marketing-seo-online-branding-services-launched"
+                      },
+                      {
+                        "url": "https://www.conductor.com/"
+                      },
+                      {
+                        "url": "https://groups.drupal.org/node/50158"
+                      },
+                      {
+                        "url": "http://www.seo-usa.org/wordpress2012/wp-content/uploads/2012/07/SEO_OpKnocksFall2016_FinalforWeb.pdf"
+                      },
+                      {
+                        "url": "http://www.universidiversi.com/seven-points-it-is-best-to-tumble-in-adore-with-manhattan-seo-experts/"
+                      },
+                      {
+                        "url": "http://www.simplyhired.com/search?q=seo+consulting&l=manhattan%2C+ny"
+                      },
+                      {
+                        "url": "https://www.ebrandz.com/"
+                      },
+                      {
+                        "url": "https://www.webcitz.com/new-york-website-design/manhattan-website-design.html"
+                      },
+                      {
+                        "url": "https://www.breaktheweb.org/new-york-city-seo/"
+                      },
+                      {
+                        "url": "https://www.redbeachadvisors.com/tag/seo-manhattan-beach/"
+                      },
+                      {
+                        "url": "http://mywebdesignsource.com/tag/seo-manhattan-beach"
+                      },
+                      {
+                        "url": "https://www.eventbrite.com/e/seo-get-found-online-drive-traffic-to-your-website-lower-manhattan-11917-tickets-38397464851"
+                      },
+                      {
+                        "url": "https://webdesignandseo.company/local/manhattan-beach_ca_2411020-519/"
+                      },
+                      {
+                        "url": "https://www.manhattanprep.com/lsat/blog/tag/seo-law/"
+                      },
+                      {
+                        "url": "https://www.bluefountainmedia.com/search-engine-optimization"
+                      },
+                      {
+                        "url": "http://www.nichequest.com/7-steps-to-choosing-an-seo-company-in-new-york-city/"
+                      },
+                      {
+                        "url": "https://rocket31.com/seo-company/manhattan-nevada.php"
+                      },
+                      {
+                        "url": "https://manhattanbookreview.com/author-marketing-services/search-engine-optimization-authors/seo-pricing/"
+                      },
+                      {
+                        "url": "http://www.manhattanbestdentalcare.com/SEO-2018-1-1-1.html"
+                      },
+                      {
+                        "url": "https://globalpressclub.com/manhattan-seo-explains-what-best-search-engine-optimization-agency-can-do-as-digital-media-marketing-company-to-gain-google-and-bing-organic-traffic-for-small-businesses/1197/"
+                      },
+                      {
+                        "url": "https://www.gvate.com/opencart-seo-service-ny/"
+                      },
+                      {
+                        "url": "http://www.seobythesea.com/2014/10/google-enriched-results-patent/enriched-google-manhattan-weather/"
+                      },
+                      {
+                        "url": "https://skytideseo.com/manhattan-beach-seo/"
+                      },
+                      {
+                        "url": "http://www.jobs.com/jobs/search?q=Search%20Engine%20Optimization%20(SEO)%20Specialist&where=Manhattan%2C%20New%20York"
+                      },
+                      {
+                        "url": "https://mymediapal.com/seo/nyc/manhattan/"
+                      },
+                      {
+                        "url": "https://www.pinterest.com/pin/351421577145006049/"
+                      },
+                      {
+                        "url": "http://www.digitalvertex.com/page/digital-vertex-seo-company-manhattan-beach"
+                      },
+                      {
+                        "url": "http://www.bigappledesigns.com/what-we-offer/seo-services-new-york/"
+                      },
+                      {
+                        "url": "http://fuzeseo.co/"
+                      },
+                      {
+                        "url": "https://apexwebfirm.com/seo-services-manhattan-beach-ca/"
+                      },
+                      {
+                        "url": "http://www.seoscholars.org/"
+                      },
+                      {
+                        "url": "http://www.manhattanchildrenscenter.org/2015/10/18/seo-from-media/"
+                      },
+                      {
+                        "url": "http://jessegrillo.com/sell-marketing-services-250-per-conversion-20-ongoing/"
+                      },
+                      {
+                        "url": "https://sites.google.com/a/bhsec.bard.edu/the-bhsec-diversity-initiative/announcements/attn9thgradersseoscholarspresentationatbhsecmanhattanqueens"
+                      },
+                      {
+                        "url": "http://susiecakes.com/about/sc-seo-facebook-manhattan-beach/"
+                      },
+                      {
+                        "url": "http://www.mdinternetsolutions.com/"
+                      },
+                      {
+                        "url": "http://upsidebusiness.com/seo/nyc-seo-company-search-engine-optimization.html"
+                      },
+                      {
+                        "url": "http://www.ironpaper.com/seo/"
+                      },
+                      {
+                        "url": "https://the-maac.com/?faqs=s-e-o-question-two"
+                      },
+                      {
+                        "url": "https://cannabis8onnb3.wordpress.com/2018/01/06/manhattan-beach-seo/"
+                      },
+                      {
+                        "url": "http://serpplayer.com/local-seo-services/"
+                      },
+                      {
+                        "url": "https://www.360partners.com/blog/pathway-to-seo-success-manhattan-style/"
+                      },
+                      {
+                        "url": "http://www.cdudotcom.com/new-york-seo/midtown-manhattan-new-york-search-engine-optimization.html"
+                      },
+                      {
+                        "url": "http://www.elmuseo.org/"
+                      },
+                      {
+                        "url": "http://www.bluelaserdesign.com/website-design-manhattan-new-york/"
+                      },
+                      {
+                        "url": "http://realseotraffic.com/manhattan-beach/"
+                      },
+                      {
+                        "url": "https://www.chowhound.com/post/seo-194260"
+                      },
+                      {
+                        "url": "https://blendlocalsearchmarketing.com/tag/orthodontist-in-manhattan/"
+                      },
+                      {
+                        "url": "http://www.mymanhattancom.com/tag/seo/"
+                      },
+                      {
+                        "url": "https://www.agencyplatform.com/seo-services.html"
+                      },
+                      {
+                        "url": "https://moovitapp.com/index/en/public_transit-Earn_Seo-NYCNJ-site_31120040-121"
+                      },
+                      {
+                        "url": "https://www.themuse.com/jobs/l-Manhattan,-NY+q-SEO-jobs"
+                      },
+                      {
+                        "url": "https://vineconcepts.com/seo/manhattan/"
+                      },
+                      {
+                        "url": "https://globenewswire.com/news-release/2015/06/04/742132/10137335/en/LocalVox-Wins-Two-Best-in-Class-Awards-Best-Local-SEO-Company-and-Best-of-Manhattan-Software-Company.html"
+                      },
+                      {
+                        "url": "http://www.internships.com/marketing/social-media-intern-i2149829"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

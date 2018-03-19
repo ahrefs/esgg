@@ -1,0 +1,174 @@
+{
+  "_routing": { "required": true },
+  "_source": { "excludes": [ "url_hash" ] },
+  "properties": {
+    "user_id": { "type": "long" },
+    "dashboard_id": { "type": "long" },
+    "keyword_id": { "type": "long" },
+    "provider": { "type": "keyword" },
+    "language": { "type": "keyword" },
+    "country": { "type": "keyword" },
+    "location": { "type": "keyword" },
+    "first_seen": {
+      "type": "date",
+      "format": "epoch_millis||dateOptionalTime"
+    },
+    "last_update": {
+      "type": "date",
+      "format": "epoch_millis||dateOptionalTime"
+    },
+    "next_update": {
+      "type": "date",
+      "format": "epoch_millis||dateOptionalTime"
+    },
+    "prev_update": {
+      "type": "date",
+      "format": "epoch_millis||dateOptionalTime"
+    },
+    "difficulty": { "type": "long" },
+    "parent_keyword": {
+      "type": "keyword",
+      "fields": {
+        "hash": { "type": "murmur3" },
+        "search": { "type": "text", "term_vector": "with_positions_offsets" },
+        "word_count": {
+          "type": "token_count",
+          "analyzer": "default",
+          "store": true
+        }
+      },
+      "eager_global_ordinals": false
+    },
+    "parent_volume": { "type": "double" },
+    "parent_traffic": { "type": "double" },
+    "nice_parent_volume": { "type": "long" },
+    "nice_parent_traffic": { "type": "long" },
+    "volume": { "type": "double" },
+    "nice_volume": { "type": "long" },
+    "global_volume": { "type": "double" },
+    "nice_global_volume": { "type": "long" },
+    "keyword": {
+      "type": "keyword",
+      "fields": {
+        "hash": { "type": "murmur3" },
+        "search": { "type": "text", "term_vector": "with_positions_offsets" },
+        "word_count": {
+          "type": "token_count",
+          "analyzer": "default",
+          "store": true
+        }
+      }
+    },
+    "cpc": { "type": "long" },
+    "nice_cpc": { "type": "long" },
+    "competition": { "type": "long" },
+    "results": { "type": "long" },
+    "position": { "type": "long" },
+    "ordinal": { "type": "long" },
+    "block_pos": { "type": "long" },
+    "link_pos": { "type": "long" },
+    "type": { "type": "keyword" },
+    "url": { "type": "keyword", "fields": { "hash": { "type": "murmur3" } } },
+    "url_hash": {
+      "properties": {
+        "exact": { "type": "long" },
+        "exact_only": { "type": "long" },
+        "prefix": { "type": "long" },
+        "domain": { "type": "long" },
+        "domain_only": { "type": "long" },
+        "subdomains": { "type": "long" },
+        "rootdomain": { "type": "long" },
+        "site": { "type": "long" }
+      }
+    },
+    "url_visual": { "type": "keyword" },
+    "block": { "type": "keyword" },
+    "history": {
+      "properties": {
+        "position": { "type": "long" },
+        "ordinal": { "type": "long" },
+        "block_pos": { "type": "long" },
+        "link_pos": { "type": "long" }
+      }
+    },
+    "title": {
+      "type": "text",
+      "term_vector": "with_positions_offsets",
+      "fields": {
+        "lowercase_raw": { "type": "text", "analyzer": "lowercase_keyword" }
+      }
+    },
+    "title2": {
+      "type": "text",
+      "term_vector": "with_positions_offsets",
+      "fields": {
+        "lowercase_raw": { "type": "text", "analyzer": "lowercase_keyword" }
+      }
+    },
+    "description": { "type": "keyword" },
+    "description2": { "type": "keyword" },
+    "rating": { "type": "long" },
+    "has_thumbnail": { "type": "boolean" },
+    "video": { "type": "keyword" },
+    "prerender": { "type": "keyword" },
+    "company": {
+      "type": "text",
+      "term_vector": "with_positions_offsets",
+      "fields": {
+        "lowercase_raw": { "type": "text", "analyzer": "lowercase_keyword" }
+      }
+    },
+    "features": { "type": "keyword" },
+    "stats": {
+      "properties": {
+        "volume": { "type": "double" },
+        "nice_volume": { "type": "long" },
+        "cost": { "type": "double" },
+        "nice_cost": { "type": "long" },
+        "ctr_p": { "type": "double" },
+        "nr_pos": { "type": "long" }
+      }
+    },
+    "metrics": {
+      "properties": {
+        "backlinks": { "type": "long" },
+        "refdomains": { "type": "long" },
+        "refclass_c": { "type": "long" },
+        "domain_rating": { "type": "long" },
+        "ahrefs_rank": { "type": "long" },
+        "ahrefs_top": { "type": "long" },
+        "gplus": { "type": "long" },
+        "facebook": { "type": "long" },
+        "linkedin": { "type": "long" },
+        "nr_keywords": { "type": "long" },
+        "traffic": { "type": "double" },
+        "top_keyword": {
+          "type": "keyword",
+          "fields": {
+            "hash": { "type": "murmur3" },
+            "search": {
+              "type": "text",
+              "term_vector": "with_positions_offsets"
+            },
+            "word_count": {
+              "type": "token_count",
+              "analyzer": "default",
+              "store": true
+            }
+          }
+        },
+        "top_keyword_id": { "type": "keyword" },
+        "top_volume": { "type": "double" },
+        "nice_top_volume": { "type": "long" }
+      }
+    },
+    "ad_hash": { "type": "long" },
+    "serp_features": { "type": "keyword" },
+    "serp_structure": {
+      "properties": {
+        "nr_type": { "type": "long" },
+        "type": { "type": "keyword" }
+      }
+    }
+  }
+}

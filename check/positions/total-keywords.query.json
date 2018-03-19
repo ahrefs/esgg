@@ -1,0 +1,62 @@
+{
+    "from": 0,
+    "size": 0,
+    "timeout": "14s",
+    "aggregations": {
+        "monthlyTraffic": {
+            "terms": {
+                "field": "country",
+                "size": 170,
+                "order": {
+                    "_term": "asc"
+                }
+            },
+            "aggs": {
+                "buckets": {
+                    "sum": {
+                        "field": "stats.volume"
+                    }
+                }
+            }
+        },
+        "monthlyCost": {
+            "terms": {
+                "field": "country",
+                "size": 170,
+                "order": {
+                    "_term": "asc"
+                }
+            },
+            "aggs": {
+                "buckets": {
+                    "sum": {
+                        "field": "stats.cost"
+                    }
+                }
+            }
+        }
+    },
+    "query": {
+        "bool": {
+            "filter": [
+                {
+                    "term": {
+                        "url_hash.subdomains": "-1897437192639571459"
+                    }
+                }
+            ],
+            "must_not": [
+                {
+                    "term": {
+                        "type": "paid"
+                    }
+                },
+                {
+                    "term": {
+                        "block_pos": 0
+                    }
+                }
+            ]
+        }
+    }
+}

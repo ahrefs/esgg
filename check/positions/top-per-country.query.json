@@ -1,0 +1,108 @@
+{
+  "query": {
+    "bool": {
+      "must_not": [
+        {
+          "term": {
+            "type": "paid"
+          }
+        },
+        {
+          "term": {
+            "block_pos": 0
+          }
+        }
+      ],
+      "filter": [
+        {
+          "term": {
+            "url_hash.subdomains": "-7312684605858653705"
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "totalTraffic": {
+      "sum": {
+        "field": "stats.volume"
+      }
+    },
+    "topPerCountry": {
+      "terms": {
+        "field": "country",
+        "size": 170,
+        "order": {
+          "_term": "asc"
+        }
+      },
+      "aggs": {
+        "top": {
+          "terms": {
+            "field": "url_hash.exact_only",
+            "size": 5,
+            "order": {
+              "traffic": "desc"
+            }
+          },
+          "aggs": {
+            "traffic": {
+              "sum": {
+                "field": "stats.volume"
+              }
+            },
+            "traffic_value": {
+              "sum": {
+                "field": "stats.cost"
+              }
+            },
+            "top": {
+              "top_hits": {
+                "size": 1,
+                "_source": [
+                  "url",
+                  "type",
+                  "keyword",
+                  "block_pos",
+                  "serp_features",
+                  "nice_volume"
+                ],
+                "sort": [
+                  {
+                    "stats.volume": {
+                      "order": "desc"
+                    }
+                  }
+                ]
+              }
+            },
+            "have_rd": {
+              "filter": {
+                "exists": {
+                  "field": "metrics.refdomains"
+                }
+              },
+              "aggs": {
+                "top2": {
+                  "top_hits": {
+                    "size": 1,
+                    "_source": [
+                      "metrics.refdomains"
+                    ],
+                    "sort": [
+                      {
+                        "last_update": {
+                          "order": "desc"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

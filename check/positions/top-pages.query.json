@@ -1,0 +1,125 @@
+{
+  "_source": [
+    "type",
+    "history",
+    "keyword",
+    "block_pos",
+    "nice_volume",
+    "nice_cpc",
+    "url",
+    "stats",
+    "competition",
+    "results",
+    "last_update",
+    "prev_update",
+    "difficulty",
+    "serp_features",
+    "has_thumbnail",
+    "video"
+  ],
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "country": "us"
+          }
+        },
+        {
+          "term": {
+            "url_hash.exact": "8012791234673931489"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "type": "paid"
+          }
+        },
+        {
+          "term": {
+            "block_pos": 0
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "topPages": {
+      "terms": {
+        "field": "url_hash.exact_only",
+        "size": 500,
+        "order": {
+          "traffic": "desc"
+        }
+      },
+      "aggs": {
+        "traffic": {
+          "sum": {
+            "field": "stats.volume"
+          }
+        },
+        "traffic_value": {
+          "sum": {
+            "field": "stats.cost"
+          }
+        },
+        "top": {
+          "top_hits": {
+            "size": 1,
+            "_source": [
+              "url",
+              "type",
+              "keyword",
+              "block_pos",
+              "serp_features",
+              "nice_volume"
+            ],
+            "sort": [
+              {
+                "stats.volume": {
+                  "order": "desc"
+                }
+              }
+            ]
+          }
+        },
+        "have_rd": {
+          "filter": {
+            "exists": {
+              "field": "metrics.refdomains"
+            }
+          },
+          "aggs": {
+            "top2": {
+              "top_hits": {
+                "size": 1,
+                "_source": [
+                  "metrics.refdomains"
+                ],
+                "sort": [
+                  {
+                    "last_update": {
+                      "order": "desc"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "totalPages": {
+      "cardinality": {
+        "field": "url_hash.exact_only"
+      }
+    },
+    "totalTraffic": {
+      "sum": {
+        "field": "stats.volume"
+      }
+    }
+  }
+}

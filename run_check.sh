@@ -11,12 +11,12 @@ function check {
   atdgen -t check.atd
   atdgen -j check.atd
   ocamlfind ocamlc -package atdgen,extlib -linkpkg check_t.mli check_t.ml check_j.mli check_j.ml run_check.ml -o run_check.byte
-  ./run_check.byte < $(echo $name | sed s%/q%/r%)
+  ./run_check.byte < $(echo $name | sed s%query.json%result.json%)
 }
 
 if [ $# -eq 0 ]; then
   for dir in check/*; do
-    for name in $dir/q*.json ; do
+    for name in $dir/*.query.json ; do
       check $name
     done
   done

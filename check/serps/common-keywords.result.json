@@ -1,0 +1,34 @@
+{
+  "took" : 291,
+  "timed_out" : false,
+  "num_reduce_phases" : 8,
+  "_shards" : {
+    "total" : 4000,
+    "successful" : 4000,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 187933964,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "competitorsCommonKeywords" : {
+      "buckets" : {
+        "https://github.com/tzutalin/labelImg" : {
+          "doc_count" : 25,
+          "partition" : {
+            "doc_count" : 3
+          }
+        },
+        "www.labelimage.com.au" : {
+          "doc_count" : 23,
+          "partition" : {
+            "doc_count" : 23
+          }
+        }
+      }
+    }
+  }
+}

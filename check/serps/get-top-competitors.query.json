@@ -1,0 +1,59 @@
+{
+  "_source": [
+    "type",
+    "history",
+    "keyword",
+    "block_pos",
+    "nice_volume",
+    "nice_cpc",
+    "url",
+    "stats",
+    "competition",
+    "results",
+    "last_update",
+    "prev_update",
+    "difficulty",
+    "serp_features",
+    "has_thumbnail",
+    "video"
+  ],
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "country": "us"
+          }
+        },
+        {
+          "terms": {
+            "keyword": [
+              "brooklyn seo",
+              "staten island seo",
+              "manhattan seo",
+              "brooklyn seo company"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "topCompetitors": {
+      "significant_terms": {
+        "field": "urls_hashes_top10.rootdomain",
+        "size": 51
+      },
+      "aggs": {
+        "hits": {
+          "top_hits": {
+            "size": 1,
+            "_source": [
+              "positions.url"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
