@@ -12,12 +12,28 @@ type result_type = [
   | `Double
   ]
 
-type single_aggregation = { name : string; agg_type : string; field : string }
+type agg_type =
+| Simple_metric of string
+| Cardinality of string
+| Terms of string
+| Histogram of string
+
+type single_aggregation = { name : string; agg : agg_type; }
 type aggregation = { this : single_aggregation; sub : aggregation list; }
 
+let get json k conv = try U.member k json |> conv with exn -> Exn.fail ~exn "get %S" k
+
 let analyze_single_aggregation name agg_type json =
-  let field = json |> U.member "field" |> U.to_string in
-  { name; agg_type; field }
+  let field () = get json "field" U.to_string in
+  let agg =
+    match agg_type with
+    | "max" | "min" | "avg" | "sum" -> Simple_metric (field ())
+    | "cardinality" -> Cardinality (field ())
+    | "terms" -> Terms (field ())
+    | "histogram" -> Histogram (field ())
+    | _ -> Exn.fail "unknown aggregation type %S" agg_type
+  in
+  { name; agg; }
 
 let extract_aggregations x =
   let open U in
@@ -31,26 +47,29 @@ let extract_aggregations x =
   aggs,rest
 
 let rec aggregation (name,x) =
-  let (sub,rest) = extract_aggregations x in
-  match rest with
-  | [agg_type,x] ->
-    let this = analyze_single_aggregation name agg_type x in
-    let sub = List.map aggregation sub in
-    { this; sub }
-  | _ -> Exn.fail "no aggregation?"
+  try
+    let (sub,rest) = extract_aggregations x in
+    match rest with
+    | [agg_type,x] ->
+      let this = analyze_single_aggregation name agg_type x in
+      let sub = List.map aggregation sub in
+      { this; sub }
+    | _ -> Exn.fail "no aggregation?"
+  with
+    exn -> Exn.fail ~exn "while analyzing aggregation %S" name
 
 let get_aggregations x =
   let open U in
   extract_aggregations x |> fst |> List.map aggregation
 
-let infer_single_aggregation { name; agg_type; field; } sub =
+let infer_single_aggregation { name; agg; } sub =
   let buckets t = `Dict [ "buckets", `List (sub ["key", t; "doc_count", `Int]) ] in
   let (cstr,shape) =
-    match agg_type with
-    | "max" | "min" | "avg" -> [], sub [ "value", `Typeof field ]
-    | "terms" -> [], buckets (`Typeof field)
-    | "histogram" -> [`Is (`Typeof field, `Num)], buckets `Double
-    | _ -> Exn.fail "unknown agg_type %S" agg_type
+    match agg with
+    | Simple_metric field -> [`Is_num field], sub [ "value", `Double ]
+    | Cardinality _field -> [], sub ["value", `Int ]
+    | Terms field -> [], buckets (`Typeof field)
+    | Histogram field -> [`Is_num field], buckets `Double
   in
   cstr, (name, shape)
 
@@ -71,7 +90,7 @@ let rec resolve_types properties shape : result_type =
   let typeof t =
     match List.assoc t properties with
     | exception _ -> Exn.fail "no field %S in schema" t
-    | a -> atd_of_es_type @@ U.(a |> member "type" |> to_string)
+    | a -> atd_of_es_type @@ get a "type" U.to_string
   in
   let rec map = function
   | `List t -> `List (map t)
@@ -128,7 +147,9 @@ let derive_atd shape =
   print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format @@ atd_of_shape "result" shape
 
 let derive mapping query =
-  let properties = U.(mapping |> member "properties" |> to_assoc) in
+  let properties = get mapping "properties" U.to_assoc in
   let result = `Dict ["aggregations", `Dict (List.map snd @@ analyze_aggregations query)] in (* XXX discarding constraints *)
   derive_atd @@ resolve_types properties result;
   ()
+
+let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
