@@ -95,17 +95,22 @@ let atd_of_es_type = function
 | "keyword" -> `String
 | s -> Exn.fail "atd_of_es_type: cannot handle %S" s
 
-let resolve_types properties shape : result_type =
+let resolve_types mapping shape : result_type =
   let typeof t =
-    match List.assoc t properties with
-    | exception _ -> Exn.fail "no field %S in schema" t
-    | a -> atd_of_es_type @@ get a "type" U.to_string
+    let rec find path schema =
+      match path with
+      | [] -> get schema "type" U.to_string
+      | hd::tl -> find tl (List.assoc hd (get schema "properties" U.to_assoc))
+    in
+    match find (Stre.nsplitc t '.') mapping with
+    | exception _ -> Exn.fail "no such field"
+    | a -> atd_of_es_type a
   in
   let rec map = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
-  | `Typeof x -> typeof x
+  | `Typeof x -> (try typeof x with exn -> Exn.fail ~exn "failed to type field %S" x)
   | `Int | `String | `Double as t -> t
   in
   map shape
@@ -182,9 +187,8 @@ let derive_atd shape =
   print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format @@ atd_of_shape "result" shape
 
 let derive mapping query =
-  let properties = get mapping "properties" U.to_assoc in
   let result = `Dict ["aggregations", `Dict (List.map snd @@ analyze_aggregations query)] in (* XXX discarding constraints *)
-  derive_atd @@ resolve_types properties result;
+  derive_atd @@ resolve_types mapping result;
   ()
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
