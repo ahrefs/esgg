@@ -188,7 +188,8 @@ let derive_atd shape =
   print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format @@ atd_of_shape "result" shape
 
 let derive mapping query =
-  let result = `Dict ["aggregations", `Dict (List.map snd @@ analyze_aggregations query)] in (* XXX discarding constraints *)
+  let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
+  let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
   derive_atd @@ resolve_types mapping result;
   ()
 
