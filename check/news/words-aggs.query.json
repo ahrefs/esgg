@@ -1,0 +1,87 @@
+{
+  "sort": [
+    {
+      "_score": {
+        "order": "desc"
+      }
+    }
+  ],
+  "_source": [
+    "content_metrics.words",
+    "traffic",
+    "metrics",
+    "url",
+    "title",
+    "publish_time",
+    "se_metrics",
+    "author",
+    "last_update",
+    "next_update",
+    "first_seen",
+    "tags.og_description",
+    "tags.og_image"
+  ],
+  "highlight": {
+    "order": "score",
+    "pre_tags": [
+      "#####AHREFS-HIGHLIGHT#####"
+    ],
+    "post_tags": [
+      "#####/AHREFS_HIGHLIGHT#####"
+    ],
+    "encoder": "html",
+    "fields": {
+      "content": {
+        "fragment_size": 130,
+        "number_of_fragments": 1,
+        "no_match_size": 130
+      }
+    }
+  },
+  "query": {
+    "function_score": {
+      "query": {
+        "bool": {
+          "must": {
+            "query_string": {
+              "query": "content:(\"send money to india\"~6) OR title:(send money to india) OR title:(\"send money to india\"^10)",
+              "default_operator": "AND"
+            }
+          }
+        }
+      },
+      "functions": [
+        {
+          "field_value_factor": {
+            "field": "metrics.rank",
+            "modifier": "sqrt"
+          }
+        },
+        {
+          "field_value_factor": {
+            "field": "se_metrics.domain_rating"
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "countByWords": {
+      "range": {
+        "field": "content_metrics.words",
+        "ranges": [
+          {
+            "to": 999
+          },
+          {
+            "from": 1000,
+            "to": 5000
+          },
+          {
+            "from": 5001
+          }
+        ]
+      }
+    }
+  }
+}

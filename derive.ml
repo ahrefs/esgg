@@ -21,6 +21,7 @@ type agg_type =
 | Filter
 | Filters
 | Top_hits
+| Range of string
 
 type single_aggregation = { name : string; agg : agg_type; }
 type aggregation = { this : single_aggregation; sub : aggregation list; }
@@ -38,6 +39,7 @@ let analyze_single_aggregation name agg_type json =
     | "filter" -> Filter
     | "filters" -> Filters
     | "top_hits" -> Top_hits
+    | "range" -> Range (field ()) (* TODO keyed *)
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in
   { name; agg; }
@@ -79,6 +81,7 @@ let infer_single_aggregation { name; agg; } sub =
     | Filter -> [], sub ["doc_count", `Int]
     | Filters -> [], `Dict [ "buckets", `Assoc (`String, sub ["doc_count", `Int])]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
+    | Range field -> [`Is_num field], `Dict [ "buckets", `List (sub ["doc_count", `Int]) ]
   in
   cstr, (name, shape)
 

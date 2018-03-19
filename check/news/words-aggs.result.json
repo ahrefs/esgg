@@ -1,0 +1,36 @@
+{
+  "took": 93,
+  "timed_out": false,
+  "_shards": {
+    "total": 980,
+    "successful": 980,
+    "failed": 0
+  },
+  "hits": {
+    "total": 1069,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "countByWords": {
+      "buckets": [
+        {
+          "key": "*-999.0",
+          "to": 999,
+          "doc_count": 767
+        },
+        {
+          "key": "1000.0-5000.0",
+          "from": 1000,
+          "to": 5000,
+          "doc_count": 262
+        },
+        {
+          "key": "5001.0-*",
+          "from": 5001,
+          "doc_count": 40
+        }
+      ]
+    }
+  }
+}
