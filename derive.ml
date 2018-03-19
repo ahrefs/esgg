@@ -132,14 +132,37 @@ end
 
 let atd_of_shape name (shape:result_type) =
   let open Gen in
-  let types = ref [
-    ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
-    ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
-  ] in
+  let names = Hashtbl.create 10 in
+  let types = ref [] in
+  let fresh_name t =
+    let (prefix,start) =
+      match t with
+      | `Record (_,[`Field (_,(name,_,_),_)],_) -> name, name
+      | _ -> "t", "t0"
+    in
+    let rec loop name n =
+      match Hashtbl.mem names name with
+      | true -> loop (sprintf "%s%d" prefix n) (n+1)
+      | false -> name
+    in
+    loop start 1
+  in
+  let new_type typ =
+    tuck types typ;
+    let `Type (_,(name,_,_),_) = typ in
+    assert (not @@ Hashtbl.mem names name);
+    Hashtbl.add names name ()
+  in
+  new_type @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
+  new_type @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
   let ref_name t =
-    let name = newname () in
-    tuck types (typ name t);
-    tname name
+    match List.find (fun (`Type (_,_,v)) -> t = v) !types with
+    | `Type (_,(name,[],_),_) -> tname name
+    | _ -> assert false (* parametric type cannot match *)
+    | exception _ ->
+      let name = fresh_name t in
+      new_type @@ typ name t;
+      tname name
   in
   let rec map ?(push=ref_name) shape =
     match shape with
