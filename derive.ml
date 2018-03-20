@@ -5,14 +5,14 @@ open Printf
 module Json = Yojson.Safe
 module U = Json.Util
 
+type simple_type = [ `Int | `Int64 | `String | `Double ]
+
 type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
-  | `Int
-  | `Int64
-  | `String
-  | `Double
+  | `Ref of (string * simple_type) (* reference field in mapping *)
+  | simple_type
   ]
 
 type agg_type =
@@ -115,11 +115,12 @@ let resolve_types mapping shape : result_type =
     | "long" when String.exists t "hash" -> `Int64 (* hack *)
     | a -> atd_of_es_type a
   in
+  let typeof x = try typeof x with exn -> Exn.fail ~exn "failed to type field %S" x in
   let rec map = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
-  | `Typeof x -> (try typeof x with exn -> Exn.fail ~exn "failed to type field %S" x)
+  | `Typeof x -> `Ref (x, typeof x)
   | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
@@ -137,7 +138,7 @@ module Gen = struct
   let list ?(a=[]) t = `List (loc,t,annots a)
   let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
   let record fields = `Record (loc,fields,[])
-  let field n t = `Field (loc, (n, `Required, []), t)
+  let field ?(a=[]) n t = `Field (loc, (n, `Required, annots a), t)
   let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
   let tname ?a t = pname ?a t []
   let tvar t = `Tvar (loc,t)
@@ -180,17 +181,22 @@ let atd_of_shape name (shape:result_type) =
       new_type @@ typ name t;
       tname name
   in
-  let rec map ?(push=ref_name) shape =
-    match shape with
-    | `List t -> list (map t)
+  let map_simple_type = function
     | `Int -> tname "int"
     | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
     | `String -> tname "string"
     | `Double -> tname "float"
-    | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
-    | `Dict ["buckets", `List t] -> pname "buckets" [map t]
-    | `Dict fields -> push @@ record (List.map (fun (n,t) -> field n (map t)) fields)
-    | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
+  in
+  let rec map ?push shape = snd @@ map' ?push shape
+  and map' ?(push=ref_name) shape =
+    match shape with
+    | #simple_type as c -> [], map_simple_type c
+    | `Ref (ref,t) -> ["doc",["text",ref]], map_simple_type t
+    | `List t -> [], list (map t)
+    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
+    | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
+    | `Dict fields -> [], push @@ record (List.map (fun (n,t) -> let (a,t) = map' t in field ~a n t) fields)
+    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
   in
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
