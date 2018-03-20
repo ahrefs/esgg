@@ -1,0 +1,175 @@
+{
+  "took": 663,
+  "timed_out": false,
+  "num_reduce_phases": 2,
+  "_shards": {
+    "total": 1000,
+    "successful": 1000,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 960,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "totalVolume": {
+      "value": 37570
+    },
+    "byMonth": {
+      "buckets": [
+        {
+          "key_as_string": "2015-09",
+          "key": 1441065600000,
+          "doc_count": 66
+        },
+        {
+          "key_as_string": "2015-10",
+          "key": 1443657600000,
+          "doc_count": 34
+        },
+        {
+          "key_as_string": "2015-11",
+          "key": 1446336000000,
+          "doc_count": 40
+        },
+        {
+          "key_as_string": "2015-12",
+          "key": 1448928000000,
+          "doc_count": 28
+        },
+        {
+          "key_as_string": "2016-01",
+          "key": 1451606400000,
+          "doc_count": 32
+        },
+        {
+          "key_as_string": "2016-02",
+          "key": 1454284800000,
+          "doc_count": 43
+        },
+        {
+          "key_as_string": "2016-03",
+          "key": 1456790400000,
+          "doc_count": 34
+        },
+        {
+          "key_as_string": "2016-04",
+          "key": 1459468800000,
+          "doc_count": 29
+        },
+        {
+          "key_as_string": "2016-05",
+          "key": 1462060800000,
+          "doc_count": 36
+        },
+        {
+          "key_as_string": "2016-06",
+          "key": 1464739200000,
+          "doc_count": 23
+        },
+        {
+          "key_as_string": "2016-07",
+          "key": 1467331200000,
+          "doc_count": 28
+        },
+        {
+          "key_as_string": "2016-08",
+          "key": 1470009600000,
+          "doc_count": 28
+        },
+        {
+          "key_as_string": "2016-09",
+          "key": 1472688000000,
+          "doc_count": 21
+        },
+        {
+          "key_as_string": "2016-10",
+          "key": 1475280000000,
+          "doc_count": 31
+        },
+        {
+          "key_as_string": "2016-11",
+          "key": 1477958400000,
+          "doc_count": 35
+        },
+        {
+          "key_as_string": "2016-12",
+          "key": 1480550400000,
+          "doc_count": 18
+        },
+        {
+          "key_as_string": "2017-01",
+          "key": 1483228800000,
+          "doc_count": 31
+        },
+        {
+          "key_as_string": "2017-02",
+          "key": 1485907200000,
+          "doc_count": 24
+        },
+        {
+          "key_as_string": "2017-03",
+          "key": 1488326400000,
+          "doc_count": 40
+        },
+        {
+          "key_as_string": "2017-04",
+          "key": 1491004800000,
+          "doc_count": 58
+        },
+        {
+          "key_as_string": "2017-05",
+          "key": 1493596800000,
+          "doc_count": 49
+        },
+        {
+          "key_as_string": "2017-06",
+          "key": 1496275200000,
+          "doc_count": 32
+        },
+        {
+          "key_as_string": "2017-07",
+          "key": 1498867200000,
+          "doc_count": 18
+        },
+        {
+          "key_as_string": "2017-08",
+          "key": 1501545600000,
+          "doc_count": 45
+        },
+        {
+          "key_as_string": "2017-09",
+          "key": 1504224000000,
+          "doc_count": 26
+        },
+        {
+          "key_as_string": "2017-10",
+          "key": 1506816000000,
+          "doc_count": 32
+        },
+        {
+          "key_as_string": "2017-11",
+          "key": 1509494400000,
+          "doc_count": 20
+        },
+        {
+          "key_as_string": "2017-12",
+          "key": 1512086400000,
+          "doc_count": 8
+        },
+        {
+          "key_as_string": "2018-01",
+          "key": 1514764800000,
+          "doc_count": 33
+        },
+        {
+          "key_as_string": "2018-02",
+          "key": 1517443200000,
+          "doc_count": 18
+        }
+      ]
+    }
+  }
+}

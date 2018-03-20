@@ -1,0 +1,76 @@
+{
+  "sort": [
+    {
+      "volume": {
+        "order": "desc",
+        "missing": 0
+      }
+    }
+  ],
+  "_source": {
+    "excludes": [
+      "serps"
+    ]
+  },
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "terms": {
+            "country": [
+              "us"
+            ]
+          }
+        },
+        {
+          "range": {
+            "monthly_users": {
+              "gt": 0
+            }
+          }
+        }
+      ],
+      "should": [
+        [
+          {
+            "match_phrase": {
+              "keyword.search": "online invitations"
+            }
+          }
+        ]
+      ],
+      "must_not": [
+        {
+          "term": {
+            "volume": 0
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "aggs": {
+    "byMonth": {
+      "date_histogram": {
+        "field": "first_seen",
+        "format": "yyyy-MM",
+        "interval": "1M"
+      }
+    },
+    "totalVolume": {
+      "sum": {
+        "field": "nice_volume"
+      }
+    }
+  },
+  "script_fields": {
+    "serp": {
+      "script": {
+        "id": "keyword_serp",
+        "params": {
+          "user_id": 607925
+        }
+      }
+    }
+  }
+}
