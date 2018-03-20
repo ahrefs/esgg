@@ -20,6 +20,7 @@ type agg_type =
 | Cardinality of string
 | Terms of string
 | Histogram of string
+| Date_histogram of string
 | Filter
 | Filters
 | Top_hits
@@ -38,6 +39,7 @@ let analyze_single_aggregation name agg_type json =
     | "cardinality" -> Cardinality (field ())
     | "terms" | "significant_terms" -> Terms (field ())
     | "histogram" -> Histogram (field ())
+    | "date_histogram" -> Date_histogram (field ())
     | "filter" -> Filter
     | "filters" -> Filters
     | "top_hits" -> Top_hits
@@ -80,6 +82,7 @@ let infer_single_aggregation { name; agg; } sub =
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms field -> [], buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
+    | Date_histogram field -> [`Is_date field], buckets `Int
     | Filter -> [], sub ["doc_count", `Int]
     | Filters -> [], `Dict [ "buckets", `Assoc (`String, sub ["doc_count", `Int])]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
