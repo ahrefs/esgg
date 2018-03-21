@@ -5,13 +5,15 @@ open Printf
 module Json = Yojson.Safe
 module U = Json.Util
 
+type mapping = { mapping : Json.json; name : string option; }
+
 type simple_type = [ `Int | `Int64 | `String | `Double ]
 
 type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
-  | `Ref of (string * simple_type) (* reference field in mapping *)
+  | `Ref of (string list * simple_type) (* reference field in mapping *)
   | simple_type
   ]
 
@@ -103,6 +105,8 @@ let atd_of_es_type = function
 | "keyword" | "text" -> `String
 | s -> Exn.fail "atd_of_es_type: cannot handle %S" s
 
+let mod_of_es_name s = List.map String.capitalize s |> String.concat "."
+
 let resolve_types mapping shape : result_type =
   let typeof t =
     let rec find path schema =
@@ -110,17 +114,22 @@ let resolve_types mapping shape : result_type =
       | [] -> get schema "type" U.to_string
       | hd::tl -> find tl (List.assoc hd (get schema "properties" U.to_assoc))
     in
-    match find (Stre.nsplitc t '.') mapping with
+    match find t mapping.mapping with
     | exception _ -> Exn.fail "no such field"
-    | "long" when String.exists t "hash" -> `Int64 (* hack *)
+    | "long" when List.exists (fun s -> String.exists s "hash") t -> `Int64 (* hack *)
     | a -> atd_of_es_type a
   in
-  let typeof x = try typeof x with exn -> Exn.fail ~exn "failed to type field %S" x in
+  let typeof x = try typeof x with exn -> Exn.fail ~exn "failed to type field %S" (String.concat "." x) in
+  let ref path =
+    match mapping.name with
+    | None -> path
+    | Some base -> base :: path
+  in
   let rec map = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
-  | `Typeof x -> `Ref (x, typeof x)
+  | `Typeof x -> let path = Stre.nsplitc x '.' in `Ref (ref path, typeof path)
   | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
@@ -141,6 +150,7 @@ module Gen = struct
   let field ?(a=[]) n t = `Field (loc, (n, `Required, annots a), t)
   let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
   let tname ?a t = pname ?a t []
+  let wrap ocaml t = `Wrap (loc,t,annots ["ocaml",ocaml])
   let tvar t = `Tvar (loc,t)
   let ptyp name params t = `Type (loc, (name,params,[]), t)
   let typ name t = ptyp name [] t
@@ -191,7 +201,7 @@ let atd_of_shape name (shape:result_type) =
   and map' ?(push=ref_name) shape =
     match shape with
     | #simple_type as c -> [], map_simple_type c
-    | `Ref (ref,t) -> ["doc",["text",ref]], map_simple_type t
+    | `Ref (ref,t) -> ["doc",["text",String.concat "." ref]], wrap ["module",mod_of_es_name ref] (map_simple_type t)
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
@@ -204,7 +214,8 @@ let atd_of_shape name (shape:result_type) =
 let derive_atd shape =
   print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format @@ atd_of_shape "result" shape
 
-let derive mapping query =
+let derive ?name mapping query =
+  let mapping = { mapping; name } in
   let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
   let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
   derive_atd @@ resolve_types mapping result;

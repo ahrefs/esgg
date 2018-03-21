@@ -5,7 +5,9 @@ type value = { value: float }
 type hits = { hits: total }
 type t0 = { doc_count: int; top2: hits }
 type t1 = {
-  key <doc text="url_hash.exact_only">: int <ocaml repr="int64">;
+  key <doc text="positions.url_hash.exact_only">:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Positions.Url_hash.Exact_only">;
   doc_count: int;
   traffic: value;
   traffic_value: value;
@@ -13,7 +15,8 @@ type t1 = {
   have_rd: t0
 }
 type t2 = {
-  key <doc text="country">: string;
+  key <doc text="positions.country">:
+    string wrap <ocaml module="Positions.Country">;
   doc_count: int;
   top: t1 buckets
 }
