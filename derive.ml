@@ -221,4 +221,30 @@ let derive ?name mapping query =
   derive_atd @@ resolve_types mapping result;
   ()
 
+let uident s =
+  assert (s <> "");
+  let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
+  let s = match s.[0] with '0'..'9' -> "M_" ^ s | _ -> s in
+  String.capitalize s
+
+let reflect name mapping =
+  let rec iter hash nr_indent (name,x) =
+    let indent = String.make nr_indent ' ' in
+    let hash = hash || String.exists name "hash" in
+    match U.member "type" x, U.member "properties" x with
+    | `String typ, `Null ->
+      let typ = if typ = "long" && hash then "int64" else typ in
+      printfn "%smodule %s = Id(%s)" indent (uident name) (uident typ)
+    | (`Null | `String "nested"), `Assoc props ->
+      let modul = uident name in
+      printfn "%smodule %s = struct" indent modul;
+      List.iter (iter hash (nr_indent+2)) props;
+      printfn "%send (* %s *)" indent modul
+    | `Null, `Null -> Exn.fail "neither type nor properties found for %S" name
+    | _, `Null -> Exn.fail "strange type for %S" name
+    | `Null, _ -> Exn.fail "strange properties for %S" name
+    | _, _ -> Exn.fail "both type and properties found for %S" name
+  in
+  iter false 0 (name,mapping)
+
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)

@@ -123,7 +123,6 @@
         "nice_cpc": { "type": "long" },
         "competition": { "type": "long" },
         "results": { "type": "long" },
-        "user_id": { "type": "long" },
         "positions": {
           "type": "nested",
           "properties": {
