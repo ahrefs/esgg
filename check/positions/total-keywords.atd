@@ -1,0 +1,11 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type value = { value: float }
+type t0 = {
+  key <doc text="country">: string;
+  doc_count: int;
+  buckets: value
+}
+type t1 = { monthlyTraffic: t0 buckets; monthlyCost: t0 buckets }
+type result = { hits: total; aggregations: t1 }

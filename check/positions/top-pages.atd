@@ -1,0 +1,17 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type value = { value: float }
+type hits = { hits: total }
+type t0 = { doc_count: int; top2: hits }
+type t1 = {
+  key <doc text="url_hash.exact_only">: int <ocaml repr="int64">;
+  doc_count: int;
+  traffic: value;
+  traffic_value: value;
+  top: hits;
+  have_rd: t0
+}
+type value1 = { value: int }
+type t2 = { topPages: t1 buckets; totalPages: value1; totalTraffic: value }
+type result = { hits: total; aggregations: t2 }

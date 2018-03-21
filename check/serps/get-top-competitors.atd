@@ -1,0 +1,11 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type hits = { hits: total }
+type t0 = {
+  key <doc text="urls_hashes_top10.rootdomain">: int <ocaml repr="int64">;
+  doc_count: int;
+  hits: hits
+}
+type topCompetitors = { topCompetitors: t0 buckets }
+type result = { hits: total; aggregations: topCompetitors }

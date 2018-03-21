@@ -1,0 +1,8 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type doc_count1 = { doc_count: int }
+type t0 = { doc_count: int; partition: doc_count1 }
+type buckets1 = { buckets: (string * t0) list <json repr="object"> }
+type competitorsCommonKeywords = { competitorsCommonKeywords: buckets1 }
+type result = { hits: total; aggregations: competitorsCommonKeywords }

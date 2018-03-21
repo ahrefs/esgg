@@ -1,0 +1,6 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type doc_count1 = { doc_count: int }
+type countByWords = { countByWords: doc_count1 buckets }
+type result = { hits: total; aggregations: countByWords }

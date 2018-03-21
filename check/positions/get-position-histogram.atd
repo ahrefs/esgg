@@ -1,0 +1,10 @@
+type 'key doc_count = { key: 'key; doc_count: int }
+type 'a buckets = { buckets: 'a list }
+type total = { total: int }
+type t0 = {
+  key <doc text="country">: string;
+  doc_count: int;
+  buckets: float doc_count buckets
+}
+type positionHistogram = { positionHistogram: t0 buckets }
+type result = { hits: total; aggregations: positionHistogram }
