@@ -228,13 +228,14 @@ let uident s =
   String.capitalize s
 
 let reflect name mapping =
+  let extern name = name ^ "_" in
   let rec iter hash nr_indent (name,x) =
     let indent = String.make nr_indent ' ' in
     let hash = hash || String.exists name "hash" in
     match U.member "type" x, U.member "properties" x with
     | `String typ, `Null ->
       let typ = if typ = "long" && hash then "int64" else typ in
-      printfn "%smodule %s = Id(%s)" indent (uident name) (uident typ)
+      printfn "%smodule %s = %s(%s)" indent (uident name) (extern "Id") (uident @@ extern typ)
     | (`Null | `String "nested"), `Assoc props ->
       let modul = uident name in
       printfn "%smodule %s = struct" indent modul;
