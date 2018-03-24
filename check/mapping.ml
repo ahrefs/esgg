@@ -471,6 +471,7 @@ module Serps = struct
   module Nice_volume = Id_(Long_)
   module Global_volume = Id_(Double_)
   module Nice_global_volume = Id_(Long_)
+  module Hash = Id_(Int64_)
   module Keyword = Id_(Keyword_)
   module Cpc = Id_(Long_)
   module Nice_cpc = Id_(Long_)

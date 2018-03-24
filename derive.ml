@@ -27,6 +27,8 @@ type agg_type =
 | Filters
 | Top_hits
 | Range of string
+| Nested of string
+| Reverse_nested
 
 type single_aggregation = { name : string; agg : agg_type; }
 type aggregation = { this : single_aggregation; sub : aggregation list; }
@@ -46,6 +48,8 @@ let analyze_single_aggregation name agg_type json =
     | "filters" -> Filters
     | "top_hits" -> Top_hits
     | "range" -> Range (field ()) (* TODO keyed *)
+    | "nested" -> Nested (get json "path" U.to_string)
+    | "reverse_nested" -> Reverse_nested
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in
   { name; agg; }
@@ -71,7 +75,7 @@ let rec aggregation (name,x) =
       { this; sub }
     | _ -> Exn.fail "no aggregation?"
   with
-    exn -> Exn.fail ~exn "while analyzing aggregation %S" name
+    exn -> Exn.fail ~exn "aggregation %S" name
 
 let get_aggregations x =
   extract_aggregations x |> fst |> List.map aggregation
@@ -85,7 +89,7 @@ let infer_single_aggregation { name; agg; } sub =
     | Terms field -> [], buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
     | Date_histogram field -> [`Is_date field], buckets `Int
-    | Filter -> [], sub ["doc_count", `Int]
+    | Filter | Nested _ | Reverse_nested -> [], sub ["doc_count", `Int]
     | Filters -> [], `Dict [ "buckets", `Assoc (`String, sub ["doc_count", `Int])]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
     | Range field -> [`Is_num field], `Dict [ "buckets", `List (sub ["doc_count", `Int]) ]

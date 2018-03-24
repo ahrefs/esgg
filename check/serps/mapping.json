@@ -48,6 +48,7 @@
     "nice_volume": { "type": "long" },
     "global_volume": { "type": "double" },
     "nice_global_volume": { "type": "long" },
+    "hash": { "type": "long" },
     "keyword": {
       "type": "keyword",
       "fields": {

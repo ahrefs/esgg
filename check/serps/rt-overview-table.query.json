@@ -1,0 +1,266 @@
+{
+  "body":{
+      "query": {
+          "bool": {
+              "filter": [
+                  {
+                      "term": {
+                          "dashboard_id": "{!! $dashboardId !!}"
+                      }
+                  },
+                  {
+                      "term": {
+                          "provider": "{!! $source !!}"
+                      }
+                  }
+              ],
+              "should": [
+                  {
+                      "range": {
+                          "last_update": {
+                              "gte": "{!! $formattedDateFrom !!}",
+                              "lte": "{!! $formattedDateFrom !!}"
+                          }
+                      }
+                  },
+                  {
+                      "range": {
+                          "last_update": {
+                              "gte": "{!! $formattedDateTo !!}",
+                              "lte": "{!! $formattedDateTo !!}"
+                          }
+                      }
+                  }
+              ],
+              "minimum_should_match": 1
+          }
+      },
+      "size": 0,
+      "aggs": {
+          "keywords": {
+              "terms": {
+                  "size": 10000,
+                  "field": "hash"
+              },
+              "aggs": {
+                  "first_serp": {
+                      "filter": {
+                          "range": {
+                              "last_update": {
+                                  "gte": "{!! $formattedDateFrom !!}",
+                                  "lte": "{!! $formattedDateFrom !!}"
+                              }
+                          }
+                      },
+                      "aggs": {
+                          "nest_positions": {
+                              "nested": {
+                                  "path":"positions"
+                              },
+                              "aggs": {
+                                  "target": {
+                                      "filter": {
+                                          "bool": {
+                                              "filter": [
+                                                  {
+                                                      "term": {
+                                                          "positions.url_hash.{!! $mode !!}": "{!! $target->$mode !!}"
+                                                      }
+                                                  }
+                                              ]
+                                          }
+                                      },
+                                      "aggs": {
+                                          "organic": {
+                                              "filter": {
+                                                  "bool": {
+                                                      "filter": {
+                                                          "range": {
+                                                              "positions.block_pos": {
+                                                                  "gte": 1,
+                                                                  "lte": 100
+                                                              }
+                                                          }
+                                                      }
+                                                  }
+                                              },
+                                              "aggs": {
+                                                  "nest_filters": {
+                                                      "filter": {
+                                                          "bool": {
+                                                              "must_not": [
+                                                                  {
+                                                                      "term": {
+                                                                          "positions.url_hash.exclude.{!! $mode !!}": "{!! $target->$mode !!}"
+                                                                      }
+                                                                  }
+                                                              ]
+                                                          }
+                                                      },
+                                                      "aggs": {
+                                                          "top_position": {
+                                                              "top_hits": {
+                                                                  "size": 1,
+                                                                  "_source": [
+                                                                      "positions.type",
+                                                                      "positions.block_pos",
+                                                                      "positions.url"
+                                                                  ],
+                                                                  "sort": [
+                                                                      {
+                                                                          "positions.ordinal": "asc"
+                                                                      }
+                                                                  ]
+                                                              }
+                                                          }
+                                                      }
+                                                  },
+                                                  "traffic": {
+                                                      "sum": {
+                                                          "field": "positions.stats.volume"
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      }
+                                  }
+                              }
+                          },
+                          "data": {
+                              "top_hits": {
+                                  "size":1,
+                                  "_source": [
+                                      "last_update"
+                                  ]
+                              }
+                          }
+                      }
+                  },
+                  "last_serp": {
+                      "filter": {
+                          "range": {
+                              "last_update": {
+                                  "gte": "{!! $formattedDateTo !!}",
+                                  "lte": "{!! $formattedDateTo !!}"
+                              }
+                          }
+                      },
+                      "aggs": {
+                          "nest_positions": {
+                              "nested": {
+                                  "path": "positions"
+                              },
+                              "aggs": {
+                                  "target": {
+                                      "filter": {
+                                          "bool": {
+                                              "filter": {
+                                                  "term": {
+                                                      "positions.url_hash.{!! $mode !!}": "{!! $target->$mode !!}"
+                                                  }
+                                              }
+                                          }
+                                      },
+                                      "aggs": {
+                                          "organic": {
+                                              "filter": {
+                                                  "bool": {
+                                                      "filter": {
+                                                          "range": {
+                                                              "positions.block_pos": {
+                                                                  "gte": 1,
+                                                                  "lte": 100
+                                                              }
+                                                          }
+                                                      }
+                                                  }
+                                              },
+                                              "aggs": {
+                                                  "nest_filters": {
+                                                      "filter": {
+                                                          "bool": {
+                                                              "must_not": [
+                                                                  {
+                                                                      "term": {
+                                                                          "positions.url_hash.exclude.{!! $mode !!}": "{!! $target->$mode !!}"
+                                                                      }
+                                                                  }
+                                                              ]
+                                                          }
+                                                      },
+                                                      "aggs": {
+                                                          "top_position": {
+                                                              "top_hits": {
+                                                                  "size": 1,
+                                                                  "_source": [
+                                                                      "positions.type",
+                                                                      "positions.block_pos",
+                                                                      "positions.url",
+                                                                      "positions.ordinal"
+                                                                  ],
+                                                                  "sort": [
+                                                                      {
+                                                                          "positions.ordinal": "asc"
+                                                                      }
+                                                                  ]
+                                                              }
+                                                          }
+                                                      }
+                                                  },
+                                                  "traffic": {
+                                                      "sum": {
+                                                          "field": "positions.stats.volume"
+                                                      }
+                                                  }
+                                              }
+                                          },
+                                          "target_features": {
+                                              "terms": {
+                                                  "field": "positions.type",
+                                                  "size": 100,
+                                                  "exclude": [
+                                                      "organic",
+                                                      "local_teaser",
+                                                      "local_pack"
+                                                  ]
+                                              }
+                                          }
+                                      }
+                                  },
+                                  "serp_features": {
+                                      "terms": {
+                                          "field": "positions.type",
+                                          "size": 100,
+                                          "exclude": [
+                                              "organic",
+                                              "local_teaser",
+                                              "local_pack"
+                                          ]
+                                      }
+                                  }
+                              }
+                          },
+                          "data": {
+                              "top_hits": {
+                                  "size": 1,
+                                  "_source": [
+                                      "first_seen",
+                                      "last_update",
+                                      "keyword",
+                                      "language",
+                                      "country",
+                                      "location",
+                                      "nice_volume",
+                                      "difficulty",
+                                      "tags",
+                                      "hash"
+                                  ]
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+  }
+}
