@@ -4,3 +4,4 @@ PKG yojson
 PKG devkit
 PKG atd
 PKG easy-format
+PKG jsonm
