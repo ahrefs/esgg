@@ -2,7 +2,7 @@
 .PHONY: build clean
 
 build:
-	ocamlbuild -use-ocamlfind -package yojson,extlib,devkit,atd,easy-format esgg.native
+	ocamlbuild -use-ocamlfind -package yojson,extlib,devkit,atd,easy-format,jsonm esgg.native
 
 clean:
 	ocamlbuild -clean
