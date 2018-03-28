@@ -73,18 +73,6 @@ let rec aggregation (name,x) =
     exn -> Exn.fail ~exn "aggregation %S" name
 
 let get_aggregations x =
-  let agg =
-    match U.assoc "aggregations" x with
-    | exception _ -> (try Some (U.assoc "aggs" x) with _ -> None)
-    | x -> Some x
-  in
-  match agg with
-  | None -> []
-  | Some agg ->
-  match Tjson.to_yojson_exn agg with
-  | exception _ -> Exn.fail "TODO parameterization of aggregations not supported"
-  | agg ->
-  let x = `Assoc ["aggregations", agg] in
   extract_aggregations x |> fst |> List.map aggregation
 
 let infer_single_aggregation { name; agg; } sub =
