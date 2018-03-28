@@ -28,6 +28,7 @@ end
 let atd_of_es_type = function
 | "long" -> `Int
 | "keyword" | "text" -> `String
+| "date" -> `String
 | s -> Exn.fail "atd_of_es_type: cannot handle %S" s
 
 let typeof mapping t =
