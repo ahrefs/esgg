@@ -1,14 +1,21 @@
 open ExtLib
 
-module Json = Yojson.Safe
-module U = Json.Util
+module U = struct
 
-let get json name conv =
-  match json with
-  | `Assoc a -> (try List.assoc name a |> conv with exn -> Exn.fail ~exn "get %S" name)
-  | _ -> Exn.fail "get %S : not a dict" name
+let member name = function
+| `Assoc l -> (try List.assoc name l with _ -> `Null)
+| _ -> Exn.fail "member %S : not a dict" name
 
-type mapping = { mapping : Json.json; name : string option; }
+let get json name conv = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
+
+let assoc name json = match member name json with `Null -> Exn.fail "assoc %S : not found" name | x -> x
+
+let to_string = function `String (s:string) -> s | _ -> Exn.fail "expected string"
+let to_assoc = function `Assoc a -> a | _ -> Exn.fail "expected dict"
+
+end
+
+type mapping = { mapping : Yojson.Basic.json; name : string option; }
 
 let ref_path mapping path =
   match mapping.name with
@@ -34,8 +41,8 @@ let atd_of_es_type = function
 let typeof mapping t =
   let rec find path schema =
     match path with
-    | [] -> get schema "type" U.to_string
-    | hd::tl -> find tl (List.assoc hd (get schema "properties" U.to_assoc))
+    | [] -> U.get schema "type" U.to_string
+    | hd::tl -> find tl (List.assoc hd (U.get schema "properties" U.to_assoc))
   in
   match find t mapping.mapping with
   | exception _ -> Exn.fail "no such field"

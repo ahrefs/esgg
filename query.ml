@@ -10,7 +10,7 @@ type t =
 | Range of (string * Tjson.t list)
 | Exists of string
 
-let lookup json x = try Some (Tjson.member x json) with _ -> None
+let lookup json x = try Some (U.assoc x json) with _ -> None
 
 let rec extract_clause (query,json) =
   let as_list = function `List l -> l | `Assoc _ as x -> [x] | _ -> Exn.fail "bad %S clause : expected list or dict" query in
@@ -22,7 +22,7 @@ and extract_query q =
   match q with
   | "bool", `Assoc l -> Bool (List.filter_map extract_clause l)
   | "terms", `Assoc [field, x] -> Terms (field, x) (* TODO distinguish terms lookup *)
-  | "term", `Assoc [f, (`Assoc _ as x)] -> Term (f, Tjson.member "value" x)
+  | "term", `Assoc [f, (`Assoc _ as x)] -> Term (f, U.assoc "value" x)
   | "term", `Assoc [f, x] -> Term (f,x)
   | "range", `Assoc [f, (`Assoc _ as x)] -> Range (f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"])
   | "exists", `Assoc ["field", `String f] -> Exists f
@@ -49,7 +49,7 @@ let resolve_types mapping query =
   iter query;
   h
 
-let extract json = extract_query @@ Tjson.member "query" json
+let extract json = extract_query @@ U.assoc "query" json
 
 let convertor t v =
   match t with
