@@ -73,6 +73,18 @@ let rec aggregation (name,x) =
     exn -> Exn.fail ~exn "aggregation %S" name
 
 let get_aggregations x =
+  let agg =
+    match Tjson.member "aggregations" x with
+    | exception _ -> (try Some (Tjson.member "aggs" x) with _ -> None)
+    | x -> Some x
+  in
+  match agg with
+  | None -> []
+  | Some agg ->
+  match Tjson.to_yojson_exn agg with
+  | exception _ -> Exn.fail "TODO parameterization of aggregations not supported"
+  | agg ->
+  let x = `Assoc ["aggregations", agg] in
   extract_aggregations x |> fst |> List.map aggregation
 
 let infer_single_aggregation { name; agg; } sub =
@@ -195,6 +207,10 @@ let derive ?name mapping query =
   let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
   derive_atd @@ resolve_types mapping result;
   ()
+
+let query ?name mapping query =
+  let mapping = { mapping; name } in
+  Query.analyze mapping query
 
 let uident s =
   assert (s <> "");

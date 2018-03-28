@@ -81,7 +81,7 @@ let parse s : t =
   with
     Escape (range,e) -> Exn.fail "E: %s %s" (show_decoded_range range) (show_error e)
 
-let lift_to_string v =
+let lift_to_string map v =
   let module J = Yojson.Basic in
   let module Bi = Bi_outbuf in
   let out = Buffer.create 10 in
@@ -92,7 +92,7 @@ let lift_to_string v =
   | `Bool b -> J.write_bool cur b
   | `String s -> J.write_string cur s
   | `Float f -> J.write_float cur f
-  | `Var name -> bprintf out "%S^%s^" (Bi.contents cur) name; Bi.clear cur
+  | `Var name -> bprintf out "%S^\n  %s^\n  " (Bi.contents cur) (map name); Bi.clear cur
   | `List l -> Bi.add_char cur '['; List.iteri (comma write) l; Bi.add_char cur ']'
   | `Assoc a ->
     Bi.add_char cur '{';
@@ -108,14 +108,13 @@ let rec fold (f:'a->t->'a) acc = function
 | `List l -> List.fold_left (fold f) acc l
 | `Assoc a -> List.fold_left (fun acc (_,v) -> fold f acc v) acc a
 
-let vars v =
+let vars (v:t) =
   List.unique ~cmp:String.equal (fold (fun acc x -> match x with `Var name -> name::acc | _ -> acc) [] v)
 
-let tjson s =
-  let v = parse s in
+let lift map v =
   printf "fun ";
   List.iter (fun var -> printf "~%s " var) (vars v);
-  printf "() -> %s" (lift_to_string v);
+  printf "() ->\n  %s" (lift_to_string map v);
   print_newline ();
   ()
 
