@@ -1,4 +1,4 @@
-module Json = Yojson.Safe
+module Json = Yojson.Basic
 
 let () =
   let json fname = Json.from_file ~fname fname in

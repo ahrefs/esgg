@@ -128,10 +128,6 @@ let parse_json s =
   in
   show @@ Jsonm.decoder @@ `String s
 
-let member name = function
-| `Assoc l -> (try List.assoc name l with _ -> Exn.fail "Tjson.member %S : not found" name)
-| _ -> Exn.fail "Tjson.member %S : not a dict" name
-
 let rec to_yojson_exn = function
 | `Var name -> Exn.fail "of_tjson `Var %S" name
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)

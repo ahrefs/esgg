@@ -31,7 +31,7 @@ type single_aggregation = { name : string; agg : agg_type; }
 type aggregation = { this : single_aggregation; sub : aggregation list; }
 
 let analyze_single_aggregation name agg_type json =
-  let field () = get json "field" U.to_string in
+  let field () = U.(get json "field" to_string) in
   let agg =
     match agg_type with
     | "max" | "min" | "avg" | "sum" -> Simple_metric (field ())
@@ -43,7 +43,7 @@ let analyze_single_aggregation name agg_type json =
     | "filters" -> Filters
     | "top_hits" -> Top_hits
     | "range" -> Range (field ()) (* TODO keyed *)
-    | "nested" -> Nested (get json "path" U.to_string)
+    | "nested" -> Nested U.(get json "path" to_string)
     | "reverse_nested" -> Reverse_nested
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in
@@ -74,8 +74,8 @@ let rec aggregation (name,x) =
 
 let get_aggregations x =
   let agg =
-    match Tjson.member "aggregations" x with
-    | exception _ -> (try Some (Tjson.member "aggs" x) with _ -> None)
+    match U.assoc "aggregations" x with
+    | exception _ -> (try Some (U.assoc "aggs" x) with _ -> None)
     | x -> Some x
   in
   match agg with
