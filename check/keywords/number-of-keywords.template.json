@@ -1,0 +1,20 @@
+{
+        "query": {
+            "bool": {
+                "filter": [{
+                    "term": {
+                        "user_id": $userId
+                    }
+                }, {
+                    "terms": {
+                        "dashboard_id": $dashboardIds
+                 }
+                }],
+                "must_not": [{
+                    "exists": {
+                        "field": "deleted_at"
+                    }
+                }]
+            }
+        }
+}

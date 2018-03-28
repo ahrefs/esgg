@@ -184,6 +184,8 @@ module Keywords = struct
   module Domains_names_paid = Id_(Keyword_)
   module Cpc = Id_(Long_)
   module Nice_cpc = Id_(Long_)
+  module User_id = Id_(Long_)
+  module Dashboard_id = Id_(Long_)
 end (* Keywords *)
 
 module News = struct

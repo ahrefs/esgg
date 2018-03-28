@@ -449,6 +449,8 @@
     "domains_names_organic": { "type": "keyword" },
     "domains_names_paid": { "type": "keyword" },
     "cpc": { "type": "long" },
-    "nice_cpc": { "type": "long" }
+    "nice_cpc": { "type": "long" },
+    "user_id": { "type": "long" },
+    "dashboard_id": { "type": "long" }
   }
 }

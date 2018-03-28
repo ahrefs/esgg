@@ -1,0 +1,254 @@
+{
+    "query": {
+      "bool": {
+        "filter": [
+          {
+            "term": {
+              "dashboard_id": $dashboardId
+            }
+          },
+          {
+            "term": {
+              "provider": $source
+            }
+          },
+          {
+            "terms": {
+              "hash": $filteredHashes
+            }
+          }
+        ],
+        "should": [
+          {
+            "range": {
+              "last_update": {
+                "gte": $formattedDateFrom,
+                "lte": $formattedDateFrom
+              }
+            }
+          },
+          {
+            "range": {
+              "last_update": {
+                "gte": $formattedDateTo,
+                "lte": $formattedDateTo
+              }
+            }
+          }
+        ],
+        "minimum_should_match": 1
+      }
+    },
+    "size": 0,
+    "aggs": {
+      "tags": {
+        "filters": {
+          "filters": $tagsFilters
+        },
+        "aggs": {
+          "first_and_last_serp": {
+            "filters": {
+              "filters": {
+                "first_serp": {
+                  "range": {
+                    "last_update": {
+                      "gte": $formattedDateFrom,
+                      "lte": $formattedDateFrom
+                    }
+                  }
+                },
+                "last_serp": {
+                  "range": {
+                    "last_update": {
+                      "gte": $formattedDateTo,
+                      "lte": $formattedDateTo
+                    }
+                  }
+                }
+              }
+            },
+            "aggs": {
+              "nest_positions": {
+                "nested": {
+                  "path": "positions"
+                },
+                "aggs": {
+                  "target": {
+                    "filter": {
+                      "bool": {
+                        "filter": {
+                          "term": {
+                            "positions.url_hash.$mode": $mode
+                          }
+                        }
+                      }
+                    },
+                    "aggs": {
+                      "organic": {
+                        "filter": {
+                          "bool": {
+                            "filter": {
+                              "range": {
+                                "positions.block_pos": {
+                                  "gte": 1,
+                                  "lte": 100
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "aggs": {
+                          "nest_filters": {
+                            "filter": {
+                              "bool": {
+                                "must_not": [
+                                  {
+                                    "term": {
+                                      "positions.url_hash.exclude.$mode": $mode
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "aggs": {
+                              "avg_top_position": {
+                                "avg": {
+                                  "field": "positions.block_pos"
+                                }
+                              },
+                              "positions": {
+                                "filters": {
+                                  "other_bucket_key": "51-100",
+                                  "filters": {
+                                    "1-3": {
+                                      "terms": {
+                                        "positions.block_pos": [ 1, 2, 3 ]
+                                      }
+                                    },
+                                    "4-10": {
+                                      "terms": {
+                                        "positions.block_pos": [ 4, 5, 6, 7, 8, 9, 10 ]
+                                      }
+                                    },
+                                    "11-50": {
+                                      "range": {
+                                        "positions.block_pos": {
+                                          "gt": 10,
+                                          "lte": 50
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "traffic": {
+                            "sum": {
+                              "field": "positions.stats.volume"
+                            }
+                          },
+                          "nr_pages": {
+                            "cardinality": {
+                              "field": "positions.url.hash"
+                            }
+                          }
+                        }
+                      },
+                      "target_features": {
+                        "terms": {
+                          "field": "positions.type",
+                          "size": 100,
+                          "exclude": [
+                            "organic",
+                            "paid"
+                          ]
+                        },
+                        "aggs": {
+                          "unique": {
+                            "reverse_nested": "emptyObject"
+                          }
+                        }
+                      },
+                      "paid_features": {
+                        "filter": {
+                          "term": {
+                            "positions.type": "paid"
+                          }
+                        },
+                        "aggs": {
+                          "block": {
+                            "terms": {
+                              "field": "positions.block",
+                              "size": 3
+                            },
+                            "aggs": {
+                              "unique": {
+                                "reverse_nested": "emptyObject"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "organic": {
+                    "filter": {
+                      "range": {
+                        "positions.block_pos": {
+                          "gte": 1,
+                          "lte": 100
+                        }
+                      }
+                    },
+                    "aggs": {
+                      "total_traffic": {
+                        "sum": {
+                          "field": "positions.stats.volume"
+                        }
+                      }
+                    }
+                  },
+                  "serp_features": {
+                    "terms": {
+                      "field": "positions.type",
+                      "size": 100,
+                      "exclude": [
+                        "organic",
+                        "paid"
+                      ]
+                    },
+                    "aggs": {
+                      "unique": {
+                        "reverse_nested": "emptyObject"
+                      }
+                    }
+                  },
+                  "paid_features": {
+                    "filter": {
+                      "term": {
+                        "positions.type": "paid"
+                      }
+                    },
+                    "aggs": {
+                      "block": {
+                        "terms": {
+                          "field": "positions.block",
+                          "size": 3
+                        },
+                        "aggs": {
+                          "unique": {
+                            "reverse_nested": "emptyObject"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+}
