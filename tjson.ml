@@ -1,5 +1,6 @@
 open Printf
 open ExtLib
+open Prelude
 
 let pp_string f x =
   let b = Buffer.create 10 in
@@ -7,6 +8,9 @@ let pp_string f x =
   f pf x;
   Format.pp_flush_formatter pf;
   Buffer.contents b
+
+let show_error = pp_string Jsonm.pp_error
+let show_lexeme = pp_string Jsonm.pp_lexeme
 
 let sub_decoded d s =
   let ((l1,c1),(l2,c2)) = Jsonm.decoded_range d in
@@ -26,6 +30,8 @@ let var_name s =
   match Scanf.sscanf s "$%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
   | exception _ -> Exn.fail "bad var name %S" s
   | () -> String.slice ~first:1 s
+
+let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
 let parse s =
   let exception Escape of ((int * int) * (int * int)) * Jsonm.error in
@@ -57,11 +63,11 @@ let parse s =
     let v = value (lexeme d) (fun v _ -> v) d in
     match Jsonm.decode d with
     | `End -> v
-    | `Lexeme l -> Exn.fail "expected End, got %s" (pp_string Jsonm.pp_lexeme l)
-    | `Error e -> Exn.fail "expected End, got %s" (pp_string Jsonm.pp_error e)
+    | `Lexeme l -> Exn.fail "expected End, got %s" (show_lexeme l)
+    | `Error e -> Exn.fail "expected End, got %s" (show_error e)
     | `Await -> assert false
   with
-    Escape (((l1,c1),(l2,c2)),e) -> Exn.fail "E: %d,%d-%d,%d %s" l1 c1 l2 c2 (pp_string Jsonm.pp_error e)
+    Escape (range,e) -> Exn.fail "E: %s %s" (show_decoded_range range) (show_error e)
 
 let lift_to_string v =
   let module J = Yojson.Basic in
@@ -92,10 +98,20 @@ let rec fold f acc = function
 let vars v =
   List.unique ~cmp:String.equal (fold (fun acc x -> match x with `Var name -> name::acc | _ -> acc) [] v)
 
-let parse_show s =
+let tjson s =
   let v = parse s in
   printf "fun ";
   List.iter (fun var -> printf "~%s " var) (vars v);
   printf "() -> %s" (lift_to_string v);
   print_newline ();
   ()
+
+let parse_json s =
+  let rec show d =
+    match Jsonm.decode d with
+    | `Await -> assert false
+    | `End -> printfn "end"
+    | `Error e -> printfn "error %s %s" (show_decoded_range @@ Jsonm.decoded_range d) (show_error e); show d
+    | `Lexeme x -> printfn "%s" (show_lexeme x); show d
+  in
+  show @@ Jsonm.decoder @@ `String s
