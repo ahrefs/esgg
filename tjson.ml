@@ -1,6 +1,18 @@
+(** Template JSON *)
+
 open Printf
 open ExtLib
 open Prelude
+
+type t = [
+| `Assoc of (string * t) list
+| `Bool of bool
+| `Float of float
+| `List of t list
+| `Null
+| `String of string
+| `Var of string
+]
 
 let pp_string f x =
   let b = Buffer.create 10 in
@@ -33,12 +45,12 @@ let var_name s =
 
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
-let parse s =
+let parse s : t =
   let exception Escape of ((int * int) * (int * int)) * Jsonm.error in
   let lexeme d =
     match Jsonm.decode d with
     | `Lexeme l -> (l :> [Jsonm.lexeme|`Var of string])
-    | `Error (`Expected `Value) -> `Var (var_name @@ sub_decoded d s)
+    | `Error (`Expected `Value) -> `Var (var_name @@ String.strip @@ sub_decoded d s)
     | `Error e -> raise (Escape (Jsonm.decoded_range d, e))
     | `End | `Await -> assert false
   in
@@ -74,23 +86,24 @@ let lift_to_string v =
   let module Bi = Bi_outbuf in
   let out = Buffer.create 10 in
   let cur = Bi.create 10 in
+  let comma f = fun i x -> if i <> 0 then Bi.add_char cur ','; f x in
   let rec write = function
   | `Null -> J.write_null cur ()
   | `Bool b -> J.write_bool cur b
   | `String s -> J.write_string cur s
   | `Float f -> J.write_float cur f
-  | `Var name -> bprintf out "%S^%s^" (Bi.contents cur) name; Bi.reset cur
-  | `List l -> Bi.add_char cur '['; List.iter write l; Bi.add_char cur ']'
+  | `Var name -> bprintf out "%S^%s^" (Bi.contents cur) name; Bi.clear cur
+  | `List l -> Bi.add_char cur '['; List.iteri (comma write) l; Bi.add_char cur ']'
   | `Assoc a ->
     Bi.add_char cur '{';
-    List.iter (fun (k,v) -> J.write_string cur k; Bi.add_char cur ':'; write v) a;
+    List.iteri (comma @@ (fun (k,v) -> J.write_string cur k; Bi.add_char cur ':'; write v)) a;
     Bi.add_char cur '}'
   in
   write v;
-  Buffer.add_string out (Bi.contents cur);
+  bprintf out "%S" (Bi.contents cur);
   Buffer.contents out
 
-let rec fold f acc = function
+let rec fold (f:'a->t->'a) acc = function
 | `Null | `Bool _ | `String _ | `Float _ | `Var _ as x -> f acc x
 | `List l -> List.fold_left (fold f) acc l
 | `Assoc a -> List.fold_left (fun acc (_,v) -> fold f acc v) acc a
