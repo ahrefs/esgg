@@ -2,10 +2,7 @@ open ExtLib
 open Prelude
 open Printf
 
-module Json = Yojson.Safe
-module U = Json.Util
-
-type mapping = { mapping : Json.json; name : string option; }
+open Common
 
 type simple_type = [ `Int | `Int64 | `String | `Double ]
 
@@ -32,8 +29,6 @@ type agg_type =
 
 type single_aggregation = { name : string; agg : agg_type; }
 type aggregation = { this : single_aggregation; sub : aggregation list; }
-
-let get json k conv = try U.member k json |> conv with exn -> Exn.fail ~exn "get %S" k
 
 let analyze_single_aggregation name agg_type json =
   let field () = get json "field" U.to_string in
@@ -104,36 +99,12 @@ let rec infer_aggregation { this; sub } =
 
 let analyze_aggregations query = List.map infer_aggregation (get_aggregations query)
 
-let atd_of_es_type = function
-| "long" -> `Int
-| "keyword" | "text" -> `String
-| s -> Exn.fail "atd_of_es_type: cannot handle %S" s
-
-let mod_of_es_name s = List.map String.capitalize s |> String.concat "."
-
 let resolve_types mapping shape : result_type =
-  let typeof t =
-    let rec find path schema =
-      match path with
-      | [] -> get schema "type" U.to_string
-      | hd::tl -> find tl (List.assoc hd (get schema "properties" U.to_assoc))
-    in
-    match find t mapping.mapping with
-    | exception _ -> Exn.fail "no such field"
-    | "long" when List.exists (fun s -> String.exists s "hash") t -> `Int64 (* hack *)
-    | a -> atd_of_es_type a
-  in
-  let typeof x = try typeof x with exn -> Exn.fail ~exn "failed to type field %S" (String.concat "." x) in
-  let ref path =
-    match mapping.name with
-    | None -> path
-    | Some base -> base :: path
-  in
   let rec map = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
-  | `Typeof x -> let path = Stre.nsplitc x '.' in `Ref (ref path, typeof path)
+  | `Typeof x -> let path = ES_name.make x in `Ref (ref_path mapping path, typeof mapping path)
   | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
@@ -205,7 +176,7 @@ let atd_of_shape name (shape:result_type) =
   and map' ?(push=ref_name) shape =
     match shape with
     | #simple_type as c -> [], map_simple_type c
-    | `Ref (ref,t) -> ["doc",["text",String.concat "." ref]], wrap ["module",mod_of_es_name ref] (map_simple_type t)
+    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap ["module",ES_name.to_ocaml ref] (map_simple_type t)
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
