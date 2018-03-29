@@ -36,7 +36,7 @@ end
 
 type simple_type = [ `Int | `Int64 | `String | `Double ]
 
-let simple_type_show = function
+let show_simple_type = function
 | `Int -> "int"
 | `Int64 -> "int64"
 | `String -> "string"

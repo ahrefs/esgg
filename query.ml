@@ -17,7 +17,7 @@ module Variable = struct
 
  let show = function
  | Any -> "any"
- | Property (name,typ) -> sprintf "%s:%s" (ES_name.show name) (simple_type_show typ)
+ | Property (name,typ) -> sprintf "%s:%s" (ES_name.show name) (show_simple_type typ)
 
  let equal a b =
     match a,b with
@@ -78,14 +78,23 @@ let convertor t =
   | `Double -> sprintf "Yojson.Basic.to_string (`Double %s)"
   | `Json -> sprintf "Yojson.Basic.to_string %s"
 
+type var_type = [ simple_type | `Json ]
+
 let analyze mapping json =
   let q = extract json in
   let h = resolve_types mapping q in
-  let map name =
+  let var_unwrap name =
     match Hashtbl.find h name with
-    | exception _ -> convertor `Json name
-    | Property (es_name,typ) -> convertor typ (sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) name)
-    | Any -> convertor `Json name
+    | exception _ -> name
+    | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) name
+    | Any -> name
   in
-  Tjson.lift map json;
-  ()
+  let var_type name =
+    match Hashtbl.find h name with
+    | Property (_,typ) -> (typ:>var_type)
+    | exception _ -> `Json
+    | Any -> `Json
+  in
+  let map name = convertor (var_type name) (var_unwrap name) in
+  let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
+  vars, map

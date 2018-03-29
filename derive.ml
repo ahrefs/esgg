@@ -184,19 +184,10 @@ let atd_of_shape name (shape:result_type) =
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
 
-let derive_atd shape =
-  print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format @@ atd_of_shape "result" shape
-
-let derive ?name mapping query =
-  let mapping = { mapping; name } in
+let output mapping query =
   let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
   let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
-  derive_atd @@ resolve_types mapping result;
-  ()
-
-let query ?name mapping query =
-  let mapping = { mapping; name } in
-  Query.analyze mapping query
+  atd_of_shape "result" (resolve_types mapping result)
 
 let uident s =
   assert (s <> "");
@@ -204,7 +195,7 @@ let uident s =
   let s = match s.[0] with '0'..'9' -> "M_" ^ s | _ -> s in
   String.capitalize s
 
-let reflect name mapping =
+let print_reflect name mapping =
   let extern name = name ^ "_" in
   let rec iter hash nr_indent (name,x) =
     let indent = String.make nr_indent ' ' in
