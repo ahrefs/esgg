@@ -4,8 +4,6 @@ open Printf
 
 open Common
 
-type simple_type = [ `Int | `Int64 | `String | `Double ]
-
 type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
@@ -166,7 +164,7 @@ let atd_of_shape name (shape:result_type) =
       new_type @@ typ name t;
       tname name
   in
-  let map_simple_type = function
+  let atd_of_simple_type = function
     | `Int -> tname "int"
     | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
     | `String -> tname "string"
@@ -175,8 +173,8 @@ let atd_of_shape name (shape:result_type) =
   let rec map ?push shape = snd @@ map' ?push shape
   and map' ?(push=ref_name) shape =
     match shape with
-    | #simple_type as c -> [], map_simple_type c
-    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap ["module",ES_name.to_ocaml ref] (map_simple_type t)
+    | #simple_type as c -> [], atd_of_simple_type c
+    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap ["module",ES_name.to_ocaml ref] (atd_of_simple_type t)
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
