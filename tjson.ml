@@ -112,13 +112,14 @@ let vars (v:t) =
   List.unique ~cmp:String.equal (fold (fun acc x -> match x with `Var name -> name::acc | _ -> acc) [] v)
 
 let lift map v =
-  printf "fun ";
-  List.iter (fun var -> printf "~%s " var) (vars v);
-  printf "() ->\n  %s" (lift_to_string map v);
-  print_newline ();
-  ()
+  let b = Buffer.create 10 in
+  bprintf b "fun ";
+  List.iter (fun var -> bprintf b "~%s " var) (vars v);
+  bprintf b "() ->\n  %s" (lift_to_string map v);
+  bprintf b "\n";
+  Buffer.contents b
 
-let parse_json s =
+let print_parse_json s =
   let rec show d =
     match Jsonm.decode d with
     | `Await -> assert false
