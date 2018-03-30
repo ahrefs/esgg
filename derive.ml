@@ -125,10 +125,18 @@ module Gen = struct
   let tname ?a t = pname ?a t []
   let wrap ocaml t = `Wrap (loc,t,annots ["ocaml",ocaml])
   let tvar t = `Tvar (loc,t)
-  let ptyp name params t = `Type (loc, (name,params,[]), t)
-  let typ name t = ptyp name [] t
+  let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
+  let typ ?a name t = ptyp ?a name [] t
 
 end
+
+let atd_of_simple_type =
+  let open Gen in
+  function
+  | `Int -> tname "int"
+  | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
+  | `String -> tname "string"
+  | `Double -> tname "float"
 
 let atd_of_shape name (shape:result_type) =
   let open Gen in
@@ -164,12 +172,6 @@ let atd_of_shape name (shape:result_type) =
       new_type @@ typ name t;
       tname name
   in
-  let atd_of_simple_type = function
-    | `Int -> tname "int"
-    | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
-    | `String -> tname "string"
-    | `Double -> tname "float"
-  in
   let rec map ?push shape = snd @@ map' ?push shape
   and map' ?(push=ref_name) shape =
     match shape with
@@ -188,6 +190,21 @@ let output mapping query =
   let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
   let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
   atd_of_shape "result" (resolve_types mapping result)
+
+let atd_of_vars l =
+  let open Gen in
+  let atd_of_var_type = function
+  | #simple_type as t -> atd_of_simple_type t
+  | `Json -> tname "basic_json"
+  in
+  let basic_json =
+    if List.exists (fun (_,t) -> t = `Json) l then
+      [typ "basic_json" ~a:["ocaml",["module","Yojson.Basic";"t","json"]] (tname "abstract")]
+    else
+      []
+  in
+  let input = [typ "input" (record (List.map (fun (n,t) -> field n (atd_of_var_type t)) l))] in
+  (loc,[]), (basic_json @ input)
 
 let uident s =
   assert (s <> "");

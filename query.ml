@@ -1,5 +1,6 @@
-open ExtLib
 open Printf
+open ExtLib
+open Prelude
 
 open Common
 
@@ -80,14 +81,14 @@ let convertor t =
 
 type var_type = [ simple_type | `Json ]
 
-let analyze mapping json =
+let analyze_ map mapping json =
   let q = extract json in
   let h = resolve_types mapping q in
   let var_unwrap name =
     match Hashtbl.find h name with
-    | exception _ -> name
-    | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) name
-    | Any -> name
+    | exception _ -> map name
+    | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) (map name)
+    | Any -> map name
   in
   let var_type name =
     match Hashtbl.find h name with
@@ -98,3 +99,5 @@ let analyze mapping json =
   let map name = convertor (var_type name) (var_unwrap name) in
   let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
   vars, map
+
+let analyze = analyze_ id
