@@ -18,7 +18,7 @@ let pp_string f x =
   let b = Buffer.create 10 in
   let pf = Format.formatter_of_buffer b in
   f pf x;
-  Format.pp_flush_formatter pf;
+  Format.pp_print_flush pf ();
   Buffer.contents b
 
 let show_error = pp_string Jsonm.pp_error
@@ -45,8 +45,9 @@ let var_name s =
 
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
+exception Escape of ((int * int) * (int * int)) * Jsonm.error
+
 let parse s : t =
-  let exception Escape of ((int * int) * (int * int)) * Jsonm.error in
   let lexeme d =
     match Jsonm.decode d with
     | `Lexeme l -> (l :> [Jsonm.lexeme|`Var of string])
