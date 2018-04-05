@@ -14,17 +14,19 @@ type t =
 
 module Variable = struct
 
- type t = Property of ES_name.t * simple_type | Any
+ type t = Property of ES_name.t * simple_type | Any | Type of simple_type
 
  let show = function
  | Any -> "any"
+ | Type typ -> show_simple_type typ
  | Property (name,typ) -> sprintf "%s:%s" (ES_name.show name) (show_simple_type typ)
 
  let equal a b =
     match a,b with
     | Any, Any -> true
+    | Type a, Type b -> a = b
     | Property (a,a'), Property (b,b') -> ES_name.equal a b && a' = b'
-    | Property _, Any | Any, Property _ -> false
+    | _ -> false
 
 end
 
@@ -52,22 +54,22 @@ and extract_query q =
     in
     Query (qt, Field { field; values })
 
+let record vars var ti =
+  match Hashtbl.find vars var with
+  | exception _ -> Hashtbl.add vars var ti
+  | x when Variable.equal x ti -> ()
+  | x -> Exn.fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
+
 let resolve_types mapping query =
-  let h = Hashtbl.create 3 in
-  let record var ti =
-    match Hashtbl.find h var with
-    | exception _ -> Hashtbl.add h var ti
-    | x when Variable.equal x ti -> ()
-    | x -> Exn.fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
-  in
-  let record_field var name = record var (Property (name, typeof mapping name)) in
+  let vars = Hashtbl.create 3 in
+  let record_field var name = record vars var (Property (name, typeof mapping name)) in
   let rec iter = function
   | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
   | Query (_,Field { field; values }) -> List.iter (function `Var var -> record_field var (ES_name.make field) | _ -> ()) values
-  | Query (_,Var var) -> record var Any
+  | Query (_,Var var) -> record vars var Any
   in
   iter query;
-  h
+  vars
 
 let extract json = extract_query @@ U.assoc "query" json
 
@@ -81,20 +83,29 @@ let convertor t =
 
 type var_type = [ simple_type | `Json ]
 
+let resolve_constraints vars l =
+  l |> List.iter begin function
+  | `Var (typ, var) -> record vars var (Type typ)
+  | `Is_num _ | `Is_date _ -> ()
+  end
+
 let analyze_ map mapping json =
+  let constraints = List.concat @@ fst @@ List.split @@ Derive.analyze_aggregations json in
   let q = extract json in
-  let h = resolve_types mapping q in
+  let vars = resolve_types mapping q in
+  resolve_constraints vars constraints;
   let var_unwrap name =
-    match Hashtbl.find h name with
+    match Hashtbl.find vars name with
     | exception _ -> map name
     | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) (map name)
-    | Any -> map name
+    | Any | Type _ -> map name
   in
   let var_type name =
-    match Hashtbl.find h name with
+    match Hashtbl.find vars name with
     | Property (_,typ) -> (typ:>var_type)
     | exception _ -> `Json
     | Any -> `Json
+    | Type typ -> (typ:>var_type)
   in
   let map name = convertor (var_type name) (var_unwrap name) in
   let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
