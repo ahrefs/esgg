@@ -1,2 +1,2 @@
 true: bin_annot, debug, thread
-true: strict_formats, strict_sequence, warn(+a-40-42-44-48)
+true: strict_formats, strict_sequence, warn(+a-4-40-42-44-48)

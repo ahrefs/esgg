@@ -15,7 +15,7 @@ type result_type = [
 type agg_type =
 | Simple_metric of string
 | Cardinality of string
-| Terms of string
+| Terms of { field : string; size : Tjson.t }
 | Histogram of string
 | Date_histogram of string
 | Filter
@@ -34,7 +34,7 @@ let analyze_single_aggregation name agg_type json =
     match agg_type with
     | "max" | "min" | "avg" | "sum" -> Simple_metric (field ())
     | "cardinality" -> Cardinality (field ())
-    | "terms" | "significant_terms" -> Terms (field ())
+    | "terms" | "significant_terms" -> Terms { field = field (); size = U.member "size" json }
     | "histogram" -> Histogram (field ())
     | "date_histogram" -> Date_histogram (field ())
     | "filter" -> Filter
@@ -79,7 +79,7 @@ let infer_single_aggregation { name; agg; } sub =
     match agg with
     | Simple_metric field -> [`Is_num field], sub [ "value", `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
-    | Terms field -> [], buckets (`Typeof field)
+    | Terms { field; size } -> (match size with `Var var -> [`Var (`Int, var)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
     | Date_histogram field -> [`Is_date field], buckets `Int
     | Filter | Nested _ | Reverse_nested -> [], sub ["doc_count", `Int]
