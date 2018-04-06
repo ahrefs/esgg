@@ -8,7 +8,7 @@ type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
-  | `Ref of (string list * simple_type) (* reference field in mapping *)
+  | `Ref of (ES_name.t * simple_type) (* reference field in mapping *)
   | simple_type
   ]
 
@@ -102,7 +102,7 @@ let resolve_types mapping shape : result_type =
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
-  | `Typeof x -> let path = ES_name.make x in `Ref (ref_path mapping path, typeof mapping path)
+  | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
   | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
