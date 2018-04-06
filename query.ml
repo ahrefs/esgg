@@ -77,9 +77,9 @@ let convertor t =
   match t with
   | `Int -> sprintf "string_of_int %s"
   | `Int64 -> sprintf "Int64.to_string %s"
-  | `String -> sprintf "Yojson.Basic.to_string (`String %s)"
-  | `Double -> sprintf "Yojson.Basic.to_string (`Double %s)"
-  | `Json -> sprintf "Yojson.Basic.to_string %s"
+  | `String -> sprintf "Json.to_string (`String %s)"
+  | `Double -> sprintf "Json.to_string (`Double %s)"
+  | `Json -> sprintf "Json.to_string %s"
 
 type var_type = [ simple_type | `Json ]
 

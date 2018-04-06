@@ -199,7 +199,7 @@ let atd_of_vars l =
   in
   let basic_json =
     if List.exists (fun (_,t) -> t = `Json) l then
-      [typ "basic_json" ~a:["ocaml",["module","Yojson.Basic";"t","json"]] (tname "abstract")]
+      [typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")]
     else
       []
   in
