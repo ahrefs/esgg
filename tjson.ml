@@ -48,12 +48,20 @@ let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 exception Escape of ((int * int) * (int * int)) * Jsonm.error
 
 let parse s : t =
-  let lexeme d =
-    match Jsonm.decode d with
+  let rec lexeme d =
+    match Jsonm.Uncut.decode d with
     | `Lexeme l -> (l :> [Jsonm.lexeme|`Var of string])
+    | `Comment _ | `White _ -> lexeme d (* skip *)
     | `Error (`Expected `Value) -> `Var (var_name @@ String.strip @@ sub_decoded d s)
     | `Error e -> raise (Escape (Jsonm.decoded_range d, e))
     | `End | `Await -> assert false
+  in
+  let rec finish d =
+    match Jsonm.Uncut.decode d with
+    | `End -> ()
+    | `Comment _ | `White _ -> finish d
+    | `Await -> assert false
+    | _  -> Exn.fail "expected End"
   in
   let rec value v k d =
     match v with
@@ -74,11 +82,8 @@ let parse s : t =
   let d = Jsonm.decoder @@ `String s in
   try
     let v = value (lexeme d) (fun v _ -> v) d in
-    match Jsonm.decode d with
-    | `End -> v
-    | `Lexeme l -> Exn.fail "expected End, got %s" (show_lexeme l)
-    | `Error e -> Exn.fail "expected End, got %s" (show_error e)
-    | `Await -> assert false
+    finish d;
+    v
   with
     Escape (range,e) -> Exn.fail "E: %s %s" (show_decoded_range range) (show_error e)
 
