@@ -3,7 +3,7 @@ type 'a buckets = { buckets: 'a list }
 type total = { total: int }
 type hits = { hits: total }
 type t0 = {
-  key <doc text="serps.urls_hashes_top10.rootdomain">:
+  key <doc text="urls_hashes_top10.rootdomain">:
     int <ocaml repr="int64"> wrap
       <ocaml module="Serps.Urls_hashes_top10.Rootdomain">;
   doc_count: int;

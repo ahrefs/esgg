@@ -65,7 +65,7 @@ let resolve_types mapping query =
   let record_field var name = record vars var (Property (name, typeof mapping name)) in
   let rec iter = function
   | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
-  | Query (_,Field { field; values }) -> List.iter (function `Var var -> record_field var (ES_name.make field) | _ -> ()) values
+  | Query (_,Field { field; values }) -> List.iter (function `Var var -> record_field var (ES_name.make mapping field) | _ -> ()) values
   | Query (_,Var var) -> record vars var Any
   in
   iter query;

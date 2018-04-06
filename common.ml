@@ -1,4 +1,5 @@
 open ExtLib
+open Prelude
 
 module U = struct
 
@@ -17,18 +18,14 @@ end
 
 type mapping = { mapping : Yojson.Basic.json; name : string option; }
 
-let ref_path mapping path =
-  match mapping.name with
-  | None -> path
-  | Some base -> base :: path
-
 module ES_name = struct
 
-type t = string list
+type t = (string option * string list)
 
-let to_ocaml s = List.map String.capitalize s |> String.concat "."
-let make s = Stre.nsplitc s '.'
-let show = String.concat "."
+let to_ocaml (modname,l) = (List.filter_map id [modname] @ l) |> List.map String.capitalize |> String.concat "."
+let get_path = snd
+let make mapping s = mapping.name, Stre.nsplitc s '.'
+let show (_,l) = String.concat "." l
 
 let equal (a:t) b = a = b
 
@@ -55,9 +52,9 @@ let typeof mapping t : simple_type =
     | [] -> U.get schema "type" U.to_string
     | hd::tl -> find tl (List.assoc hd (U.get schema "properties" U.to_assoc))
   in
-  match find t mapping.mapping with
+  match find (ES_name.get_path t) mapping.mapping with
   | exception _ -> Exn.fail "no such field"
-  | "long" when List.exists (fun s -> String.exists s "hash") t -> `Int64 (* hack *)
+  | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path t) -> `Int64 (* hack *)
   | a -> simple_of_es_type a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
