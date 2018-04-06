@@ -8,12 +8,8 @@ let tjson tjson = print_endline @@ Tjson.lift tjson
 
 let input_direct mapping query =
   let (vars,map) = Query.analyze mapping query in
-  let show_var_type = function
-  | `Json -> "json"
-  | #Common.simple_type as t -> Common.show_simple_type t
-  in
   if vars <> [] then printfn "(*";
-  vars |> List.iter (fun (name,typ) -> printfn "%s : %s" name (show_var_type typ));
+  vars |> List.iter (fun (name,typ) -> printfn "%s : %s" name (Common.show_var_type typ));
   if vars <> [] then printfn "*)";
   print_string "let make = ";
   print_endline @@ Tjson.lift_ map query

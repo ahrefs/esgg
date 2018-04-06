@@ -8,7 +8,7 @@ type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
-  | `Ref of (ES_name.t * simple_type) (* reference field in mapping *)
+  | ref_type
   | simple_type
   ]
 
@@ -138,6 +138,8 @@ let atd_of_simple_type =
   | `String -> tname "string"
   | `Double -> tname "float"
 
+let wrap_ref ref t = Gen.wrap ["module",ES_name.to_ocaml ref] (atd_of_simple_type t)
+
 let atd_of_shape name (shape:result_type) =
   let open Gen in
   let names = Hashtbl.create 10 in
@@ -176,7 +178,7 @@ let atd_of_shape name (shape:result_type) =
   and map' ?(push=ref_name) shape =
     match shape with
     | #simple_type as c -> [], atd_of_simple_type c
-    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap ["module",ES_name.to_ocaml ref] (atd_of_simple_type t)
+    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref t
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
@@ -195,6 +197,7 @@ let atd_of_vars l =
   let open Gen in
   let atd_of_var_type = function
   | #simple_type as t -> atd_of_simple_type t
+  | `Ref (ref,t) -> wrap_ref ref t
   | `Json -> tname "basic_json"
   in
   let basic_json =
