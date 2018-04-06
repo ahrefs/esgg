@@ -32,12 +32,19 @@ let equal (a:t) b = a = b
 end
 
 type simple_type = [ `Int | `Int64 | `String | `Double ]
+type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
+type wire_type = [ simple_type | `Json ]
+type var_type = [ wire_type | ref_type ]
 
 let show_simple_type = function
 | `Int -> "int"
 | `Int64 -> "int64"
 | `String -> "string"
 | `Double -> "float"
+
+let show_var_type = function
+| `Json -> "json"
+| `Ref (_,t) | (#simple_type as t) -> show_simple_type t
 
 let simple_of_es_type = function
 | "long" -> `Int

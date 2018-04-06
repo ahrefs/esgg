@@ -74,14 +74,17 @@ let resolve_types mapping query =
 let extract json = extract_query @@ U.assoc "query" json
 
 let convertor t =
+  let t =
+    match t with
+    | `Ref (_,t) -> (t:>wire_type)
+    | #wire_type as t -> t
+  in
   match t with
   | `Int -> sprintf "string_of_int %s"
   | `Int64 -> sprintf "Int64.to_string %s"
   | `String -> sprintf "Json.to_string (`String %s)"
   | `Double -> sprintf "Json.to_string (`Double %s)"
   | `Json -> sprintf "Json.to_string %s"
-
-type var_type = [ simple_type | `Json ]
 
 let resolve_constraints vars l =
   l |> List.iter begin function
@@ -100,9 +103,9 @@ let analyze_ map mapping json =
     | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) (map name)
     | Any | Type _ -> map name
   in
-  let var_type name =
+  let var_type name : var_type =
     match Hashtbl.find vars name with
-    | Property (_,typ) -> (typ:>var_type)
+    | Property (name,typ) -> `Ref (name,typ)
     | exception _ -> `Json
     | Any -> `Json
     | Type typ -> (typ:>var_type)
