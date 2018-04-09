@@ -74,14 +74,14 @@ let get_aggregations x =
   extract_aggregations x |> fst |> List.map aggregation
 
 let infer_single_aggregation { name; agg; } sub =
-  let buckets t = `Dict [ "buckets", `List (sub ["key", t; "doc_count", `Int]) ] in
+  let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
   let (cstr,shape) =
     match agg with
     | Simple_metric field -> [`Is_num field], sub [ "value", `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms { field; size } -> (match size with `Var var -> [`Var (`Int, var)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
-    | Date_histogram field -> [`Is_date field], buckets `Int
+    | Date_histogram field -> [`Is_date field], buckets `Int ~extra:["key_as_string", `String]
     | Filter | Nested _ | Reverse_nested -> [], sub ["doc_count", `Int]
     | Filters -> [], `Dict [ "buckets", `Assoc (`String, sub ["doc_count", `Int])]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
