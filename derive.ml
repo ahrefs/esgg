@@ -9,7 +9,7 @@ type result_type = [
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
   | ref_type
-  | simple_type
+  | nullable_type
   ]
 
 type agg_type =
@@ -77,7 +77,7 @@ let infer_single_aggregation { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
   let (cstr,shape) =
     match agg with
-    | Simple_metric field -> [`Is_num field], sub [ "value", `Double ]
+    | Simple_metric field -> [`Is_num field], sub [ "value", `Maybe `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms { field; size } -> (match size with `Var var -> [`Var (`Int, var)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
@@ -103,7 +103,7 @@ let resolve_types mapping shape : result_type =
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Assoc (k,v) -> `Assoc (map k, map v)
   | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
-  | `Int64 | `Int | `String | `Double as t -> t
+  | `Maybe _ | `Int64 | `Int | `String | `Double as t -> t
   in
   map shape
 
@@ -123,6 +123,7 @@ module Gen = struct
   let field ?(a=[]) n t = `Field (loc, (n, `Required, annots a), t)
   let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
   let tname ?a t = pname ?a t []
+  let nullable ?(a=[]) t = `Nullable(loc,t,annots a)
   let wrap ocaml t = `Wrap (loc,t,annots ["ocaml",ocaml])
   let tvar t = `Tvar (loc,t)
   let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
@@ -137,6 +138,10 @@ let atd_of_simple_type =
   | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
   | `String -> tname "string"
   | `Double -> tname "float"
+
+let atd_of_nullable_type = function
+| #simple_type as t -> atd_of_simple_type t
+| `Maybe t -> Gen.nullable @@ atd_of_simple_type t
 
 let wrap_ref ref t = Gen.wrap ["module",ES_name.to_ocaml ref] (atd_of_simple_type t)
 
@@ -177,7 +182,7 @@ let atd_of_shape name (shape:result_type) =
   let rec map ?push shape = snd @@ map' ?push shape
   and map' ?(push=ref_name) shape =
     match shape with
-    | #simple_type as c -> [], atd_of_simple_type c
+    | #nullable_type as c -> [], atd_of_nullable_type c
     | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref t
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
@@ -196,7 +201,7 @@ let output mapping query =
 let atd_of_vars l =
   let open Gen in
   let atd_of_var_type = function
-  | #simple_type as t -> atd_of_simple_type t
+  | #nullable_type as t -> atd_of_nullable_type t
   | `Ref (ref,t) -> wrap_ref ref t
   | `Json -> tname "basic_json"
   in
