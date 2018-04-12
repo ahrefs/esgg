@@ -14,18 +14,23 @@ type t =
 
 module Variable = struct
 
- type t = Property of ES_name.t * simple_type | Any | Type of simple_type
+ type multi = One | Many
+ type t = Property of multi * ES_name.t * simple_type | Any | Type of simple_type
 
  let show = function
  | Any -> "any"
  | Type typ -> show_simple_type typ
- | Property (name,typ) -> sprintf "%s:%s" (ES_name.show name) (show_simple_type typ)
+ | Property (multi,name,typ) ->
+  let s = sprintf "%s:%s" (ES_name.show name) (show_simple_type typ) in
+  match multi with
+  | One -> s
+  | Many -> sprintf "[%s]" s
 
  let equal a b =
     match a,b with
     | Any, Any -> true
     | Type a, Type b -> a = b
-    | Property (a,a'), Property (b,b') -> ES_name.equal a b && a' = b'
+    | Property (m1,n1,t1), Property (m2,n2,t2) -> ES_name.equal n1 n2 && t1 = t2 && m1 = m2
     | _ -> false
 
 end
@@ -62,10 +67,13 @@ let record vars var ti =
 
 let resolve_types mapping query =
   let vars = Hashtbl.create 3 in
-  let record_field var name = record vars var (Property (name, typeof mapping name)) in
   let rec iter = function
   | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
-  | Query (_,Field { field; values }) -> List.iter (function `Var var -> record_field var (ES_name.make mapping field) | _ -> ()) values
+  | Query (qt,Field { field; values }) ->
+    let name = ES_name.make mapping field in
+    let typ = typeof mapping name in
+    let multi = match qt with "terms" -> Variable.Many | _ -> One in
+    List.iter (function `Var var -> record vars var (Property (multi,name,typ))  | _ -> ()) values
   | Query (_,Var var) -> record vars var Any
   in
   iter query;
@@ -73,18 +81,25 @@ let resolve_types mapping query =
 
 let extract json = extract_query @@ U.assoc "query" json
 
-let convertor t =
-  let t =
-    match t with
-    | `Ref (_,t) -> (t:>wire_type)
-    | #wire_type as t -> t
-  in
+let convert_wire_type = function
+| `Int -> sprintf "string_of_int %s"
+| `Int64 -> sprintf "Int64.to_string %s"
+| `String -> sprintf "Json.to_string (`String %s)"
+| `Double -> sprintf "Json.to_string (`Double %s)"
+| `Json -> sprintf "Json.to_string %s"
+
+let convertor (t:var_type) =
   match t with
-  | `Int -> sprintf "string_of_int %s"
-  | `Int64 -> sprintf "Int64.to_string %s"
-  | `String -> sprintf "Json.to_string (`String %s)"
-  | `Double -> sprintf "Json.to_string (`Double %s)"
-  | `Json -> sprintf "Json.to_string %s"
+  | `Ref (_,t) -> convert_wire_type t
+  | #wire_type as t -> convert_wire_type t
+  | `List (`Ref (_,t)) ->
+    let mapper = match t with
+    | `Int -> "`Int x"
+    | `Int64 -> "`String (Int64.to_string x)"
+    | `String -> "`String x"
+    | `Double -> "`Double x"
+    in
+    sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" mapper
 
 let resolve_constraints vars l =
   l |> List.iter begin function
@@ -100,12 +115,15 @@ let analyze_ map mapping json =
   let var_unwrap name =
     match Hashtbl.find vars name with
     | exception _ -> map name
-    | Property (es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name) (map name)
+    | Property (multi,es_name,_) ->
+      let multi = match multi with Many -> "List.map " | One -> "" in
+      sprintf "(%s%s.unwrap %s)" multi (ES_name.to_ocaml es_name) (map name)
     | Any | Type _ -> map name
   in
   let var_type name : var_type =
     match Hashtbl.find vars name with
-    | Property (name,typ) -> `Ref (name,typ)
+    | Property (One,name,typ) -> `Ref (name,typ)
+    | Property (Many,name,typ) -> `List (`Ref (name,typ))
     | exception _ -> `Json
     | Any -> `Json
     | Type typ -> (typ:>var_type)

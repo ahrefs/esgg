@@ -35,7 +35,7 @@ type simple_type = [ `Int | `Int64 | `String | `Double ]
 type nullable_type = [ simple_type | `Maybe of simple_type ]
 type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
 type wire_type = [ simple_type | `Json ]
-type var_type = [ wire_type | ref_type ]
+type var_type = [ wire_type | ref_type | `List of ref_type ]
 
 let show_simple_type = function
 | `Int -> "int"
@@ -50,6 +50,7 @@ let show_nullable_type = function
 let show_var_type = function
 | `Json -> "json"
 | `Ref (_,t) | (#simple_type as t) -> show_simple_type t
+| `List (`Ref (_,t)) -> Printf.sprintf "[%s]" (show_simple_type t)
 
 let simple_of_es_type = function
 | "long" -> `Int

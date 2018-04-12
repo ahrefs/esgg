@@ -200,9 +200,10 @@ let output mapping query =
 
 let atd_of_vars l =
   let open Gen in
-  let atd_of_var_type = function
-  | #nullable_type as t -> atd_of_nullable_type t
+  let atd_of_var_type : var_type -> Atd_ast.type_expr = function
+  | #simple_type as t -> atd_of_simple_type t
   | `Ref (ref,t) -> wrap_ref ref t
+  | `List (`Ref (ref,t)) -> list (wrap_ref ref t)
   | `Json -> tname "basic_json"
   in
   let basic_json =
