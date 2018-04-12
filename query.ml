@@ -88,18 +88,19 @@ let convert_wire_type = function
 | `Double -> sprintf "Json.to_string (`Double %s)"
 | `Json -> sprintf "Json.to_string %s"
 
-let convertor (t:var_type) =
+let convertor (t:var_type) unwrap name =
   match t with
-  | `Ref (_,t) -> convert_wire_type t
-  | #wire_type as t -> convert_wire_type t
+  | `Ref (_,t) -> convert_wire_type t (unwrap name)
+  | #wire_type as t -> convert_wire_type t (unwrap name)
   | `List (`Ref (_,t)) ->
-    let mapper = match t with
-    | `Int -> "`Int x"
-    | `Int64 -> "`String (Int64.to_string x)"
-    | `String -> "`String x"
-    | `Double -> "`Double x"
+    let mapper =
+      sprintf @@ match t with
+      | `Int -> "`Int %s"
+      | `Int64 -> "`String (Int64.to_string %s)"
+      | `String -> "`String %s"
+      | `Double -> "`Double %s"
     in
-    sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" mapper
+    sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (mapper @@ unwrap "x") name
 
 let resolve_constraints vars l =
   l |> List.iter begin function
@@ -114,11 +115,9 @@ let analyze_ map mapping json =
   resolve_constraints vars constraints;
   let var_unwrap name =
     match Hashtbl.find vars name with
-    | exception _ -> map name
-    | Property (multi,es_name,_) ->
-      let multi = match multi with Many -> "List.map " | One -> "" in
-      sprintf "(%s%s.unwrap %s)" multi (ES_name.to_ocaml es_name) (map name)
-    | Any | Type _ -> map name
+    | exception _ -> id
+    | Property (_,es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name)
+    | Any | Type _ -> id
   in
   let var_type name : var_type =
     match Hashtbl.find vars name with
@@ -128,7 +127,7 @@ let analyze_ map mapping json =
     | Any -> `Json
     | Type typ -> (typ:>var_type)
   in
-  let map name = convertor (var_type name) (var_unwrap name) in
+  let map name = convertor (var_type name) (var_unwrap name) (map name) in
   let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
   vars, map
 
