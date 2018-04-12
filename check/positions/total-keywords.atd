@@ -1,7 +1,7 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type total = { total: int }
-type value = { value: float }
+type value = { value: float nullable }
 type t0 = {
   key <doc text="country">: string wrap <ocaml module="Positions.Country">;
   doc_count: int;

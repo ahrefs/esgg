@@ -1,7 +1,7 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type total = { total: int }
-type value = { value: float }
+type value = { value: float nullable }
 type hits = { hits: total }
 type t0 = { doc_count: int; top2: hits }
 type t1 = {

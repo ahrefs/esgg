@@ -2,6 +2,6 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type total = { total: int }
 type t0 = { key: int; doc_count: int; key_as_string: string }
-type value = { value: float }
+type value = { value: float nullable }
 type t1 = { byMonth: t0 buckets; totalVolume: value }
 type result = { hits: total; aggregations: t1 }
