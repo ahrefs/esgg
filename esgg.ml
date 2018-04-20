@@ -14,10 +14,12 @@ let input_direct mapping json =
   print_string "let make = ";
   print_endline @@ Tjson.lift_ map json
 
+let show_as_record_fields vars =
+  Printf.sprintf "{%s}" @@ String.concat "; " @@ List.map (fun (name,_typ) -> name) vars
+
 let input_j mapping json =
-  let map name = "x."^name in
-  let (vars,map,json) = Query.analyze_ map mapping json in
-  printfn "let make %s =" (if vars = [] then "()" else "x");
+  let (vars,map,json) = Query.analyze mapping json in
+  printfn "let make %s =" (if vars = [] then "()" else show_as_record_fields vars);
   printfn "  %s" (Tjson.lift_to_string map json)
 
 let vars mapping query =

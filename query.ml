@@ -111,7 +111,7 @@ let resolve_constraints vars l =
   | `Is_num _ | `Is_date _ -> ()
   end
 
-let analyze_ map mapping json =
+let analyze mapping json =
   let constraints = List.concat @@ fst @@ List.split @@ Derive.analyze_aggregations json in
   let q = extract json in
   let vars = resolve_types mapping q.query in
@@ -130,7 +130,7 @@ let analyze_ map mapping json =
     | Any -> `Json
     | Type typ -> (typ:>var_type)
   in
-  let map name = convertor (var_type name) (var_unwrap name) (map name) in
+  let map name = convertor (var_type name) (var_unwrap name) name in
   let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
   let json =
     match json with
@@ -138,5 +138,3 @@ let analyze_ map mapping json =
     | _ -> assert false
   in
   vars, map, json
-
-let analyze = analyze_ id
