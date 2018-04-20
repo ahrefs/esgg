@@ -6,22 +6,22 @@ let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.for
 
 let tjson tjson = print_endline @@ Tjson.lift tjson
 
-let input_direct mapping query =
-  let (vars,map) = Query.analyze mapping query in
+let input_direct mapping json =
+  let (vars,map,json) = Query.analyze mapping json in
   if vars <> [] then printfn "(*";
   vars |> List.iter (fun (name,typ) -> printfn "%s : %s" name (Common.show_var_type typ));
   if vars <> [] then printfn "*)";
   print_string "let make = ";
-  print_endline @@ Tjson.lift_ map query
+  print_endline @@ Tjson.lift_ map json
 
-let input_j mapping query =
+let input_j mapping json =
   let map name = "x."^name in
-  let (vars,map) = Query.analyze_ map mapping query in
+  let (vars,map,json) = Query.analyze_ map mapping json in
   printfn "let make %s =" (if vars = [] then "()" else "x");
-  printfn "  %s" (Tjson.lift_to_string map query)
+  printfn "  %s" (Tjson.lift_to_string map json)
 
 let vars mapping query =
-  let (vars,_) = Query.analyze mapping query in
+  let (vars,_,_) = Query.analyze mapping query in
   print_atd @@ Derive.atd_of_vars vars
 
 let output mapping query = print_atd @@ Derive.output mapping query
