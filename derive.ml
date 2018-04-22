@@ -123,7 +123,8 @@ module Gen = struct
   let field ?(a=[]) n t = `Field (loc, (n, `Required, annots a), t)
   let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
   let tname ?a t = pname ?a t []
-  let nullable ?(a=[]) t = `Nullable(loc,t,annots a)
+  let nullable ?(a=[]) t = `Nullable (loc,t,annots a)
+  let option ?(a=[]) t = `Option (loc,t,annots a)
   let wrap ocaml t = `Wrap (loc,t,annots ["ocaml",ocaml])
   let tvar t = `Tvar (loc,t)
   let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
@@ -144,6 +145,16 @@ let atd_of_nullable_type = function
 | `Maybe t -> Gen.nullable @@ atd_of_simple_type t
 
 let wrap_ref ref t = Gen.wrap ["module",ES_name.to_ocaml ref] (atd_of_simple_type t)
+
+let atd_of_var_type' : var_type' -> Atd_ast.type_expr = function
+| #simple_type as t -> atd_of_simple_type t
+| `Ref (ref,t) -> wrap_ref ref t
+| `List (`Ref (ref,t)) -> Gen.list (wrap_ref ref t)
+| `Json -> Gen.tname "basic_json"
+
+let atd_of_var_type : var_type -> Atd_ast.type_expr = function
+| #var_type' as t -> atd_of_var_type' t
+| `Optional t -> Gen.option @@ atd_of_var_type' t
 
 let atd_of_shape name (shape:result_type) =
   let open Gen in
@@ -200,12 +211,6 @@ let output mapping query =
 
 let atd_of_vars l =
   let open Gen in
-  let atd_of_var_type : var_type -> Atd_ast.type_expr = function
-  | #simple_type as t -> atd_of_simple_type t
-  | `Ref (ref,t) -> wrap_ref ref t
-  | `List (`Ref (ref,t)) -> list (wrap_ref ref t)
-  | `Json -> tname "basic_json"
-  in
   let basic_json =
     if List.exists (fun (_,t) -> t = `Json) l then
       [typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")]

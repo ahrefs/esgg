@@ -108,7 +108,7 @@ let convert_wire_type = function
 | `Double -> sprintf "Json.to_string (`Double %s)"
 | `Json -> sprintf "Json.to_string %s"
 
-let convertor (t:var_type) unwrap name =
+let convertor (t:var_type') unwrap name =
   match t with
   | `Ref (_,t) -> convert_wire_type t (unwrap name)
   | #wire_type as t -> convert_wire_type t (unwrap name)
@@ -139,16 +139,19 @@ let analyze mapping json =
     | Property (_,es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name)
     | Any | Type _ -> id
   in
-  let var_type name : var_type =
+  let var_type name : var_type' =
     match Hashtbl.find vars name with
     | Property (One,name,typ) -> `Ref (name,typ)
     | Property (Many,name,typ) -> `List (`Ref (name,typ))
     | exception _ -> `Json
     | Any -> `Json
-    | Type typ -> (typ:>var_type)
+    | Type typ -> (typ:>var_type')
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
-  let vars = Tjson.vars ~optional:true json |> List.map begin fun (var:Tjson.var) -> var.name, var_type var.name end in
+  let vars = Tjson.vars ~optional:true json |> List.map begin fun (var:Tjson.var) ->
+    let typ = var_type var.name in
+    var.name, if var.optional then `Optional typ else (typ:>var_type) end
+  in
   let json =
     match json with
     | `Assoc l -> `Assoc (List.map (function "query",_ -> "query", q.json | x -> x) l)
