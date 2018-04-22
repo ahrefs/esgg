@@ -6,7 +6,7 @@ open Common
 
 (* type query_type = Term | Terms | Range | Exists *)
 type query_type = string
-type equation = Field of { field : string; values : Tjson.t list } | Var of string
+type equation = Field of { field : string; values : Tjson.t list } | Var of Tjson.var
 
 type query =
 | Bool of (string * t list) list
@@ -38,16 +38,26 @@ end
 
 let lookup json x = try Some (U.assoc x json) with _ -> None
 
-let rec extract_clause (query,json) =
-  let as_list = function `List l -> l | `Assoc _ as x -> [x] | _ -> Exn.fail "bad %S clause : expected list or dict" query in
-  match query with
-  | "must" | "must_not" | "should" | "filter" -> Some (query, List.map extract_query @@ as_list json)
-  | _ -> None
+let rec extract_clause (clause,json) =
+  match clause with
+  | "must" | "must_not" | "should" | "filter" ->
+    begin match json with
+    | `Assoc _ as x -> let q = extract_query x in q.json, (clause, [q])
+    | `List l ->
+      let l = List.map extract_query l in
+      let json = `List (List.map (fun q -> q.json) l) in
+      json, (clause, l)
+    | _ -> Exn.fail "bad %S clause : expected list or dict" clause
+    end
+  | _ -> Exn.fail "unsupported bool clause %S" clause
 and extract_query json =
   let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
-  let query = match q with
-  | "bool", `Assoc l -> Bool (List.filter_map extract_clause l)
-  | qt, `Var x -> Query (qt, Var x)
+  let (json,query) = match q with
+  | "bool", `Assoc l ->
+    let bool = List.map extract_clause l in
+    let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
+    json, Bool (List.map snd bool)
+  | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
       match qt, v with
@@ -58,7 +68,13 @@ and extract_query json =
       | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
-    Query (qt, Field { field; values })
+    json, Query (qt, Field { field; values })
+  in
+  let json =
+    match List.filter_map (fun { Tjson.optional; name } -> if optional then Some name else None) @@ Tjson.vars ~optional:false json with
+    | [] -> json
+    | [var_name] -> `Optional (var_name, json)
+    | _ -> Exn.fail "multiple optional vars in one scope not supported"
   in
   { query; json }
 
@@ -70,14 +86,15 @@ let record vars var ti =
 
 let resolve_types mapping query =
   let vars = Hashtbl.create 3 in
-  let rec iter = function
-  | Bool l -> List.iter (fun (_typ,l) -> List.iter (fun { query; json=_ } -> iter query) l) l
-  | Query (qt,Field { field; values }) ->
-    let name = ES_name.make mapping field in
-    let typ = typeof mapping name in
-    let multi = match qt with "terms" -> Variable.Many | _ -> One in
-    List.iter (function `Var var -> record vars var (Property (multi,name,typ))  | _ -> ()) values
-  | Query (_,Var var) -> record vars var Any
+  let rec iter { query; json=_ } =
+    match query with
+    | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
+    | Query (qt,Field { field; values }) ->
+      let name = ES_name.make mapping field in
+      let typ = typeof mapping name in
+      let multi = match qt with "terms" -> Variable.Many | _ -> One in
+      List.iter (function `Var (var:Tjson.var) -> record vars var.name (Property (multi,name,typ))  | _ -> ()) values
+    | Query (_,Var var) -> record vars var.name Any
   in
   iter query;
   vars
@@ -107,14 +124,14 @@ let convertor (t:var_type) unwrap name =
 
 let resolve_constraints vars l =
   l |> List.iter begin function
-  | `Var (typ, var) -> record vars var (Type typ)
+  | `Var (typ, (var:Tjson.var)) -> record vars var.name (Type typ)
   | `Is_num _ | `Is_date _ -> ()
   end
 
 let analyze mapping json =
   let constraints = List.concat @@ fst @@ List.split @@ Derive.analyze_aggregations json in
   let q = extract json in
-  let vars = resolve_types mapping q.query in
+  let vars = resolve_types mapping q in
   resolve_constraints vars constraints;
   let var_unwrap name =
     match Hashtbl.find vars name with
@@ -131,7 +148,7 @@ let analyze mapping json =
     | Type typ -> (typ:>var_type)
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
-  let vars = Tjson.vars json |> List.map begin fun name -> name, var_type name end in
+  let vars = Tjson.vars ~optional:true json |> List.map begin fun (var:Tjson.var) -> var.name, var_type var.name end in
   let json =
     match json with
     | `Assoc l -> `Assoc (List.map (function "query",_ -> "query", q.json | x -> x) l)
