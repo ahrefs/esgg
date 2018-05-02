@@ -139,6 +139,7 @@ let atd_of_simple_type =
   | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
   | `String -> tname "string"
   | `Double -> tname "float"
+  | `Bool -> tname "bool"
 
 let atd_of_nullable_type = function
 | #simple_type as t -> atd_of_simple_type t
@@ -150,11 +151,17 @@ let atd_of_var_type' : var_type' -> Atd_ast.type_expr = function
 | #simple_type as t -> atd_of_simple_type t
 | `Ref (ref,t) -> wrap_ref ref t
 | `List (`Ref (ref,t)) -> Gen.list (wrap_ref ref t)
+| `List (#simple_type as t) -> Gen.list (atd_of_simple_type t)
 | `Json -> Gen.tname "basic_json"
 
 let atd_of_var_type : var_type -> Atd_ast.type_expr = function
 | #var_type' as t -> atd_of_var_type' t
 | `Optional t -> Gen.option @@ atd_of_var_type' t
+
+let atd_name name =
+  match name with
+  | "type" -> "type_" (* TODO json name *)
+  | s -> s
 
 let atd_of_shape name (shape:result_type) =
   let open Gen in
@@ -167,6 +174,7 @@ let atd_of_shape name (shape:result_type) =
       | _ -> "t", "t0"
     in
     let rec loop name n =
+      let name = atd_name name in
       match Hashtbl.mem names name with
       | true -> loop (sprintf "%s%d" prefix n) (n+1)
       | false -> name
@@ -198,16 +206,38 @@ let atd_of_shape name (shape:result_type) =
     | `List t -> [], list (map t)
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
-    | `Dict fields -> [], push @@ record (List.map (fun (n,t) -> let (a,t) = map' t in field ~a n t) fields)
+    | `Dict fields -> [], push @@ record (List.map (fun (n,t) -> let (a,t) = map' t in field ~a (atd_name n) t) fields)
     | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
   in
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
 
+let shape_of_mapping x =
+  let rec make path json =
+    match U.assoc "type" json with
+    | `String "nested" -> `List (make_properties path json)
+    | `String t -> simple_of_es_type path t
+    | _ -> Exn.fail "strange type : %s" (U.to_string json)
+    | exception _ -> make_properties path json
+  and make_properties path json =
+    match U.(get json "properties" to_assoc) with
+    | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
+    | f -> `Dict (f |> List.map (fun (name,x) -> name, make (ES_name.append path name) x))
+  in
+  make (ES_name.make x "") x.mapping
+
 let output mapping query =
-  let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
-  let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
-  atd_of_shape "result" (resolve_types mapping result)
+  let shape =
+    match U.assoc "query" query with
+    | exception _ ->
+      let source = shape_of_mapping mapping in
+      `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
+    | _ ->
+      let aggs = List.map snd @@ analyze_aggregations query in (* XXX discarding constraints *)
+      let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
+      resolve_types mapping result
+  in
+  atd_of_shape "result" shape
 
 let atd_of_vars l =
   let open Gen in

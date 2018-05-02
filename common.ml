@@ -25,17 +25,18 @@ type t = (string option * string list)
 let to_ocaml (modname,l) = (List.filter_map id [modname] @ l) |> List.map String.capitalize |> String.concat "."
 let get_path = snd
 let make mapping s = mapping.name, Stre.nsplitc s '.'
+let append (m,l) s = m, l @ Stre.nsplitc s '.'
 let show (_,l) = String.concat "." l
 
 let equal (a:t) b = a = b
 
 end
 
-type simple_type = [ `Int | `Int64 | `String | `Double ]
+type simple_type = [ `Int | `Int64 | `String | `Double | `Bool ]
 type nullable_type = [ simple_type | `Maybe of simple_type ]
 type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
 type wire_type = [ simple_type | `Json ]
-type var_type' = [ wire_type | ref_type | `List of ref_type ]
+type var_type' = [ wire_type | ref_type | `List of [ ref_type | simple_type ] ]
 type var_type = [ var_type' | `Optional of var_type' ]
 
 let show_simple_type = function
@@ -43,6 +44,7 @@ let show_simple_type = function
 | `Int64 -> "int64"
 | `String -> "string"
 | `Double -> "float"
+| `Bool -> "bool"
 
 let show_nullable_type = function
 | #simple_type as t -> show_simple_type t
@@ -51,18 +53,22 @@ let show_nullable_type = function
 let show_var_type' = function
 | `Json -> "json"
 | `Ref (_,t) | (#simple_type as t) -> show_simple_type t
-| `List (`Ref (_,t)) -> Printf.sprintf "[%s]" (show_simple_type t)
+| `List (`Ref (_,t) | (#simple_type as t)) -> Printf.sprintf "[%s]" (show_simple_type t)
 
 let show_var_type = function
 | #var_type' as t -> show_var_type' t
 | `Optional t -> Printf.sprintf "%s?" (show_var_type' t)
 
-let simple_of_es_type = function
-| "long" -> `Int
-| "keyword" | "text" -> `String
-| "date" -> `String
-| "double" -> `Double
-| s -> Exn.fail "simple_of_es_type: cannot handle %S" s
+let simple_of_es_type name t =
+  match t with
+  | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path name) -> `Int64 (* hack *)
+  | "long" -> `Int
+  | "keyword" | "text" -> `String
+  | "ip" -> `String
+  | "date" -> `String
+  | "double" -> `Double
+  | "boolean" -> `Bool
+  | _ -> Exn.fail "simple_of_es_type: cannot handle %S" t
 
 let typeof mapping t : simple_type =
   let rec find path schema =
@@ -72,7 +78,6 @@ let typeof mapping t : simple_type =
   in
   match find (ES_name.get_path t) mapping.mapping with
   | exception _ -> Exn.fail "no such field"
-  | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path t) -> `Int64 (* hack *)
-  | a -> simple_of_es_type a
+  | a -> simple_of_es_type t a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
