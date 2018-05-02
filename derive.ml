@@ -120,7 +120,7 @@ module Gen = struct
   let list ?(a=[]) t = `List (loc,t,annots a)
   let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
   let record fields = `Record (loc,fields,[])
-  let field ?(a=[]) n t = `Field (loc, (n, `Required, annots a), t)
+  let field ?(kind=`Required) ?(a=[]) n t = `Field (loc, (n, kind, annots a), t)
   let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
   let tname ?a t = pname ?a t []
   let nullable ?(a=[]) t = `Nullable (loc,t,annots a)
@@ -204,21 +204,42 @@ let atd_of_shape name (shape:result_type) =
     | #nullable_type as c -> [], atd_of_nullable_type c
     | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref t
     | `List t -> [], list (map t)
+    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
-    | `Dict fields -> [], push @@ record (List.map (fun (n,t) -> let (a,t) = map' t in field ~a (atd_name n) t) fields)
-    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
+    | `Dict fields ->
+      let fields = fields |> List.map begin fun (n,t) ->
+        let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
+        let (a,t) = map' t in
+        field ~a ~kind (atd_name n) t
+      end in
+      [], push @@ record fields
   in
   tuck types (typ name (map ~push:id shape));
   (loc,[]), List.rev !types
 
-let shape_of_mapping x =
+let shape_of_mapping x : result_type =
   let rec make path json =
+    let meta = `Assoc (Option.default [] @@ U.(opt json "_meta" to_assoc)) in
+    let maybe_multi ?(default=false) t =
+      let multi = Option.default default U.(opt meta "multi" to_bool) in
+      if multi then `List t else t
+    in
+    (* can have only simple optional type now, thats why
+    TODO lift restriction *)
+    let maybe_optional (t:simple_type) =
+      let multi = Option.default false U.(opt meta "multi" to_bool) in
+      let optional = Option.default false U.(opt meta "optional" to_bool) in
+      if optional then
+        `Maybe t
+      else
+        if multi then `List (t:>result_type) else (t:>result_type)
+    in
     match U.assoc "type" json with
-    | `String "nested" -> `List (make_properties path json)
-    | `String t -> simple_of_es_type path t
+    | exception _ -> maybe_multi (make_properties path json)
+    | `String "nested" -> maybe_multi ~default:true (make_properties path json)
+    | `String t -> maybe_optional (simple_of_es_type path t)
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
-    | exception _ -> make_properties path json
   and make_properties path json =
     match U.(get json "properties" to_assoc) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
