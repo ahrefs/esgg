@@ -8,11 +8,13 @@ let member name = function
 | _ -> Exn.fail "member %S : not a dict" name
 
 let get json name conv = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
+let opt json name conv = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
 
 let assoc name json = match member name json with `Null -> Exn.fail "assoc %S : not found" name | x -> x
 
 let to_string = function `String (s:string) -> s | _ -> Exn.fail "expected string"
 let to_assoc = function `Assoc a -> a | _ -> Exn.fail "expected dict"
+let to_bool = function `Bool b -> b | _ -> Exn.fail "expected bool"
 
 end
 
