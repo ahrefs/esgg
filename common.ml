@@ -68,7 +68,7 @@ let simple_of_es_type name t =
   | "keyword" | "text" -> `String
   | "ip" -> `String
   | "date" -> `String
-  | "double" -> `Double
+  | "double" | "float" -> `Double
   | "boolean" -> `Bool
   | _ -> Exn.fail "simple_of_es_type: cannot handle %S" t
 
