@@ -116,7 +116,7 @@ module Gen = struct
   open Atd_ast
   let loc = dummy_loc
   let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
-  let annots = List.map (fun (s,l) -> annot s l)
+  let annots a = Atd_annot.merge @@ List.map (fun (s,l) -> annot s l) a
   let list ?(a=[]) t = `List (loc,t,annots a)
   let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
   let record fields = `Record (loc,fields,[])
@@ -160,8 +160,8 @@ let atd_of_var_type : var_type -> Atd_ast.type_expr = function
 
 let atd_name name =
   match name with
-  | "type" -> "type_" (* TODO json name *)
-  | s -> s
+  | "type" -> ["json",["name",name]],"type_"
+  | s -> [],s
 
 let atd_of_shape name (shape:result_type) =
   let open Gen in
@@ -174,7 +174,7 @@ let atd_of_shape name (shape:result_type) =
       | _ -> "t", "t0"
     in
     let rec loop name n =
-      let name = atd_name name in
+      let (_,name) (* TODO *) = atd_name name in
       match Hashtbl.mem names name with
       | true -> loop (sprintf "%s%d" prefix n) (n+1)
       | false -> name
@@ -208,10 +208,12 @@ let atd_of_shape name (shape:result_type) =
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
     | `Dict fields ->
-      let fields = fields |> List.map begin fun (n,t) ->
+      let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
         let (a,t) = map' t in
-        field ~a ~kind (atd_name n) t
+        let (a',name) = atd_name name in
+        let a = a' @ a in
+        field ~a ~kind name t
       end in
       [], push @@ record fields
   in
