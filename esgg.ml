@@ -7,7 +7,7 @@ let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.for
 let tjson tjson = print_endline @@ Tjson.lift tjson
 
 let input_direct mapping json =
-  let (vars,map,json) = Query.analyze mapping json in
+  let (vars,map,json) = Derive.derive mapping json in
   if vars <> [] then printfn "(*";
   vars |> List.iter (fun (name,typ) -> printfn "%s : %s" name (Common.show_var_type typ));
   if vars <> [] then printfn "*)";
@@ -18,13 +18,13 @@ let show_as_record_fields vars =
   Printf.sprintf "{%s}" @@ String.concat "; " @@ List.map (fun (name,_typ) -> name) vars
 
 let input_j mapping json =
-  let (vars,map,json) = Query.analyze mapping json in
+  let (vars,map,json) = Derive.derive mapping json in
   printfn "let make %s =" (if vars = [] then "()" else show_as_record_fields vars);
   printfn "  %s" (Tjson.lift_to_string map json)
 
 let vars mapping query =
-  let (vars,_,_) = Query.analyze mapping query in
-  print_atd @@ Derive.atd_of_vars vars
+  let (vars,_,_) = Derive.derive mapping query in
+  print_atd @@ Atdgen.of_vars vars
 
 let output mapping query = print_atd @@ Derive.output mapping query
 
