@@ -1,6 +1,8 @@
 open ExtLib
 open Prelude
 
+let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
+
 module U = struct
 
 let member name = function
@@ -40,6 +42,14 @@ type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapp
 type wire_type = [ simple_type | `Json ]
 type var_type' = [ wire_type | ref_type | `List of [ ref_type | simple_type ] ]
 type var_type = [ var_type' | `Optional of var_type' ]
+
+type result_type = [
+  | `List of result_type
+  | `Dict of (string * result_type) list
+  | `Assoc of (result_type * result_type)
+  | ref_type
+  | nullable_type
+  ]
 
 let show_simple_type = function
 | `Int -> "int"
