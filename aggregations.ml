@@ -68,18 +68,18 @@ let infer_single { name; agg; } sub =
   let doc_count () = sub ["doc_count", `Int] in
   let (cstr,shape) =
     match agg with
-    | Simple_metric field -> [`Is_num field], sub [ "value", `Maybe `Double ]
+    | Simple_metric field -> [Query.Field_num field], sub [ "value", `Maybe `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
-    | Terms { field; size } -> (match size with `Var var -> [`Var (`Type `Int, var)] | _ -> []), buckets (`Typeof field)
-    | Histogram field -> [`Is_num field], buckets `Double
-    | Date_histogram field -> [`Is_date field], buckets `Int ~extra:["key_as_string", `String]
+    | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
+    | Histogram field -> [Field_num field], buckets `Double
+    | Date_histogram field -> [Field_date field], buckets `Int ~extra:["key_as_string", `String]
     | Nested _ | Reverse_nested -> [], doc_count ()
     | Filter q -> Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
       let cstrs = l |> List.map (fun (_,q) -> Query.infer q) |> List.flatten in
       cstrs, `Dict [ "buckets", `Assoc (`String, doc_count ())]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
-    | Range field -> [`Is_num field], `Dict [ "buckets", `List (doc_count ()) ]
+    | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in
   cstr, (name, shape)
 
