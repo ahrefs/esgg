@@ -15,9 +15,12 @@ and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of Tjson.t
 
+type multi = One | Many
+type var_eq = Eq_any | Eq_type of simple_type | Eq_field of multi * string
+type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
+
 module Variable = struct
 
- type multi = One | Many
  type t = Property of multi * ES_name.t * simple_type | Any | Type of simple_type | List of simple_type
 
  let show = function
@@ -92,10 +95,10 @@ let infer query =
   let rec iter { query; json=_ } =
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
-    | Query (qt,Field { field; values }) ->
-      let multi = match qt with "terms" -> Variable.Many | _ -> One in
-      List.iter (function `Var (var:Tjson.var) -> tuck constraints (`Var (`Field (multi,field), var)) | _ -> ()) values
-    | Query (_,Var var) -> tuck constraints (`Var (`Any, var))
+    | Query (qt, Field { field; values }) ->
+      let multi = match qt with "terms" -> Many | _ -> One in
+      List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (multi,field))) | _ -> ()) values
+    | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
   in
   iter query;
   !constraints
@@ -116,16 +119,16 @@ let extract json =
 let resolve_constraints mapping l =
   let vars = Hashtbl.create 3 in
   l |> List.iter begin function
-  | `Var (t, (var:Tjson.var)) ->
+  | On_var (var,t) ->
     let t = match t with
-    | `Type typ -> Variable.Type typ
-    | `Any -> Any
-    | `Field (multi,field) ->
+    | Eq_type typ -> Variable.Type typ
+    | Eq_any -> Any
+    | Eq_field (multi,field) ->
       let name = ES_name.make mapping field in
       let typ = typeof mapping name in
       Property (multi,name,typ)
     in
     record vars var.name t
-  | `Is_num _ | `Is_date _ -> ()
+  | Field_num _ | Field_date _ -> ()
   end;
   vars
