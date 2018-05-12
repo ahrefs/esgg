@@ -4,6 +4,12 @@ type 'a buckets = { buckets: 'a list }
 type total = { total: int }
 type doc_count1 = { doc_count: int }
 type t0 = { doc_count: int; partition: doc_count1 }
-type buckets1 = { buckets: (string * t0) list <json repr="object"> }
+type t1 = {
+  www_labelimage_com_au <json name="www.labelimage.com.au">: t0;
+  https___github_com_tzutalin_labelImg
+    <json name="https://github.com/tzutalin/labelImg">:
+    t0
+}
+type buckets1 = { buckets: t1 }
 type competitorsCommonKeywords = { competitorsCommonKeywords: buckets1 }
 type result = { hits: total; aggregations: competitorsCommonKeywords }
