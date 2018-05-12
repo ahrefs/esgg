@@ -8,8 +8,8 @@ type agg_type =
 | Terms of { field : string; size : Tjson.t }
 | Histogram of string
 | Date_histogram of string
-| Filter
-| Filters
+| Filter of Query.t
+| Filters of (string * Query.t) list
 | Top_hits
 | Range of string
 | Nested of string
@@ -27,8 +27,8 @@ let analyze_single name agg_type json =
     | "terms" | "significant_terms" -> Terms { field = field (); size = U.member "size" json }
     | "histogram" -> Histogram (field ())
     | "date_histogram" -> Date_histogram (field ())
-    | "filter" -> Filter
-    | "filters" -> Filters
+    | "filter" -> Filter (Query.extract_query json)
+    | "filters" -> Filters (json |> U.member "filters" |> U.to_assoc |> List.map (fun (k,v) -> k, Query.extract_query v))
     | "top_hits" -> Top_hits
     | "range" -> Range (field ()) (* TODO keyed *)
     | "nested" -> Nested U.(get json "path" to_string)
@@ -65,17 +65,21 @@ let get x =
 
 let infer_single { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
+  let doc_count () = sub ["doc_count", `Int] in
   let (cstr,shape) =
     match agg with
     | Simple_metric field -> [`Is_num field], sub [ "value", `Maybe `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
-    | Terms { field; size } -> (match size with `Var var -> [`Var (`Int, var)] | _ -> []), buckets (`Typeof field)
+    | Terms { field; size } -> (match size with `Var var -> [`Var (`Type `Int, var)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [`Is_num field], buckets `Double
     | Date_histogram field -> [`Is_date field], buckets `Int ~extra:["key_as_string", `String]
-    | Filter | Nested _ | Reverse_nested -> [], sub ["doc_count", `Int]
-    | Filters -> [], `Dict [ "buckets", `Assoc (`String, sub ["doc_count", `Int])]
+    | Nested _ | Reverse_nested -> [], doc_count ()
+    | Filter q -> Query.infer q, doc_count ()
+    | Filters l ->  (* TODO other_bucket *)
+      let cstrs = l |> List.map (fun (_,q) -> Query.infer q) |> List.flatten in
+      cstrs, `Dict [ "buckets", `Assoc (`String, doc_count ())]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
-    | Range field -> [`Is_num field], `Dict [ "buckets", `List (sub ["doc_count", `Int]) ]
+    | Range field -> [`Is_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in
   cstr, (name, shape)
 

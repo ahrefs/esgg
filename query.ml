@@ -1,5 +1,6 @@
 open Printf
 open ExtLib
+open Prelude
 
 open Common
 
@@ -86,20 +87,18 @@ let record vars var ti =
   | x when Variable.equal x ti -> ()
   | x -> Exn.fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
 
-let resolve_types mapping query =
-  let vars = Hashtbl.create 3 in
+let infer query =
+  let constraints = ref [] in
   let rec iter { query; json=_ } =
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
     | Query (qt,Field { field; values }) ->
-      let name = ES_name.make mapping field in
-      let typ = typeof mapping name in
       let multi = match qt with "terms" -> Variable.Many | _ -> One in
-      List.iter (function `Var (var:Tjson.var) -> record vars var.name (Property (multi,name,typ))  | _ -> ()) values
-    | Query (_,Var var) -> record vars var.name Any
+      List.iter (function `Var (var:Tjson.var) -> tuck constraints (`Var (`Field (multi,field), var)) | _ -> ()) values
+    | Query (_,Var var) -> tuck constraints (`Var (`Any, var))
   in
   iter query;
-  vars
+  !constraints
 
 let resolve_mget_types ids =
   let vars = Hashtbl.create 3 in
@@ -114,8 +113,19 @@ let extract json =
     let ids = U.assoc "ids" json in
     Mget ids
 
-let resolve_constraints vars l =
+let resolve_constraints mapping l =
+  let vars = Hashtbl.create 3 in
   l |> List.iter begin function
-  | `Var (typ, (var:Tjson.var)) -> record vars var.name (Type typ)
+  | `Var (t, (var:Tjson.var)) ->
+    let t = match t with
+    | `Type typ -> Variable.Type typ
+    | `Any -> Any
+    | `Field (multi,field) ->
+      let name = ES_name.make mapping field in
+      let typ = typeof mapping name in
+      Property (multi,name,typ)
+    in
+    record vars var.name t
   | `Is_num _ | `Is_date _ -> ()
-  end
+  end;
+  vars

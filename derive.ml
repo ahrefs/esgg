@@ -110,9 +110,9 @@ let derive mapping json =
   let (vars,json) =
     match Query.extract json with
     | Search q ->
-      let constraints = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
-      let vars = Query.resolve_types mapping q in
-      Query.resolve_constraints vars constraints;
+      let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
+      let c2 = Query.infer q in
+      let vars = Query.resolve_constraints mapping (c1 @ c2) in
       let json =
         match json with
         | `Assoc l -> `Assoc (List.map (function "query",_ -> "query", q.json | x -> x) l)
