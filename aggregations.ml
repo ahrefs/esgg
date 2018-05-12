@@ -76,8 +76,9 @@ let infer_single { name; agg; } sub =
     | Nested _ | Reverse_nested -> [], doc_count ()
     | Filter q -> Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
-      let cstrs = l |> List.map (fun (_,q) -> Query.infer q) |> List.flatten in
-      cstrs, `Dict [ "buckets", `Assoc (`String, doc_count ())]
+      let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
+      let d = doc_count () in
+      cstrs, `Dict [ "buckets", `Dict (l |> List.map (fun (k,_) -> k, d))]
     | Top_hits -> [], `Dict [ "hits", `Dict [ "total", `Int ] ]
     | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in

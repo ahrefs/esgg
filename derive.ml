@@ -56,12 +56,6 @@ let output mapping query =
   in
   Atdgen.of_shape "result" shape
 
-let uident s =
-  assert (s <> "");
-  let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
-  let s = match s.[0] with '0'..'9' -> "M_" ^ s | _ -> s in
-  String.capitalize s
-
 let print_reflect name mapping =
   let extern name = name ^ "_" in
   let rec iter hash nr_indent (name,x) =
@@ -70,9 +64,9 @@ let print_reflect name mapping =
     match U.member "type" x, U.member "properties" x with
     | `String typ, `Null ->
       let typ = if typ = "long" && hash then "int64" else typ in
-      printfn "%smodule %s = %s(%s)" indent (uident name) (extern "Id") (uident @@ extern typ)
+      printfn "%smodule %s = %s(%s)" indent (to_valid_modname name) (extern "Id") (to_valid_modname @@ extern typ)
     | (`Null | `String "nested"), `Assoc props ->
-      let modul = uident name in
+      let modul = to_valid_modname name in
       printfn "%smodule %s = struct" indent modul;
       List.iter (iter hash (nr_indent+2)) props;
       printfn "%send (* %s *)" indent modul

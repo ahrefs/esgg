@@ -93,3 +93,10 @@ let typeof mapping t : simple_type =
   | a -> simple_of_es_type t a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
+
+let to_valid_ident ~prefix s =
+  assert (s <> "");
+  let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
+  match s.[0] with '0'..'9' -> prefix ^ s | _ -> s
+
+let to_valid_modname s = String.capitalize @@ to_valid_ident ~prefix:"M_" s

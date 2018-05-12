@@ -43,10 +43,17 @@ let of_var_type : var_type -> Atd_ast.type_expr = function
 | #var_type' as t -> of_var_type' t
 | `Optional t -> option @@ of_var_type' t
 
-let safe_name name =
-  match name with
-  | "type" -> ["json",["name",name]],"type_"
-  | s -> [],s
+let safe_ident name =
+  let safe =
+    match name with
+    | "type" -> Some "type_"
+    | s ->
+      let s' = to_valid_ident ~prefix:"t_" s in
+      if s = s' then None else Some s'
+  in
+  match safe with
+  | Some s -> ["json",["name",name]], s
+  | None -> [], name
 
 let of_shape name (shape:result_type) =
   let names = Hashtbl.create 10 in
@@ -58,7 +65,7 @@ let of_shape name (shape:result_type) =
       | _ -> "t", "t0"
     in
     let rec loop name n =
-      let (_,name) (* TODO *) = safe_name name in
+      let (_,name) (* TODO *) = safe_ident name in
       match Hashtbl.mem names name with
       | true -> loop (sprintf "%s%d" prefix n) (n+1)
       | false -> name
@@ -95,7 +102,7 @@ let of_shape name (shape:result_type) =
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
         let (a,t) = map' t in
-        let (a',name) = safe_name name in
+        let (a',name) = safe_ident name in (* TODO check unique *)
         let a = a' @ a in
         field ~a ~kind name t
       end in
