@@ -34,6 +34,7 @@ let append (m,l) s = m, l @ Stre.nsplitc s '.'
 let show (_,l) = String.concat "." l
 
 let equal (a:t) b = a = b
+let compare = compare
 
 end
 
