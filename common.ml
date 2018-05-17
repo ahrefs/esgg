@@ -9,14 +9,15 @@ let member name = function
 | `Assoc l -> (try List.assoc name l with _ -> `Null)
 | _ -> Exn.fail "member %S : not a dict" name
 
-let get json name conv = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
-let opt json name conv = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
+let get name conv json = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
+let opt name conv json = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
 
 let assoc name json = match member name json with `Null -> Exn.fail "assoc %S : not found" name | x -> x
 
 let to_string = function `String (s:string) -> s | _ -> Exn.fail "expected string"
 let to_assoc = function `Assoc a -> a | _ -> Exn.fail "expected dict"
 let to_bool = function `Bool b -> b | _ -> Exn.fail "expected bool"
+let to_list f = function `List l -> List.map f l | _ -> Exn.fail "expected list"
 
 end
 
@@ -85,8 +86,8 @@ let simple_of_es_type name t =
 let typeof mapping t : simple_type =
   let rec find path schema =
     match path with
-    | [] -> U.get schema "type" U.to_string
-    | hd::tl -> find tl (List.assoc hd (U.get schema "properties" U.to_assoc))
+    | [] -> U.get "type" U.to_string schema
+    | hd::tl -> find tl (List.assoc hd (U.get "properties" U.to_assoc schema))
   in
   match find (ES_name.get_path t) mapping.mapping with
   | exception _ -> Exn.fail "no such field"

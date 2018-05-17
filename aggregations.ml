@@ -19,7 +19,7 @@ type single = { name : string; agg : agg_type; }
 type t = { this : single; sub : t list; }
 
 let analyze_single name agg_type json =
-  let field () = U.(get json "field" to_string) in
+  let field () = U.(get "field" to_string json) in
   let agg =
     match agg_type with
     | "max" | "min" | "avg" | "sum" -> Simple_metric (field ())
@@ -31,7 +31,7 @@ let analyze_single name agg_type json =
     | "filters" -> Filters (json |> U.member "filters" |> U.to_assoc |> List.map (fun (k,v) -> k, Query.extract_query v))
     | "top_hits" -> Top_hits
     | "range" -> Range (field ()) (* TODO keyed *)
-    | "nested" -> Nested U.(get json "path" to_string)
+    | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in

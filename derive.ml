@@ -16,16 +16,16 @@ let resolve_types mapping shape : result_type =
 
 let shape_of_mapping x : result_type =
   let rec make path json =
-    let meta = `Assoc (Option.default [] @@ U.(opt json "_meta" to_assoc)) in
+    let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc json)) in
     let maybe_multi ?(default=false) t =
-      let multi = Option.default default U.(opt meta "multi" to_bool) in
+      let multi = Option.default default U.(opt "multi" to_bool meta) in
       if multi then `List t else t
     in
     (* can have only simple optional type now, thats why
     TODO lift restriction *)
     let maybe_optional (t:simple_type) =
-      let multi = Option.default false U.(opt meta "multi" to_bool) in
-      let optional = Option.default false U.(opt meta "optional" to_bool) in
+      let multi = Option.default false U.(opt "multi" to_bool meta) in
+      let optional = Option.default false U.(opt "optional" to_bool meta) in
       if optional then
         `Maybe t
       else
@@ -37,7 +37,7 @@ let shape_of_mapping x : result_type =
     | `String t -> maybe_optional (simple_of_es_type path t)
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
   and make_properties path json =
-    match U.(get json "properties" to_assoc) with
+    match U.(get "properties" to_assoc json) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
     | f -> `Dict (f |> List.map (fun (name,x) -> name, make (ES_name.append path name) x))
   in
