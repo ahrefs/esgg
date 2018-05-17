@@ -15,6 +15,10 @@ let resolve_types mapping shape : result_type =
   map shape
 
 let shape_of_mapping x : result_type =
+  let module S = Set.Make(ES_name) in
+  let smake k = try U.(x.mapping |> member "_source" |> get k (to_list to_string)) |> List.map (ES_name.make x) |> S.of_list |> some  with _ -> None in
+  let excludes = smake "excludes" in
+  let includes = smake "includes" in
   let rec make path json =
     let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc json)) in
     let maybe_multi ?(default=false) t =
@@ -39,7 +43,16 @@ let shape_of_mapping x : result_type =
   and make_properties path json =
     match U.(get "properties" to_assoc json) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
-    | f -> `Dict (f |> List.map (fun (name,x) -> name, make (ES_name.append path name) x))
+    | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
+      let path = ES_name.append path name in
+      let included = (* TODO wildcards *)
+        (match excludes with None -> true | Some set -> not @@ S.mem path set) &&
+        (match includes with None -> true | Some set -> S.mem path set)
+      in
+      match included with
+      | false -> None
+      | true -> Some (name, make path x)
+      end)
   in
   make (ES_name.make x "") x.mapping
 
