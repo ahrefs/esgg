@@ -16,5 +16,6 @@ depends: [
   "atd"
   "easy-format"
   "jsonm"
+  "ppx_deriving"
 ]
 available: [ ocaml-version >= "4.03.0" ]

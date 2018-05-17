@@ -39,19 +39,6 @@ let compare = compare
 end
 
 type simple_type = [ `Int | `Int64 | `String | `Double | `Bool ]
-type nullable_type = [ simple_type | `Maybe of simple_type ]
-type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
-type wire_type = [ simple_type | `Json ]
-type var_type' = [ wire_type | ref_type | `List of [ ref_type | simple_type ] ]
-type var_type = [ var_type' | `Optional of var_type' ]
-
-type result_type = [
-  | `List of result_type
-  | `Dict of (string * result_type) list
-  | `Assoc of (result_type * result_type)
-  | ref_type
-  | nullable_type
-  ]
 
 let show_simple_type = function
 | `Int -> "int"
@@ -60,18 +47,24 @@ let show_simple_type = function
 | `Double -> "float"
 | `Bool -> "bool"
 
-let show_nullable_type = function
-| #simple_type as t -> show_simple_type t
-| `Maybe t -> show_simple_type t ^ "?"
+let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
-let show_var_type' = function
-| `Json -> "json"
-| `Ref (_,t) | (#simple_type as t) -> show_simple_type t
-| `List (`Ref (_,t) | (#simple_type as t)) -> Printf.sprintf "[%s]" (show_simple_type t)
+type nullable_type = [ simple_type | `Maybe of simple_type ] [@@deriving show]
+type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
+let show_ref_type (`Ref (_,t)) = show_simple_type t
+let pp_ref_type ppf (`Ref (_,t)) = pp_simple_type ppf t
 
-let show_var_type = function
-| #var_type' as t -> show_var_type' t
-| `Optional t -> Printf.sprintf "%s?" (show_var_type' t)
+type wire_type = [ simple_type | `Json ] [@@deriving show]
+type var_type' = [ wire_type | ref_type | `List of [ ref_type | simple_type ] ] [@@deriving show]
+type var_type = [ var_type' | `Optional of var_type' ] [@@deriving show]
+
+type result_type = [
+  | `List of result_type
+  | `Dict of (string * result_type) list
+  | `Assoc of (result_type * result_type)
+  | ref_type
+  | nullable_type
+  ]
 
 let simple_of_es_type name t =
   match t with
