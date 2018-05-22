@@ -100,9 +100,6 @@ type t6 = {
   competition: int;
   results: int;
   positions: t4;
-  urls_hashes: t0;
-  urls_hashes_top10: t0;
-  ads_hashes: t0;
   slot: int;
   version: int;
   deleted: bool;

@@ -49,21 +49,21 @@ let show_simple_type = function
 
 let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
-type nullable_type = [ simple_type | `Maybe of simple_type ] [@@deriving show]
-type ref_type = [ `Ref of (ES_name.t * simple_type) ] (* reference field in mapping *)
-let show_ref_type (`Ref (_,t)) = show_simple_type t
-let pp_ref_type ppf (`Ref (_,t)) = pp_simple_type ppf t
+type multi = One | Many
 
-type wire_type = [ simple_type | `Json ] [@@deriving show]
-type var_type' = [ wire_type | ref_type | `List of [ ref_type | simple_type ] ] [@@deriving show]
-type var_type = [ var_type' | `Optional of var_type' ] [@@deriving show]
+type var_type = { multi : multi; ref : ES_name.t option; typ : simple_type; }
+let show_var_type x = show_simple_type x.typ
+let pp_var_type ppf x = pp_simple_type ppf x.typ
+
+type full_var_type = [ `Required | `Optional ] * var_type option [@@deriving show]
 
 type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
   | `Assoc of (result_type * result_type)
-  | ref_type
-  | nullable_type
+  | `Ref of (ES_name.t * simple_type)
+  | `Maybe of simple_type
+  | simple_type
   ]
 
 let simple_of_es_type name t =
