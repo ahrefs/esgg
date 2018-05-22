@@ -26,22 +26,23 @@ let of_simple_type =
   | `Double -> tname "float"
   | `Bool -> tname "bool"
 
-let of_nullable_type = function
-| #simple_type as t -> of_simple_type t
-| `Maybe t -> nullable @@ of_simple_type t
+let wrap_ref ref t : Atd_ast.type_expr = wrap ["module",ES_name.to_ocaml ref] t
 
-let wrap_ref ref t = wrap ["module",ES_name.to_ocaml ref] (of_simple_type t)
+let of_var_type {multi;ref;typ} : Atd_ast.type_expr =
+  let t = of_simple_type typ in
+  let t = match ref with Some es_name -> wrap_ref es_name t | None -> t in
+  match multi with
+  | One -> t
+  | Many -> list t
 
-let of_var_type' : var_type' -> Atd_ast.type_expr = function
-| #simple_type as t -> of_simple_type t
-| `Ref (ref,t) -> wrap_ref ref t
-| `List (`Ref (ref,t)) -> list (wrap_ref ref t)
-| `List (#simple_type as t) -> list (of_simple_type t)
-| `Json -> tname "basic_json"
-
-let of_var_type : var_type -> Atd_ast.type_expr = function
-| #var_type' as t -> of_var_type' t
-| `Optional t -> option @@ of_var_type' t
+let of_var_type (req,t) : Atd_ast.type_expr =
+  let t = match t with
+  | None -> tname "basic_json"
+  | Some t -> of_var_type t
+  in
+  match req with
+  | `Required -> t
+  | `Optional -> option t
 
 let safe_ident name =
   let safe =
@@ -55,7 +56,7 @@ let safe_ident name =
   | Some s -> ["json",["name",name]], s
   | None -> [], name
 
-let of_shape name (shape:result_type) =
+let of_shape name (shape:result_type) : Atd_ast.full_module =
   let names = Hashtbl.create 10 in
   let types = ref [] in
   let fresh_name t =
@@ -92,8 +93,9 @@ let of_shape name (shape:result_type) =
   let rec map ?push shape = snd @@ map' ?push shape
   and map' ?(push=ref_name) shape =
     match shape with
-    | #nullable_type as c -> [], of_nullable_type c
-    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref t
+    | #simple_type as t -> [], of_simple_type t
+    | `Maybe t -> [], nullable @@ of_simple_type t
+    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref (of_simple_type t)
     | `List t -> [], list (map t)
     | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
     | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
@@ -113,7 +115,7 @@ let of_shape name (shape:result_type) =
 
 let of_vars l =
   let basic_json =
-    if List.exists (fun (_,t) -> t = `Json) l then
+    if List.exists (fun (_,(_,t)) -> t = None) l then
       [typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")]
     else
       []

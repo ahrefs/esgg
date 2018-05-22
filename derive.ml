@@ -96,15 +96,16 @@ let convert_wire_type = function
 | `String -> sprintf "Json.to_string (`String %s)"
 | `Double -> sprintf "Json.to_string (`Double %s)"
 | `Bool -> sprintf "string_of_bool %s"
-| `Json -> sprintf "Json.to_string %s"
 
-let convertor (t:var_type') unwrap name =
+let convertor (t:var_type option) unwrap name =
   match t with
-  | `Ref (_,t) -> convert_wire_type t (unwrap name)
-  | #wire_type as t -> convert_wire_type t (unwrap name)
-  | `List (`Ref (_,t) | (#simple_type as t)) ->
+  | None -> sprintf "Json.to_string %s" (unwrap name)
+  | Some {multi;typ;ref=_} ->
+  match multi with
+  | One -> convert_wire_type typ (unwrap name)
+  | Many ->
     let mapper =
-      sprintf @@ match t with
+      sprintf @@ match typ with
       | `Int -> "`Int %s"
       | `Int64 -> "`String (Int64.to_string %s)"
       | `String -> "`String %s"
@@ -134,18 +135,16 @@ let derive mapping json =
     | Property (_,es_name,_) -> sprintf "(%s.unwrap %s)" (ES_name.to_ocaml es_name)
     | Any | Type _ | List _ -> id
   in
-  let var_type name : var_type' =
+  let var_type name : var_type option =
     match Hashtbl.find vars name with
-    | Property (One,name,typ) -> `Ref (name,typ)
-    | Property (Many,name,typ) -> `List (`Ref (name,typ))
-    | exception _ -> `Json
-    | Any -> `Json
-    | List typ -> (`List typ :> var_type')
-    | Type typ -> (typ:>var_type')
+    | Property (multi,name,typ) -> Some { multi; ref = Some name; typ; }
+    | exception _ -> None
+    | Any -> None
+    | List typ -> Some { multi = Many; ref = None; typ; }
+    | Type typ -> Some { multi = One; ref = None; typ; }
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
   let vars = Tjson.vars ~optional:true json |> List.map begin fun (var:Tjson.var) ->
-    let typ = var_type var.name in
-    var.name, if var.optional then `Optional typ else (typ:>var_type) end
-  in
+    var.name, ((if var.optional then `Optional else `Required), var_type var.name)
+  end in
   vars, map, json

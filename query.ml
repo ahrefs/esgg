@@ -15,7 +15,6 @@ and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of Tjson.t
 
-type multi = One | Many
 type var_eq = Eq_any | Eq_type of simple_type | Eq_field of multi * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
 
