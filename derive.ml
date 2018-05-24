@@ -13,29 +13,31 @@ let resolve_types mapping shape : result_type =
   in
   map shape
 
+let get_meta json default k =
+  let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc json)) in
+  Option.default default U.(opt k to_bool meta)
+
 let shape_of_mapping x : result_type =
   let module S = Set.Make(ES_name) in
   let smake k = try U.(x.mapping |> member "_source" |> get k (to_list to_string)) |> List.map (ES_name.make x) |> S.of_list |> some  with _ -> None in
   let excludes = smake "excludes" in
   let includes = smake "includes" in
-  let rec make ~meta path json =
+  let rec make ~optional ~meta path json =
     let wrap multi t =
       let t = if meta multi "multi" then `List t else t in
-      if meta false "optional" then `Maybe t else t
+      if meta optional "optional" then `Maybe t else t
     in
+    let default_optional = meta false "fields_default_optional" in
     match U.assoc "type" json with
-    | exception _ -> wrap false @@ make_properties path json
-    | `String "nested" -> wrap true @@ make_properties path json
+    | exception _ -> wrap false @@ make_properties ~default_optional path json
+    | `String "nested" -> wrap true @@ make_properties ~default_optional path json
     | `String t -> wrap false @@ simple_of_es_type path t
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
-  and make_properties path json =
+  and make_properties ~default_optional path json =
     match U.(get "properties" to_assoc json) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
     | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
-      let meta default k =
-        let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc x)) in
-        Option.default default U.(opt k to_bool meta)
-      in
+      let meta = get_meta x in
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ S.mem path set) &&
@@ -44,10 +46,10 @@ let shape_of_mapping x : result_type =
       in
       match included with
       | false -> None
-      | true -> Some (name, make ~meta path x)
+      | true -> Some (name, make ~optional:default_optional ~meta path x)
       end)
   in
-  make ~meta:(fun _ _ -> false) (ES_name.make x "") x.mapping
+  make ~optional:false ~meta:(fun _ _ -> false) (ES_name.make x "") x.mapping
 
 let output mapping query =
   let shape =
