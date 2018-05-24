@@ -60,9 +60,8 @@ type full_var_type = [ `Required | `Optional ] * var_type option [@@deriving sho
 type result_type = [
   | `List of result_type
   | `Dict of (string * result_type) list
-  | `Assoc of (result_type * result_type)
   | `Ref of (ES_name.t * simple_type)
-  | `Maybe of simple_type
+  | `Maybe of result_type
   | simple_type
   ]
 

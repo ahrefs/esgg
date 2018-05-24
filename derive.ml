@@ -8,7 +8,6 @@ let resolve_types mapping shape : result_type =
   let rec map = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
-  | `Assoc (k,v) -> `Assoc (map k, map v)
   | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
   | `Maybe _ | `Int64 | `Int | `String | `Double as t -> t
   in
@@ -20,21 +19,14 @@ let shape_of_mapping x : result_type =
   let excludes = smake "excludes" in
   let includes = smake "includes" in
   let rec make ~meta path json =
-    let maybe_multi ?(default=false) t =
-      if meta default "multi" then `List t else t
-    in
-    (* can have only simple optional type now, thats why
-    TODO lift restriction *)
-    let maybe_optional (t:simple_type) =
-      if meta false "optional" then
-        `Maybe t
-      else
-        if meta false "multi" then `List (t:>result_type) else (t:>result_type)
+    let wrap multi t =
+      let t = if meta multi "multi" then `List t else t in
+      if meta false "optional" then `Maybe t else t
     in
     match U.assoc "type" json with
-    | exception _ -> maybe_multi (make_properties path json)
-    | `String "nested" -> maybe_multi ~default:true (make_properties path json)
-    | `String t -> maybe_optional (simple_of_es_type path t)
+    | exception _ -> wrap false @@ make_properties path json
+    | `String "nested" -> wrap true @@ make_properties path json
+    | `String t -> wrap false @@ simple_of_es_type path t
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
   and make_properties path json =
     match U.(get "properties" to_assoc json) with

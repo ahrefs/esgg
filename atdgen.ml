@@ -94,7 +94,7 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   and map' ?(push=ref_name) shape =
     match shape with
     | #simple_type as t -> [], of_simple_type t
-    | `Maybe t -> [], nullable @@ of_simple_type t
+    | `Maybe t -> [], nullable @@ map t
     | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref (of_simple_type t)
     | `List t -> [], list (map t)
     | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
