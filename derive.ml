@@ -22,7 +22,8 @@ let shape_of_mapping x : result_type =
   let smake k = try U.(x.mapping |> member "_source" |> get k (to_list to_string)) |> List.map (ES_name.make x) |> S.of_list |> some  with _ -> None in
   let excludes = smake "excludes" in
   let includes = smake "includes" in
-  let rec make ~optional ~meta path json =
+  let rec make ~optional path json =
+    let meta = get_meta json in
     let wrap multi t =
       let t = if meta multi "multi" then `List t else t in
       if meta optional "optional" then `Maybe t else t
@@ -37,19 +38,18 @@ let shape_of_mapping x : result_type =
     match U.(get "properties" to_assoc json) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
     | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
-      let meta = get_meta x in
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ S.mem path set) &&
         (match includes with None -> true | Some set -> S.mem path set) &&
-        not @@ meta false "ignore"
+        not @@ get_meta x false "ignore"
       in
       match included with
       | false -> None
-      | true -> Some (name, make ~optional:default_optional ~meta path x)
+      | true -> Some (name, make ~optional:default_optional path x)
       end)
   in
-  make ~optional:false ~meta:(fun _ _ -> false) (ES_name.make x "") x.mapping
+  make ~optional:false (ES_name.make x "") x.mapping
 
 let output mapping query =
   let shape =
