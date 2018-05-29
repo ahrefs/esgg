@@ -71,7 +71,8 @@ and extract_query json =
       | "term", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
       | "term", `Assoc [f, x] -> f, [x]
       | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
-      | "match", `Assoc [f, (`Assoc _ as x)] -> f, [x]
+      | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
+      | "match", `Assoc [f, x] -> f, [x]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
     json, Query (qt, Field { field; values })
