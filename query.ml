@@ -47,19 +47,24 @@ let rec extract_clause (clause,json) =
   match clause with
   | "must" | "must_not" | "should" | "filter" ->
     begin match json with
-    | `Assoc _ as x -> let q = extract_query x in q.json, (clause, [q])
+    | `Assoc _ as x -> let q = extract_query x in Some (q.json, (clause, [q]))
     | `List l ->
       let l = List.map extract_query l in
       let json = `List (List.map (fun q -> q.json) l) in
-      json, (clause, l)
+      Some (json, (clause, l))
     | _ -> Exn.fail "bad %S clause : expected list or dict" clause
+    end
+  | "minimum_should_match" ->
+    begin match json with
+    | `Float _ | `String _ -> None
+    | _ -> Exn.fail "bad %S clause : expected int or string" clause
     end
   | _ -> Exn.fail "unsupported bool clause %S" clause
 and extract_query json =
   let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
   let (json,query) = match q with
   | "bool", `Assoc l ->
-    let bool = List.map extract_clause l in
+    let bool = List.filter_map extract_clause l in
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
   | qt, `Var x -> json, Query (qt, Var x)
