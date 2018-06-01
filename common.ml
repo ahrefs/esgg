@@ -80,7 +80,9 @@ let typeof mapping t : simple_type =
   let rec find path schema =
     match path with
     | [] -> U.get "type" U.to_string schema
-    | hd::tl -> find tl (List.assoc hd (U.get "properties" U.to_assoc schema))
+    | hd::tl ->
+      let a = try U.member "properties" schema with _ -> U.member "fields" schema in
+      find tl (U.member hd a)
   in
   match find (ES_name.get_path t) mapping.mapping with
   | exception _ -> Exn.fail "no such field"
