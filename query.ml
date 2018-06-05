@@ -11,11 +11,12 @@ type equation = Field of { field : string; values : Tjson.t list } | Var of Tjso
 type query =
 | Bool of (string * t list) list
 | Query of query_type * equation
+| Ids of Tjson.t
 and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of Tjson.t
 
-type var_eq = Eq_any | Eq_type of simple_type | Eq_field of multi * string
+type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
 
 module Variable = struct
@@ -67,6 +68,7 @@ and extract_query json =
     let bool = List.filter_map extract_clause l in
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
+  | "ids", (`Assoc _ as x) -> json, Ids (U.assoc "values" x)
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -80,8 +82,6 @@ and extract_query json =
       | "match", `Assoc [f, x] -> f, [x]
       | "match_phrase", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
       | "match_phrase", `Assoc [f, x] -> f, [x]
-      | "ids", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "values" x]
-      | "ids", `Assoc [f, x] -> f, [x]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
     json, Query (qt, Field { field; values })
@@ -109,6 +109,9 @@ let infer query =
       let multi = match qt with "terms" -> Many | _ -> One in
       List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (multi,field))) | _ -> ()) values
     | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
+    | Ids (`Var var) -> tuck constraints (On_var (var, Eq_list `String)) (* _id is string *)
+    | Ids (`List l) -> l |> List.iter (function `Var var -> tuck constraints (On_var (var, Eq_type `String)) | _ -> ())
+    | Ids _ -> Exn.fail "bad ids"
   in
   iter query;
   !constraints
@@ -132,6 +135,7 @@ let resolve_constraints mapping l =
   | On_var (var,t) ->
     let t = match t with
     | Eq_type typ -> Variable.Type typ
+    | Eq_list typ -> List typ
     | Eq_any -> Any
     | Eq_field (multi,field) ->
       let name = ES_name.make mapping field in
