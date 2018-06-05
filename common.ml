@@ -23,7 +23,16 @@ end
 
 type mapping = { mapping : Yojson.Basic.json; name : string option; }
 
-module ES_name = struct
+module ES_name : sig
+type t
+val to_ocaml : t -> string
+val get_path : t -> string list
+val make : mapping -> string -> t
+val append : t -> string -> t
+val show : t -> string
+val equal : t -> t -> bool
+val compare : t -> t -> int
+end = struct
 
 type t = (string option * string list)
 
@@ -81,7 +90,7 @@ let typeof mapping t : simple_type =
     match path with
     | [] -> U.get "type" U.to_string schema
     | hd::tl ->
-      let a = try U.member "properties" schema with _ -> U.member "fields" schema in
+      let a = try U.assoc "properties" schema with _ -> U.assoc "fields" schema in
       find tl (U.member hd a)
   in
   match find (ES_name.get_path t) mapping.mapping with
