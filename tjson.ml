@@ -198,8 +198,8 @@ let print_parse_json s =
   show @@ Jsonm.decoder @@ `String s
 
 let rec to_yojson_exn : t -> Yojson.json = function
-| `Var {optional; name} -> Exn.fail "of_tjson `Var %S %b" name optional
+| `Var {optional; name} -> Exn.fail "to_yojson_exn `Var %S%s" name (if optional then "?" else "")
+| `Optional (s, _) -> Exn.fail "to_yojson_exn `Optional %s" s
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)
 | `String _ | `Float _ | `Bool _ | `Null as x -> x
-| `Optional (s, t) -> `Assoc [s, to_yojson_exn t]
