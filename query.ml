@@ -11,7 +11,7 @@ type equation = Field of { field : string; values : Tjson.t list } | Var of Tjso
 type query =
 | Bool of (string * t list) list
 | Query of query_type * equation
-| Ids of Tjson.t
+| Ids of [ `List of Tjson.t list | `Var of Tjson.var ]
 and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of Tjson.t
@@ -68,7 +68,13 @@ and extract_query json =
     let bool = List.filter_map extract_clause l in
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
-  | "ids", (`Assoc _ as x) -> json, Ids (U.assoc "values" x)
+  | "ids", (`Assoc _ as x) ->
+    let values =
+      match U.assoc "values" x with
+      | `List _ | `Var _ as x -> x
+      | _ -> Exn.fail "bad ids values : expecting list or variable"
+    in
+    json, Ids values
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -111,7 +117,6 @@ let infer query =
     | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
     | Ids (`Var var) -> tuck constraints (On_var (var, Eq_list `String)) (* _id is string *)
     | Ids (`List l) -> l |> List.iter (function `Var var -> tuck constraints (On_var (var, Eq_type `String)) | _ -> ())
-    | Ids _ -> Exn.fail "bad ids"
   in
   iter query;
   !constraints
