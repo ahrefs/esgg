@@ -18,11 +18,19 @@ let get_meta json default k =
   let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc json)) in
   Option.default default U.(opt k to_bool meta)
 
-let shape_of_mapping x : result_type =
-  let module S = Set.Make(ES_name) in
-  let smake k = try U.(x.mapping |> member "_source" |> get k (to_list to_string)) |> List.map (ES_name.make x) |> S.of_list |> some  with _ -> None in
-  let excludes = smake "excludes" in
-  let includes = smake "includes" in
+module ES_names = Set.Make(ES_name)
+let es_names mapping l = l |> List.map (ES_name.make mapping) |> ES_names.of_list
+let source_fields k j = U.(j |> member "_source" |> opt k (to_list to_string))
+
+let option_map2 op a b =
+  match a, b with
+  | x, None | None, x -> x
+  | Some a, Some b -> Some (op a b)
+
+let shape_of_mapping ?excludes ?includes x : result_type =
+  let smake k = source_fields k x.mapping |> Option.map (es_names x) in
+  let excludes = option_map2 ES_names.union (smake "excludes") excludes in
+  let includes = option_map2 ES_names.inter (smake "includes") includes in
   let rec make ~optional path json =
     let meta = get_meta json in
     let wrap multi t =
@@ -41,12 +49,12 @@ let shape_of_mapping x : result_type =
     | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
-        (match excludes with None -> true | Some set -> not @@ S.mem path set) &&
-        (match includes with None -> true | Some set -> S.mem path set) &&
+        (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
+        (match includes with None -> true | Some set -> ES_names.mem path set) &&
         not @@ get_meta x false "ignore"
       in
       match included with
-      | false -> None
+      | false -> (* printfn "(* excluded %s *)" (ES_name.show path); *) None
       | true -> Some (name, make ~optional:default_optional path x)
       end)
   in
@@ -54,15 +62,28 @@ let shape_of_mapping x : result_type =
 
 let output mapping query =
   let shape =
-    let source = shape_of_mapping mapping in
     match U.assoc "query" query with
     | exception _ ->
+      let source = shape_of_mapping mapping in
       `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
     | _ ->
+      let source =
+        let source = U.member "_source" query in
+        if U.member "size" query = `Float 0. || source = `Bool false then None
+        else
+          let (excludes,includes) =
+            apply2 (Option.map (es_names mapping)) @@
+            match source with
+            | `List l -> None, Some (List.map U.to_string l)
+            | `String s -> None, Some [s]
+            | _ -> (source_fields "excludes" query, source_fields "includes" query)
+          in
+          Some (shape_of_mapping ?excludes ?includes mapping)
+      in
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
       let hits = List.concat [
         ["total", `Int];
-        if U.member "size" query = `Float 0. then [] else ["hits", `List (source:>resolve_type)];
+        (match source with None -> [] | Some source -> ["hits", `List (source:>resolve_type)]);
       ]
       in
       let result = `Dict (("hits", `Dict hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
