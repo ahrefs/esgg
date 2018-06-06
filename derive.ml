@@ -60,7 +60,11 @@ let output mapping query =
       `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
     | _ ->
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
-      let hits = ["total", `Int; "hits", `List (source:>resolve_type)] in
+      let hits = List.concat [
+        ["total", `Int];
+        if U.member "size" query = `Float 0. then [] else ["hits", `List (source:>resolve_type)];
+      ]
+      in
       let result = `Dict (("hits", `Dict hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
   in
