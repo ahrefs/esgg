@@ -4,12 +4,13 @@ open Printf
 
 open Common
 
-let resolve_types mapping shape : result_type =
-  let rec map = function
+let resolve_types mapping shape =
+  let rec map : resolve_type -> result_type = function
   | `List t -> `List (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
-  | `Maybe _ | `Int64 | `Int | `String | `Double as t -> t
+  | `Maybe t -> `Maybe (map t)
+  | `Int64 | `Int | `String | `Double | `Bool | `Ref _ as t -> t
   in
   map shape
 
@@ -53,13 +54,14 @@ let shape_of_mapping x : result_type =
 
 let output mapping query =
   let shape =
+    let source = shape_of_mapping mapping in
     match U.assoc "query" query with
     | exception _ ->
-      let source = shape_of_mapping mapping in
       `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
     | _ ->
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
-      let result = `Dict (("hits", `Dict ["total", `Int]) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
+      let hits = ["total", `Int; "hits", `List (source:>resolve_type)] in
+      let result = `Dict (("hits", `Dict hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
   in
   Atdgen.of_shape "result" shape
