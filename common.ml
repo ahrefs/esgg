@@ -74,6 +74,15 @@ type result_type = [
   | simple_type
   ]
 
+type resolve_type = [
+  | `Typeof of string
+  | `List of resolve_type
+  | `Dict of (string * resolve_type) list
+  | `Ref of (ES_name.t * simple_type)
+  | `Maybe of resolve_type
+  | simple_type
+  ]
+
 let simple_of_es_type name t =
   match t with
   | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path name) -> `Int64 (* hack *)
