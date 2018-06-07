@@ -81,9 +81,18 @@ let output mapping query =
           Some (shape_of_mapping ?excludes ?includes mapping)
       in
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
+      let hits source = `Dict [
+(*
+        "_index", `String;
+        "_type", `String;
+        "_score", `Maybe `Float;
+*)
+        "_id", `String;
+        "_source", source;
+      ] in
       let hits = List.concat [
         ["total", `Int];
-        (match source with None -> [] | Some source -> ["hits", `List (source:>resolve_type)]);
+        (match source with None -> [] | Some source -> ["hits", `List (hits (source:>resolve_type))]);
       ]
       in
       let result = `Dict (("hits", `Dict hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
