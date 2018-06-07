@@ -69,7 +69,7 @@ let output mapping query =
     | _ ->
       let source =
         let source = U.member "_source" query in
-        if U.member "size" query = `Float 0. || source = `Bool false then None
+        if U.member "size" query = `Int 0 || source = `Bool false then None
         else
           let (excludes,includes) =
             apply2 (Option.map (es_names mapping)) @@

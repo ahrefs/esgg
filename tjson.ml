@@ -9,6 +9,7 @@ type var = { optional : bool; name : string }
 type t = [
 | `Assoc of (string * t) list
 | `Bool of bool
+| `Int of int
 | `Float of float
 | `List of t list
 | `Null
@@ -74,7 +75,8 @@ let parse s : t =
     match v with
     | `Os -> obj [] k d
     | `As -> arr [] k d
-    | `Null | `Bool _ | `String _ | `Float _ | `Var _ as v -> k v d
+    | `Float _ as v -> let v = match int_of_string (sub_decoded d s) with exception _ -> v | i -> `Int i in k v d
+    | `Null | `Bool _ | `String _ | `Var _ as v -> k v d
     | _ -> assert false
   and arr vs k d =
     match lexeme d with
@@ -142,6 +144,7 @@ let lift_to_string map v =
   | `Bool b -> quote_val J.write_bool b
   | `String s -> quote_val J.write_string s
   | `Float f -> quote_val J.write_float f
+  | `Int i -> quote_val J.write_int i
   | `Optional (var,_) -> Exn.fail "Internal error (Optional %S not in list)" var
   | `Var { optional=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l -> output_list l
@@ -161,7 +164,7 @@ let lift_to_string map v =
   stringify @@ output v
 
 let rec fold ~optional (f:'a->t->'a) acc = function
-| `Null | `Bool _ | `String _ | `Float _ | `Var _ as x -> f acc x
+| `Null | `Bool _ | `String _ | `Float _ | `Int _ | `Var _ as x -> f acc x
 | `Optional (_,x) when optional -> fold ~optional f acc x
 | `Optional _ -> acc
 | `List l -> List.fold_left (fold ~optional f) acc l
@@ -202,4 +205,4 @@ let rec to_yojson_exn : t -> Yojson.json = function
 | `Optional (s, _) -> Exn.fail "to_yojson_exn `Optional %s" s
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)
-| `String _ | `Float _ | `Bool _ | `Null as x -> x
+| `String _ | `Float _ | `Int _ | `Bool _ | `Null as x -> x
