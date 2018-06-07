@@ -8,13 +8,19 @@ open Common
 type query_type = string
 type equation = Field of { field : string; values : Tjson.t list } | Var of Tjson.var
 
+type var_list = [ `List of Tjson.t list | `Var of Tjson.var ]
+
+let var_list_of_json ~desc = function
+| `List _ | `Var _ as x -> x
+| _ -> Exn.fail "bad %s : expecting list or variable" desc
+
 type query =
 | Bool of (string * t list) list
 | Query of query_type * equation
-| Ids of [ `List of Tjson.t list | `Var of Tjson.var ]
+| Ids of var_list
 and t = { json : Tjson.t; query : query }
 
-type req = Search of t | Mget of Tjson.t
+type req = Search of t | Mget of var_list
 
 type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
@@ -69,12 +75,7 @@ and extract_query json =
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
   | "ids", (`Assoc _ as x) ->
-    let values =
-      match U.assoc "values" x with
-      | `List _ | `Var _ as x -> x
-      | _ -> Exn.fail "bad ids values : expecting list or variable"
-    in
-    json, Ids values
+    json, Ids (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -131,7 +132,12 @@ let extract json =
   match U.assoc "query" json with
   | q -> Search (extract_query q)
   | exception _ ->
-    let ids = U.assoc "ids" json in
+    let ids =
+      match U.assoc "docs" json with
+      | `List l -> `List (List.map U.(assoc "_id") l)
+      | _ -> Exn.fail "unexpected docs"
+      | exception _ -> var_list_of_json ~desc:"mget ids" U.(assoc "ids" json)
+    in
     Mget ids
 
 let resolve_constraints mapping l =
