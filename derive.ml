@@ -20,7 +20,7 @@ let get_meta json default k =
 
 module ES_names = Set.Make(ES_name)
 let es_names mapping l = l |> List.map (ES_name.make mapping) |> ES_names.of_list
-let source_fields k j = U.(j |> member "_source" |> opt k (to_list to_string))
+let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
 
 let option_map2 op a b =
   match a, b with
