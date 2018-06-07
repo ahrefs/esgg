@@ -5,6 +5,7 @@
       "serps.positions.url_hash", "urls_hashes_top100"
     ]
   },
+  "_meta": { "fields_default_optional": true },
   "properties": {
     "parent_keyword": {
       "type": "keyword",
@@ -44,11 +45,11 @@
     },
     "source_file": { "type": "keyword" },
     "source_line": { "type": "long" },
-    "avg_volume": { "type": "double" },
+    "avg_volume": { "type": "double", "_meta": { "optional": true } },
     "pred_volume": { "type": "double" },
     "percent_clicks_organic": { "type": "double" },
     "percent_clicks_paid": { "type": "double" },
-    "ctr_p_organic": { "type": "double" },
+    "ctr_p_organic": { "type": "double", "_meta": { "optional": true } },
     "return_rate": { "type": "double" },
     "clicks_per_search": { "type": "double" },
     "clicks_per_search_organic": { "type": "double" },
@@ -421,8 +422,9 @@
       "type": "date",
       "format": "epoch_millis||dateOptionalTime"
     },
-    "serp_features": { "type": "keyword" },
+    "serp_features": { "type": "keyword", "_meta": { "multi": true } },
     "sources": {
+      "_meta": { "optional": true, "fields_default_optional": true },
       "properties": {
         "keyword_explorer": {
           "type": "date",
@@ -446,8 +448,8 @@
         "site": { "type": "long", "store": true }
       }
     },
-    "domains_names_organic": { "type": "keyword" },
-    "domains_names_paid": { "type": "keyword" },
+    "domains_names_organic": { "type": "keyword", "_meta": { "multi": true, "ignore": true } },
+    "domains_names_paid": { "type": "keyword", "_meta": { "multi": true, "ignore": true } },
     "cpc": { "type": "long" },
     "nice_cpc": { "type": "long" },
     "user_id": { "type": "long" },

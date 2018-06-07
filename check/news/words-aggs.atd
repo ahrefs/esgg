@@ -3,14 +3,14 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type t0 = { }
 type t1 = {
-  url: string;
-  title: string;
-  first_seen: string;
-  next_update: string;
-  last_update: string;
-  metrics: t0;
-  author: t0;
-  traffic: float
+  ?url: string nullable;
+  ?title: string nullable;
+  ?first_seen: string nullable;
+  ?next_update: string nullable;
+  ?last_update: string nullable;
+  ?metrics: t0 nullable;
+  ?author: t0 nullable;
+  ?traffic: float nullable
 }
 type t2 = { _id: string; _source: t1 }
 type t3 = { total: int; ~hits: t2 list }

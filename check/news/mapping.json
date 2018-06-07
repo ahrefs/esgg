@@ -1,5 +1,6 @@
 {
   "_source": { "excludes": [ "url_format", "url_hash" ] },
+  "_meta": { "fields_default_optional": true },
   "properties": {
     "url": { "type": "keyword" },
     "url_hash": {
@@ -58,6 +59,7 @@
       "format": "epoch_millis||dateOptionalTime"
     },
     "first_seen_parser": {
+      "_meta": { "ignore": true },
       "type": "date",
       "format": "epoch_millis||dateOptionalTime"
     },
@@ -81,6 +83,7 @@
     "nr_skip_crawl": { "type": "long" },
     "nr_invalid_crawl": { "type": "long" },
     "tags": {
+      "_meta": { "fields_default_optional": true },
       "properties": {
         "og_title": {
           "type": "text",
@@ -135,6 +138,7 @@
       }
     },
     "deltas": {
+      "_meta": { "fields_default_optional": true },
       "properties": {
         "10m": {
           "properties": {
@@ -243,6 +247,7 @@
     "author": {
       "properties": {
         "name": {
+          "_meta": { "optional": true },
           "type": "text",
           "term_vector": "with_positions_offsets",
           "analyzer": "default",
@@ -254,10 +259,11 @@
             }
           }
         },
-        "urls": { "type": "keyword" }
+        "urls": { "type": "keyword", "_meta": { "multi": true } }
       }
     },
     "authors_social_accounts": {
+      "_meta": { "fields_default_optional": true },
       "properties": {
         "twitter": { "type": "keyword" },
         "gplus": { "type": "keyword" },
