@@ -6,18 +6,20 @@
 # cd self directory
 cd "${0%/*}"
 
+cmd () { if ! "$@" ; then printf "FAILED: %s\n" "$*" >&2; exit 2; fi }
+
 function check {
   name=${1%.query.json}
   dir=$(dirname $name)
   echo $name
   (
   set -e
-  ../esgg.native output $(basename $dir) $dir/mapping.json $name.query.json > check.atd
-  cp check.atd $name.atd
-  atdgen -t -open Mapping check.atd
-  atdgen -j -open Mapping check.atd
-  ocamlbuild -use-ocamlfind -pkg atdgen,extlib run.byte
-  ./run.byte < $name.result.json
+  cmd ../esgg.native output $(basename $dir) $dir/mapping.json $name.query.json > check.atd
+  cmd cp check.atd $name.atd
+  cmd atdgen -t -open Mapping check.atd
+  cmd atdgen -j -open Mapping check.atd
+  cmd ocamlbuild -use-ocamlfind -pkg atdgen,extlib run.byte
+  cmd ./run.byte < $name.result.json
   )
 }
 
