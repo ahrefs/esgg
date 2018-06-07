@@ -32,6 +32,9 @@ val append : t -> string -> t
 val show : t -> string
 val equal : t -> t -> bool
 val compare : t -> t -> int
+
+(** fold over the name itself and all of its parents *)
+val fold_up : ('a -> t -> 'a) -> 'a -> t -> 'a
 end = struct
 
 type t = (string option * string list)
@@ -41,6 +44,12 @@ let get_path = snd
 let make mapping s = mapping.name, Stre.nsplitc s '.'
 let append (m,l) s = m, l @ Stre.nsplitc s '.'
 let show (_,l) = String.concat "." l
+let fold_up f acc (m,l) =
+  let rec loop acc = function
+  | [] -> acc
+  | _::xs as l -> loop (f acc (m, List.rev l)) xs
+  in
+  loop acc (List.rev l)
 
 let equal (a:t) b = a = b
 let compare = compare

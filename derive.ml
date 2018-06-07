@@ -50,7 +50,7 @@ let shape_of_mapping ?excludes ?includes x : result_type =
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
-        (match includes with None -> true | Some set -> ES_names.mem path set) &&
+        (match includes with None -> true | Some set -> path |> ES_name.fold_up (fun acc x -> acc || ES_names.mem x set) false) &&
         not @@ get_meta x false "ignore"
       in
       match included with
