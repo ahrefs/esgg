@@ -57,7 +57,7 @@ let rec extract_clause (clause,json) =
     end
   | "minimum_should_match" ->
     begin match json with
-    | `Float _ | `String _ -> json, (clause, [])
+    | `Int _ | `String _ -> json, (clause, [])
     | _ -> Exn.fail "bad %S clause : expected int or string" clause
     end
   | _ -> Exn.fail "unsupported bool clause %S" clause
