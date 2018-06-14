@@ -8,16 +8,17 @@ open Common
 type query_type = string
 type equation = Field of { field : string; values : Tjson.t list } | Var of Tjson.var
 
-type var_list = [ `List of Tjson.t list | `Var of Tjson.var ]
+type var_list = [ `List of Tjson.var list | `Var of Tjson.var ]
 
 let var_list_of_json ~desc = function
-| `List _ | `Var _ as x -> x
+| `List l -> `List (List.filter_map (function `Var v -> Some v | _ -> None) l)
+| `Var _ as x -> x
 | _ -> Exn.fail "bad %s : expecting list or variable" desc
 
 type query =
 | Bool of (string * t list) list
 | Query of query_type * equation
-| Ids of var_list
+| Strings of var_list
 and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of var_list
@@ -74,8 +75,7 @@ and extract_query json =
     let bool = List.map extract_clause l in
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
-  | "ids", (`Assoc _ as x) ->
-    json, Ids (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
+  | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -118,8 +118,8 @@ let infer query =
       let multi = match qt with "terms" -> Many | _ -> One in
       List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (multi,field))) | _ -> ()) values
     | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
-    | Ids (`Var var) -> tuck constraints (On_var (var, Eq_list `String)) (* _id is string *)
-    | Ids (`List l) -> l |> List.iter (function `Var var -> tuck constraints (On_var (var, Eq_type `String)) | _ -> ())
+    | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list `String))
+    | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type `String)))
   in
   iter query;
   !constraints
@@ -136,7 +136,7 @@ let extract json =
   | exception _ ->
     let ids =
       match U.assoc "docs" json with
-      | `List l -> `List (List.map U.(assoc "_id") l)
+      | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
       | _ -> Exn.fail "unexpected docs"
       | exception _ -> var_list_of_json ~desc:"mget ids" U.(assoc "ids" json)
     in
