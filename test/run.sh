@@ -10,12 +10,12 @@ cmd () { if ! "$@" ; then printf "FAILED: %s\n" "$*" >&2; exit 2; fi }
 
 function run() {
   dir=$(dirname $1)
-  echo -n "$dir "
+  echo -n "$dir ... "
   (
   set -e
   cmd ../esgg.native output $dir/mapping.json $dir/query.json > $dir/output.atd
   cmd ../esgg.native vars $dir/mapping.json $dir/query.json > $dir/input.atd
-  ) && echo "... ok"
+  ) && echo "ok"
 }
 
 if [ $# -eq 0 ]; then

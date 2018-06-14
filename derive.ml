@@ -47,6 +47,7 @@ let shape_of_mapping ?excludes ?includes x : result_type =
     match U.(get "properties" to_assoc json) with
     | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
     | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
+      begin match x with `Assoc _ -> () | _ -> Exn.fail "property %S not a dict" name end;
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
