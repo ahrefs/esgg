@@ -76,6 +76,7 @@ and extract_query json =
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
   | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
+  | "query_string", x -> json, Strings (`List (match U.assoc "query" x with `Var x -> [x] | _ -> []))
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -89,8 +90,6 @@ and extract_query json =
       | "match", `Assoc [f, x] -> f, [x]
       | "match_phrase", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
       | "match_phrase", `Assoc [f, x] -> f, [x]
-      | "query_string", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
-      | "query_string", `Assoc [f, x] -> f, [x]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
     json, Query (qt, Field { field; values })
