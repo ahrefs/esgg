@@ -5,14 +5,23 @@ let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
 module U = struct
 
+(** @return specified [name] from [json] dict or [`Null] when [name] is absent.
+    @raise Failure if [json] is not a dict *)
 let member name = function
 | `Assoc l -> (try List.assoc name l with _ -> `Null)
 | _ -> Exn.fail "member %S : not a dict" name
 
-let get name conv json = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
-let opt name conv json = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
-
+(** @return specified [name] from [json] dict
+    @raise Failure if [json] is not a dict or [name] is absent *)
 let assoc name json = match member name json with `Null -> Exn.fail "assoc %S : not found" name | x -> x
+
+(** @return specified [name] from [json] dict with [conv] applied to it.
+    @raise Failure if [json] is not dict, when [name] is absent, when [conv] fails *)
+let get name conv json = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
+
+(** @return specified [name] from [json] dict with [conv] applied to it.
+    @raise Failure if [json] is not dict or when [conv] fails *)
+let opt name conv json = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
 
 let to_string = function `String (s:string) -> s | _ -> Exn.fail "expected string"
 let to_assoc = function `Assoc a -> a | _ -> Exn.fail "expected dict"
