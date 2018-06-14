@@ -80,6 +80,7 @@ and extract_query json =
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
+      (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
       match qt, v with
       | "exists", `Assoc ["field", `String f] -> f, []
       | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
