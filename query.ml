@@ -89,6 +89,8 @@ and extract_query json =
       | "match", `Assoc [f, x] -> f, [x]
       | "match_phrase", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
       | "match_phrase", `Assoc [f, x] -> f, [x]
+      | "query_string", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
+      | "query_string", `Assoc [f, x] -> f, [x]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
     json, Query (qt, Field { field; values })
