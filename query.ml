@@ -19,6 +19,7 @@ type query =
 | Bool of (string * t list) list
 | Query of query_type * equation
 | Strings of var_list
+| Nothing
 and t = { json : Tjson.t; query : query }
 
 type req = Search of t | Mget of var_list
@@ -71,12 +72,20 @@ let rec extract_clause (clause,json) =
 and extract_query json =
   let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
   let (json,query) = match q with
+  | "function_score", `Assoc l ->
+    begin match List.assoc "query" l with
+    | exception _ -> json, Nothing
+    | q ->
+      let { json; query } = extract_query q in
+      `Assoc ["function_score", `Assoc (("query",json)::List.remove_assoc "query" l)], query
+    end
   | "bool", `Assoc l ->
     let bool = List.map extract_clause l in
     let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
     json, Bool (List.map snd bool)
   | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
-  | "query_string", x -> json, Strings (`List (match U.assoc "query" x with `Var x -> [x] | _ -> []))
+  | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
+  | ("match_all"|"match_none"), _ -> json, Nothing
   | qt, `Var x -> json, Query (qt, Var x)
   | qt, v ->
     let field, values =
@@ -120,6 +129,7 @@ let infer query =
     | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
     | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list `String))
     | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type `String)))
+    | Nothing -> ()
   in
   iter query;
   !constraints
