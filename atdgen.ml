@@ -120,5 +120,9 @@ let of_vars l =
     else
       []
   in
-  let input = [typ "input" (record (List.map (fun (n,t) -> field n (of_var_type t)) l))] in
-  (loc,[]), (basic_json @ input)
+  let input =
+    match l with
+    | [] -> tname "unit"
+    | _ -> record (List.map (fun (n,t) -> field n (of_var_type t)) l)
+  in
+  (loc,[]), (basic_json @ [typ "input" input])

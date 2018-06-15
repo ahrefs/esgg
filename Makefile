@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: build clean test
+.PHONY: build clean test check
 
 build:
 	ocamlbuild -use-ocamlfind -package yojson,extlib,devkit,atd,easy-format,jsonm,ppx_deriving.std esgg.native
