@@ -4,10 +4,6 @@ open Prelude
 
 open Common
 
-(* type query_type = Term | Terms | Range | Exists *)
-type query_type = string
-type equation = Field of { field : string; values : Tjson.t list } | Var of Tjson.var
-
 type var_list = [ `List of Tjson.var list | `Var of Tjson.var ]
 
 let var_list_of_json ~desc = function
@@ -17,7 +13,8 @@ let var_list_of_json ~desc = function
 
 type query =
 | Bool of (string * t list) list
-| Query of query_type * equation
+| Field of { field : string; multi : multi; values : Tjson.t list }
+| Var of Tjson.var
 | Strings of var_list
 | Nothing
 and t = { json : Tjson.t; query : query }
@@ -52,10 +49,13 @@ end
 
 let lookup json x = try Some (U.assoc x json) with _ -> None
 
+let multi_of_qt = function "terms" -> Many | _ -> One
+
 let rec extract_clause (clause,json) =
   match clause with
   | "must" | "must_not" | "should" | "filter" ->
     begin match json with
+    | `Var v -> (json, (clause, [ {json; query=Var v} ]))
     | `Assoc _ as x -> let q = extract_query x in (q.json, (clause, [q]))
     | `List l ->
       let l = List.map extract_query l in
@@ -86,7 +86,7 @@ and extract_query json =
   | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
   | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
   | ("match_all"|"match_none"), _ -> json, Nothing
-  | qt, `Var x -> json, Query (qt, Var x)
+  | _qt, `Var x -> json, Var x
   | qt, v ->
     let field, values =
       (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
@@ -102,7 +102,7 @@ and extract_query json =
       | "match_phrase", `Assoc [f, x] -> f, [x]
       | k, _ -> Exn.fail "unsupported query %S" k
     in
-    json, Query (qt, Field { field; values })
+    json, Field { field; multi = multi_of_qt qt; values }
   in
   let json =
     match List.filter_map (fun { Tjson.optional; name } -> if optional then Some name else None) @@ Tjson.vars ~optional:false json with
@@ -123,10 +123,9 @@ let infer query =
   let rec iter { query; json=_ } =
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
-    | Query (qt, Field { field; values }) ->
-      let multi = match qt with "terms" -> Many | _ -> One in
+    | Field { field; multi; values } ->
       List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (multi,field))) | _ -> ()) values
-    | Query (_,Var var) -> tuck constraints (On_var (var, Eq_any))
+    | Var var -> tuck constraints (On_var (var, Eq_any))
     | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list `String))
     | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type `String)))
     | Nothing -> ()
