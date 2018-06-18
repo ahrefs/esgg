@@ -61,7 +61,7 @@ module New_types() : sig
 open Atd_ast
 
 val new_ : module_item -> unit
-val ref_ : type_expr -> type_expr
+val ref_ : ?name:string -> type_expr -> type_expr
 val get : unit -> module_item list
 
 end = struct
@@ -71,19 +71,29 @@ end = struct
 
   let get () = List.rev !types
 
-  let fresh_name t =
-    let (prefix,start) =
+  let fresh_name ?name t =
+    let candidates =
+      (match name with Some name -> [ name, name ] | None -> [])
+      @
       match t with
-      | `Record (_,[`Field (_,(name,_,_),_)],_) -> name, name
-      | _ -> "t", "t0"
+      | `Record (_,[`Field (_,(name,_,_),_)],_) -> [ name, name ]
+      | _ -> [ "t", "t0" ]
     in
-    let rec loop name n =
+    let check name =
       let (_,name) (* TODO *) = safe_ident name in
       match Hashtbl.mem names name with
-      | true -> loop (sprintf "%s%d" prefix n) (n+1)
-      | false -> name
+      | true -> None
+      | false -> Some name
     in
-    loop start 1
+    let rec loop acc candidates n =
+      match candidates with
+      | [] -> loop [] (List.rev acc) (n+1)
+      | (prefix,name)::xs ->
+        match check name with
+        | None -> loop ((prefix,sprintf "%s%d" prefix n)::acc) xs n
+        | Some name -> name
+    in
+    loop [] candidates 1
 
   let new_ typ =
     tuck types typ;
@@ -91,14 +101,18 @@ end = struct
     assert (not @@ Hashtbl.mem names name);
     Hashtbl.add names name ()
 
-  let ref_ t =
-    match List.find (fun (`Type (_,_,v)) -> t = v) !types with
-    | `Type (_,(name,[],_),_) -> tname name
-    | _ -> assert false (* parametric type cannot match *)
-    | exception _ ->
-      let name = fresh_name t in
-      new_ @@ typ name t;
-      tname name
+  let ref_ ?name t =
+    match t with
+    | `Record _ ->
+      begin match List.find (fun (`Type (_,_,v)) -> t = v) !types with
+      | `Type (_,(name,[],_),_) -> tname name
+      | _ -> assert false (* parametric type cannot match *)
+      | exception _ ->
+        let name = fresh_name ?name t in
+        new_ @@ typ name t;
+        tname name
+      end
+    | _ -> t
 
 end
 
@@ -106,27 +120,27 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   let module Types = New_types() in
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
-  let rec map ?push shape = snd @@ map' ?push shape
-  and map' ?(push=Types.ref_) shape =
+  let rec map shape = snd @@ map' shape
+  and map' shape =
     match shape with
     | #simple_type as t -> [], of_simple_type t
-    | `Maybe t -> [], nullable @@ map t
+    | `Maybe t -> [], nullable @@ Types.ref_ @@ map t
     | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref (of_simple_type t)
-    | `List t -> [], list (map t)
-    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
-    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
-    | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
+    | `List t -> [], list (Types.ref_ @@ map t)
+    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [Types.ref_ @@ map k; Types.ref_ @@ map v])
+    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [Types.ref_ @@ map k]
+    | `Dict ["buckets", `List t] -> [], pname "buckets" [Types.ref_ @@ map t]
     | `Dict fields ->
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
         let (a,t) = map' t in
         let (a',name) = safe_ident name in (* TODO check unique *)
         let a = a' @ a in
-        field ~a ~kind name t
+        field ~a ~kind name (Types.ref_ ~name t)
       end in
-      [], push @@ record fields
+      [], record fields
   in
-  Types.new_ @@ typ name (map ~push:id shape);
+  Types.new_ @@ typ name (map shape);
   (loc,[]), Types.get ()
 
 let of_vars l =
