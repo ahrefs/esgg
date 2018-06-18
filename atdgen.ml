@@ -56,9 +56,21 @@ let safe_ident name =
   | Some s -> ["json",["name",name]], s
   | None -> [], name
 
-let of_shape name (shape:result_type) : Atd_ast.full_module =
-  let names = Hashtbl.create 10 in
-  let types = ref [] in
+module New_types() : sig
+
+open Atd_ast
+
+val new_ : module_item -> unit
+val ref_ : type_expr -> type_expr
+val get : unit -> module_item list
+
+end = struct
+
+  let names = Hashtbl.create 10
+  let types = ref []
+
+  let get () = List.rev !types
+
   let fresh_name t =
     let (prefix,start) =
       match t with
@@ -72,26 +84,30 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
       | false -> name
     in
     loop start 1
-  in
-  let new_type typ =
+
+  let new_ typ =
     tuck types typ;
     let `Type (_,(name,_,_),_) = typ in
     assert (not @@ Hashtbl.mem names name);
     Hashtbl.add names name ()
-  in
-  new_type @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
-  new_type @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
-  let ref_name t =
+
+  let ref_ t =
     match List.find (fun (`Type (_,_,v)) -> t = v) !types with
     | `Type (_,(name,[],_),_) -> tname name
     | _ -> assert false (* parametric type cannot match *)
     | exception _ ->
       let name = fresh_name t in
-      new_type @@ typ name t;
+      new_ @@ typ name t;
       tname name
-  in
+
+end
+
+let of_shape name (shape:result_type) : Atd_ast.full_module =
+  let module Types = New_types() in
+  Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
+  Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
   let rec map ?push shape = snd @@ map' ?push shape
-  and map' ?(push=ref_name) shape =
+  and map' ?(push=Types.ref_) shape =
     match shape with
     | #simple_type as t -> [], of_simple_type t
     | `Maybe t -> [], nullable @@ map t
@@ -110,8 +126,8 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
       end in
       [], push @@ record fields
   in
-  tuck types (typ name (map ~push:id shape));
-  (loc,[]), List.rev !types
+  Types.new_ @@ typ name (map ~push:id shape);
+  (loc,[]), Types.get ()
 
 let of_vars l =
   let basic_json =
