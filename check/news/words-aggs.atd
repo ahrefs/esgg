@@ -17,7 +17,7 @@ type t0 = {
   shares: int
 }
 type t1 = { ?name: string nullable; ~urls: string list }
-type t2 = {
+type _source = {
   ?url: string nullable;
   ?title: string nullable;
   ?first_seen: string nullable;
@@ -27,8 +27,8 @@ type t2 = {
   ?author: t1 nullable;
   ?traffic: float nullable
 }
-type t3 = { _id: string; _source: t2 }
-type t4 = { total: int; ~hits: t3 list }
+type t2 = { _id: string; _source: _source }
+type hits = { total: int; ~hits: t2 list }
 type doc_count1 = { doc_count: int }
-type countByWords = { countByWords: doc_count1 buckets }
-type result = { hits: t4; aggregations: countByWords }
+type aggregations = { countByWords: doc_count1 buckets }
+type result = { hits: hits; aggregations: aggregations }

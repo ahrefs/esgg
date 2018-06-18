@@ -5,7 +5,7 @@ type t0 = {
   ?keyword_explorer: string nullable;
   ?clickstream: string nullable
 }
-type t1 = {
+type _source = {
   ?parent_keyword: string nullable;
   ?parent_volume: float nullable;
   ?parent_traffic: float nullable;
@@ -40,8 +40,8 @@ type t1 = {
   ?user_id: int nullable;
   ?dashboard_id: int nullable
 }
-type t2 = { _id: string; _source: t1 }
-type t3 = { total: int; ~hits: t2 list }
-type value = { ?value: float nullable }
-type totalVolume = { totalVolume: value }
-type result = { hits: t3; aggregations: totalVolume }
+type t1 = { _id: string; _source: _source }
+type hits = { total: int; ~hits: t1 list }
+type totalVolume = { ?value: float nullable }
+type aggregations = { totalVolume: totalVolume }
+type result = { hits: hits; aggregations: aggregations }
