@@ -35,15 +35,6 @@ let of_var_type {multi;ref;typ} : Atd_ast.type_expr =
   | One -> t
   | Many -> list t
 
-let of_var_type (req,t) : Atd_ast.type_expr =
-  let t = match t with
-  | None -> tname "basic_json"
-  | Some t -> of_var_type t
-  in
-  match req with
-  | `Required -> t
-  | `Optional -> option t
-
 let safe_ident name =
   let safe =
     match name with
@@ -143,16 +134,27 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   Types.new_ @@ typ name (map shape);
   (loc,[]), Types.get ()
 
-let of_vars l =
-  let basic_json =
-    if List.exists (fun (_,(_,t)) -> t = None) l then
-      [typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")]
-    else
-      []
-  in
-  let input =
+type input_vars = (string * (required * [ `Group of input_vars | `Simple of var_type option])) list
+
+let of_vars (l:input_vars) =
+  let module Types = New_types() in
+  let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
+  let rec map_field (req,t) : Atd_ast.type_expr =
+    let t =
+      match t with
+      | `Group l -> Types.ref_ @@ map l
+      | `Simple t ->
+        match t with
+        | None -> Lazy.force basic_json; tname "basic_json"
+        | Some t -> of_var_type t
+    in
+    match req with
+    | `Required -> t
+    | `Optional -> option t
+  and map l =
     match l with
     | [] -> tname "unit"
-    | _ -> record (List.map (fun (n,t) -> field n (of_var_type t)) l)
+    | _ -> record (List.map (fun (n,t) -> field n (map_field t)) l)
   in
-  (loc,[]), (basic_json @ [typ "input" input])
+  Types.new_ @@ typ "input" (map l);
+  (loc,[]), (Types.get ())

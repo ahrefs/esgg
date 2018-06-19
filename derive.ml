@@ -176,7 +176,11 @@ let derive mapping json =
     | Type typ -> Some { multi = One; ref = None; typ; }
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
-  let vars = Tjson.vars ~optional:true json |> List.map begin fun (var:Tjson.var) ->
-    var.name, ((if var.optional then `Optional else `Required), var_type var.name)
+  let (vars,groups) = Tjson.vars json in
+  let vars = vars |> List.map begin fun (var:Tjson.var) ->
+    var.name, ((if var.optional then `Optional else `Required), `Simple (var_type var.name))
   end in
-  vars, map, json
+  let groups = groups |> List.map begin fun {Tjson.label;vars} ->
+    label, (`Optional, `Group (List.map (fun v -> v, (`Required, `Simple (var_type v))) vars))
+  end in
+  vars @ groups, map, json
