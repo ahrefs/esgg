@@ -5,6 +5,7 @@ open ExtLib
 open Prelude
 
 type var = { optional : bool; name : string }
+type group = { label : string; vars : string list }
 
 type t = [
 | `Assoc of (string * t) list
@@ -15,7 +16,7 @@ type t = [
 | `Null
 | `String of string
 | `Var of var
-| `Optional of (string * t)
+| `Optional of (group * t)
 ]
 
 let pp_string f x =
@@ -98,7 +99,7 @@ let parse s : t =
 
 let intersperse sep l = match l with [] -> [] | x::xs -> x :: List.concat (List.map (fun x -> [sep; x]) xs)
 
-let lift_to_string map v =
+let lift_to_string map (v:t) =
   let module J = Yojson.Basic in
   let quote x = `Quote x in
   let list x = `List x in
@@ -126,9 +127,9 @@ let lift_to_string map v =
   let quote_val f x = let b = Bi_outbuf.create 1 in f b x; quote @@ Bi_outbuf.contents b in
   let rec output_list l =
     let elem = function
-    | `Optional (var,x) ->
+    | `Optional ({label;vars},x) ->
       list [
-        splice @@ sprintf "begin match %s with None -> None | Some %s -> Some (" var var;
+        splice @@ sprintf "begin match %s with None -> None | Some (%s) -> Some (" label (String.concat "," vars);
         splice @@ stringify @@ output x;
         splice ") end;";
       ]
@@ -145,7 +146,7 @@ let lift_to_string map v =
   | `String s -> quote_val J.write_string s
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
-  | `Optional (var,_) -> Exn.fail "Internal error (Optional %S not in list)" var
+  | `Optional (g,_) -> Exn.fail "Error: optional group %S not as list element" g.label
   | `Var { optional=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l -> output_list l
   | `List l -> (* regular *)
@@ -163,12 +164,18 @@ let lift_to_string map v =
   in
   stringify @@ output v
 
-let rec fold ~optional (f:'a->t->'a) acc = function
-| `Null | `Bool _ | `String _ | `Float _ | `Int _ | `Var _ as x -> f acc x
-| `Optional (_,x) when optional -> fold ~optional f acc x
-| `Optional _ -> acc
-| `List l -> List.fold_left (fold ~optional f) acc l
-| `Assoc a -> List.fold_left (fun acc (_,v) -> fold ~optional f acc v) acc a
+let rec fold_ (f:'a->t->'a) acc = function
+| `Null | `Bool _ | `String _ | `Float _ | `Int _ | `Var _ | `Optional _ as x -> f acc x
+| `List l -> List.fold_left (fold_ f) acc l
+| `Assoc a -> List.fold_left (fun acc (_,v) -> fold_ f acc v) acc a
+
+let rec fold ~optional (f:'a->t->'a) acc json =
+  let f acc = function
+  | `Optional (_,x) when optional -> fold ~optional f acc x
+  | `Optional _ -> acc
+  | x -> f acc x
+  in
+  fold_ f acc json
 
 let var_equal v1 v2 =
   match String.equal v1.name v2.name with
@@ -177,13 +184,27 @@ let var_equal v1 v2 =
     if (v1.optional:bool) <> v2.optional then Exn.fail "var %S optional or not, huh?" v1.name;
     true
 
-let vars ~optional (v:t) =
+let get_vars ~optional (v:t) =
   List.unique ~cmp:var_equal (fold ~optional (fun acc x -> match x with `Var var -> var::acc | _ -> acc) [] v)
+
+module SS = Set.Make(String)
+
+let vars (v:t) =
+  let groups = fold_ (fun acc x -> match x with `Optional (g,_) -> g::acc | _ -> acc) [] v in
+  let optional_vars = List.fold_left (fun acc g -> List.fold_left (fun acc v -> SS.add v acc) acc g.vars) SS.empty groups in
+  let all_vars = get_vars ~optional:true v in
+  all_vars |> List.iter (fun v -> if SS.mem v.name optional_vars <> v.optional then Exn.fail "optional or not? %S" v.name);
+  let not_optional_vars = List.filter (fun v -> not @@ SS.mem v.name optional_vars) all_vars in
+  not_optional_vars, groups
+
+let vars_names v =
+  let (not_optional_vars, optional_groups) = vars v in
+  List.map (fun v -> true, v.name) not_optional_vars @ List.map (fun g -> false, g.label) optional_groups
 
 let lift_ map v =
   let b = Buffer.create 10 in
   bprintf b "fun ";
-  List.iter (fun var -> bprintf b "~%s " var.name) (vars ~optional:true v);
+  List.iter (fun (req,pat) -> bprintf b "%c%s " (if req then '~' else '?') pat) (vars_names v);
   bprintf b "() ->\n  %s" (lift_to_string map v);
   bprintf b "\n";
   Buffer.contents b
@@ -202,7 +223,7 @@ let print_parse_json s =
 
 let rec to_yojson_exn : t -> Yojson.json = function
 | `Var {optional; name} -> Exn.fail "to_yojson_exn `Var %S%s" name (if optional then "?" else "")
-| `Optional (s, _) -> Exn.fail "to_yojson_exn `Optional %s" s
+| `Optional (g, _) -> Exn.fail "to_yojson_exn `Optional %S" g.label
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)
 | `String _ | `Float _ | `Int _ | `Bool _ | `Null as x -> x

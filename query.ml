@@ -105,10 +105,9 @@ and extract_query json =
     json, Field { field; multi = multi_of_qt qt; values }
   in
   let json =
-    match List.filter_map (fun { Tjson.optional; name } -> if optional then Some name else None) @@ Tjson.vars ~optional:false json with
+    match List.filter_map (fun {Tjson.optional;name} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
     | [] -> json
-    | [var_name] -> `Optional (var_name, json)
-    | _ -> Exn.fail "multiple optional vars in one scope not supported"
+    | vars -> `Optional ({ label = String.concat "_" vars; vars }, json)
   in
   { query; json }
 

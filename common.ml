@@ -82,7 +82,7 @@ type var_type = { multi : multi; ref : ES_name.t option; typ : simple_type; }
 let show_var_type x = show_simple_type x.typ
 let pp_var_type ppf x = pp_simple_type ppf x.typ
 
-type full_var_type = [ `Required | `Optional ] * var_type option [@@deriving show]
+type required = [ `Required | `Optional ] [@@deriving show]
 
 type result_type = [
   | `List of result_type
