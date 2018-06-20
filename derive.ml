@@ -149,9 +149,9 @@ let convertor (t:var_type option) unwrap name =
 let derive mapping json =
   let (vars,json) =
     match Query.extract json with
-    | Search q ->
+    | Search { q; extra } ->
       let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
-      let c2 = Query.infer q in
+      let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
       let json =
         match json with

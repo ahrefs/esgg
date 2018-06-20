@@ -19,10 +19,10 @@ type query =
 | Nothing
 and t = { json : Tjson.t; query : query }
 
-type req = Search of t | Mget of var_list
-
 type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
+
+type req = Search of { q : t; extra : constraint_t list } | Mget of var_list
 
 module Variable = struct
 
@@ -117,8 +117,8 @@ let record vars var ti =
   | x when Variable.equal x ti -> ()
   | x -> Exn.fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
 
-let infer query =
-  let constraints = ref [] in
+let infer' c0 query =
+  let constraints = ref c0 in
   let rec iter { query; json=_ } =
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
@@ -132,15 +132,24 @@ let infer query =
   iter query;
   !constraints
 
+let infer = infer' []
+
 let resolve_mget_types ids =
   let vars = Hashtbl.create 3 in
   match ids with
   | `Var (v:Tjson.var) -> record vars v.name (List `String); vars
   | _ -> Exn.fail "mget: only variable ids supported"
 
+let get_var json name =
+  match U.member name json with
+  | `Var v -> assert (v.Tjson.optional = false); Some v
+  | _ -> None
+
 let extract json =
   match U.assoc "query" json with
-  | q -> Search (extract_query q)
+  | q ->
+    let extra = List.map (fun v -> On_var (v, Eq_type `Int)) @@ List.filter_map (get_var json) ["size";"from"] in
+    Search { q = extract_query q; extra }
   | exception _ ->
     let ids =
       match U.assoc "docs" json with
