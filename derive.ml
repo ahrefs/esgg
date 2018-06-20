@@ -181,6 +181,11 @@ let derive mapping json =
     var.name, ((if var.optional then `Optional else `Required), `Simple (var_type var.name))
   end in
   let groups = groups |> List.map begin fun {Tjson.label;vars} ->
-    label, (`Optional, `Group (List.map (fun v -> v, (`Required, `Simple (var_type v))) vars))
+    let v =
+      match vars with
+      | [var] -> `Simple (var_type var)
+      | _ -> `Group (List.map (fun v -> v, (`Required, `Simple (var_type v))) vars)
+    in
+    label, (`Optional, v)
   end in
   vars @ groups, map, json

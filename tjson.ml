@@ -128,8 +128,14 @@ let lift_to_string map (v:t) =
   let rec output_list l =
     let elem = function
     | `Optional ({label;vars},x) ->
+      let match_vars =
+        match vars with
+        | [] -> assert false
+        | [x] -> x
+        | l -> sprintf "{%s}" (String.concat ";" l)
+      in
       list [
-        splice @@ sprintf "begin match %s with None -> None | Some (%s) -> Some (" label (String.concat "," vars);
+        splice @@ sprintf "begin match %s with None -> None | Some %s -> Some (" label match_vars;
         splice @@ stringify @@ output x;
         splice ") end;";
       ]
