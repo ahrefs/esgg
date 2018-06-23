@@ -2,6 +2,6 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type _source = { content: string }
-type t0 = { _id: string; _source: _source }
-type hits = { total: int; ~hits: t0 list }
+type hit = { _id: string; _source: _source }
+type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }

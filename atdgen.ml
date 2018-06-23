@@ -1,4 +1,5 @@
 open Printf
+open ExtLib
 open Prelude
 open Common
 
@@ -60,16 +61,15 @@ end = struct
   let names = Hashtbl.create 10
   let types = ref []
 
-  let get () = List.rev !types
-
   let fresh_name ?name t =
     let candidates =
       (match name with Some name -> [ name, name ] | None -> [])
       @
       match t with
       | `Record (_,[`Field (_,(name,_,_),_)],_) -> [ name, name ]
-      | _ -> [ "t", "t0" ]
+      | _ -> []
     in
+    let candidates = if candidates = [] then [ "t", "t0" ] else candidates in
     let check name =
       let (_,name) (* TODO *) = safe_ident name in
       match Hashtbl.mem names name with
@@ -92,6 +92,12 @@ end = struct
     assert (not @@ Hashtbl.mem names name);
     Hashtbl.add names name ()
 
+  (* atdgen does topological sorting itself, but still lets try to keep natural order *)
+  let replace name typ =
+    match List.partition (function`Type (_,(n,_,_),_) -> n = name) !types with
+    | [`Type (loc,(n,tp,annot),_)], rest -> types := (`Type (loc,(n,tp,annot),typ)) :: rest
+    | _ -> assert false
+
   let ref_ ?name t =
     match t with
     | `Record _ ->
@@ -105,6 +111,45 @@ end = struct
       end
     | _ -> t
 
+  (* remove nested records, producing more types as needed *)
+  let unrecord name t =
+    let rec map name t =
+      match t with
+      | `Record r -> ref_ ?name (map_record r)
+      | `Sum (_loc, _variants, _annot) -> assert false
+      | `Tuple (loc, cells, annot) -> `Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
+      | `List (loc, t, annot) ->
+        let name =
+          match name with
+          | Some name when String.ends_with name "s" && String.length name > 1 -> Some (String.slice ~last:(-1) name)
+          | Some name -> Some (name ^ "_elem")
+          | None -> None
+        in
+        `List (loc, map name t, annot)
+      | `Option (loc, t, annot) -> `Option (loc, map name t, annot)
+      | `Nullable (loc, t, annot) -> `Nullable (loc, map name t, annot)
+      | `Shared (loc, t, annot) -> `Shared (loc, map name t, annot)
+      | `Wrap (loc, t, annot) -> `Wrap (loc, map name t, annot)
+      | `Name (loc, (loc', n, tl), annot) ->
+        let name = match n, tl with "buckets", [_] -> name | _ -> None in
+        `Name (loc, (loc', n, List.map (map name) tl), annot)
+      | `Tvar _ -> t
+    and map_record (loc,fields,annot) =
+      let fields = fields |> List.map begin function
+      | `Inherit _ -> Exn.fail "inherit not supported"
+      | `Field (loc,(name,_,_ as f),t) -> `Field (loc, f, map (Some name) t)
+      end
+      in
+      `Record (loc,fields,annot)
+    in
+    match t with
+    | `Record r -> map_record r (* record type top top-level, no need to unnest *)
+    | _ -> map (Some name) t
+
+  let get () =
+    !types |> List.rev |> List.iter (function `Type (_,(name,_,_),t) -> replace name (unrecord name t));
+    List.rev !types
+
 end
 
 let of_shape name (shape:result_type) : Atd_ast.full_module =
@@ -115,19 +160,19 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   and map' shape =
     match shape with
     | #simple_type as t -> [], of_simple_type t
-    | `Maybe t -> [], nullable @@ Types.ref_ @@ map t
+    | `Maybe t -> [], nullable @@ map t
     | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref (of_simple_type t)
-    | `List t -> [], list (Types.ref_ @@ map t)
-    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [Types.ref_ @@ map k; Types.ref_ @@ map v])
-    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [Types.ref_ @@ map k]
-    | `Dict ["buckets", `List t] -> [], pname "buckets" [Types.ref_ @@ map t]
+    | `List t -> [], list (map t)
+    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
+    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
+    | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
     | `Dict fields ->
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
         let (a,t) = map' t in
         let (a',name) = safe_ident name in (* TODO check unique *)
         let a = a' @ a in
-        field ~a ~kind name (Types.ref_ ~name t)
+        field ~a ~kind name t
       end in
       [], record fields
   in
