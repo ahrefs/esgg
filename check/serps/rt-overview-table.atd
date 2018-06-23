@@ -61,7 +61,7 @@ type positions = {
   stats: stats;
   metrics: metrics
 }
-type t0 = {
+type stats1 = {
   nr_int_url: int;
   nr_ext_url: int;
   recognized: float;
@@ -108,7 +108,7 @@ type _source = {
   server: string;
   pos_suffix: string;
   last_rebuild: string;
-  stats: t0
+  stats: stats1
 }
-type t1 = { _id: string; found: bool; _source: _source }
-type result = { ~docs: t1 list }
+type doc = { _id: string; found: bool; _source: _source }
+type result = { ~docs: doc list }

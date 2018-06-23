@@ -28,13 +28,13 @@ type _source = {
   stats: stats;
   serp_features: string
 }
-type t0 = { _id: string; _source: _source }
-type hits = { total: int; ~hits: t0 list }
+type hit = { _id: string; _source: _source }
+type hits = { total: int; ~hits: hit list }
 type traffic = { ?value: float nullable }
 type total = { total: int }
 type top = { hits: total }
 type have_rd = { doc_count: int; top2: top }
-type t1 = {
+type topPages = {
   key <doc text="url_hash.exact_only">:
     int <ocaml repr="int64"> wrap
       <ocaml module="Positions.Url_hash.Exact_only">;
@@ -46,7 +46,7 @@ type t1 = {
 }
 type totalPages = { value: int }
 type aggregations = {
-  topPages: t1 buckets;
+  topPages: topPages buckets;
   totalPages: totalPages;
   totalTraffic: traffic
 }

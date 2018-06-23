@@ -22,16 +22,16 @@ type _source = {
   results: int;
   stats: stats
 }
-type t0 = { _id: string; _source: _source }
-type hits = { total: int; ~hits: t0 list }
+type hit = { _id: string; _source: _source }
+type hits = { total: int; ~hits: hit list }
 type total = { total: int }
 type hits1 = { hits: total }
-type t1 = {
+type topCompetitors = {
   key <doc text="urls_hashes_top10.rootdomain">:
     int <ocaml repr="int64"> wrap
       <ocaml module="Serps.Urls_hashes_top10.Rootdomain">;
   doc_count: int;
   hits: hits1
 }
-type aggregations = { topCompetitors: t1 buckets }
+type aggregations = { topCompetitors: topCompetitors buckets }
 type result = { hits: hits; aggregations: aggregations }

@@ -4,13 +4,13 @@ type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
 type partition = { doc_count: int }
 type www_labelimage_com_au = { doc_count: int; partition: partition }
-type t0 = {
+type buckets1 = {
   www_labelimage_com_au <json name="www.labelimage.com.au">:
     www_labelimage_com_au;
   https___github_com_tzutalin_labelImg
     <json name="https://github.com/tzutalin/labelImg">:
     www_labelimage_com_au
 }
-type competitorsCommonKeywords = { buckets: t0 }
+type competitorsCommonKeywords = { buckets: buckets1 }
 type aggregations = { competitorsCommonKeywords: competitorsCommonKeywords }
 type result = { hits: hits; aggregations: aggregations }

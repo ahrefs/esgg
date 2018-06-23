@@ -3,10 +3,13 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
 type value = { ?value: float nullable }
-type t0 = {
+type monthlyTraffic = {
   key <doc text="country">: string wrap <ocaml module="Positions.Country">;
   doc_count: int;
   buckets: value
 }
-type aggregations = { monthlyTraffic: t0 buckets; monthlyCost: t0 buckets }
+type aggregations = {
+  monthlyTraffic: monthlyTraffic buckets;
+  monthlyCost: monthlyTraffic buckets
+}
 type result = { hits: hits; aggregations: aggregations }

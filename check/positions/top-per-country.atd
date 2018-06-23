@@ -80,13 +80,13 @@ type _source = {
   serp_features: string;
   serp_structure: serp_structure
 }
-type t0 = { _id: string; _source: _source }
-type hits = { total: int; ~hits: t0 list }
+type hit = { _id: string; _source: _source }
+type hits = { total: int; ~hits: hit list }
 type totalTraffic = { ?value: float nullable }
 type total = { total: int }
 type top = { hits: total }
 type have_rd = { doc_count: int; top2: top }
-type t1 = {
+type top1 = {
   key <doc text="url_hash.exact_only">:
     int <ocaml repr="int64"> wrap
       <ocaml module="Positions.Url_hash.Exact_only">;
@@ -96,10 +96,13 @@ type t1 = {
   top: top;
   have_rd: have_rd
 }
-type t2 = {
+type topPerCountry = {
   key <doc text="country">: string wrap <ocaml module="Positions.Country">;
   doc_count: int;
-  top: t1 buckets
+  top: top1 buckets
 }
-type aggregations = { totalTraffic: totalTraffic; topPerCountry: t2 buckets }
+type aggregations = {
+  totalTraffic: totalTraffic;
+  topPerCountry: topPerCountry buckets
+}
 type result = { hits: hits; aggregations: aggregations }
