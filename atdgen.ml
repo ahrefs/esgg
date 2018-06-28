@@ -156,25 +156,23 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   let module Types = New_types() in
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
-  let rec map shape = snd @@ map' shape
-  and map' shape =
+  let rec map shape =
     match shape with
-    | #simple_type as t -> [], of_simple_type t
-    | `Maybe t -> [], nullable @@ map t
-    | `Ref (ref,t) -> ["doc",["text",ES_name.show ref]], wrap_ref ref (of_simple_type t)
-    | `List t -> [], list (map t)
-    | `Assoc (k,v) -> [], list ~a:["json",["repr","object"]] (tuple [map k; map v])
-    | `Dict ["key",k; "doc_count", `Int] -> [], pname "doc_count" [map k]
-    | `Dict ["buckets", `List t] -> [], pname "buckets" [map t]
+    | #simple_type as t -> of_simple_type t
+    | `Maybe t -> nullable @@ map t
+    | `Ref (ref,t) -> wrap_ref ref (of_simple_type t)
+    | `List t -> list (map t)
+    | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
+    | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
+    | `Dict ["buckets", `List t] -> pname "buckets" [map t]
     | `Dict fields ->
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
-        let (a,t) = map' t in
-        let (a',name) = safe_ident name in (* TODO check unique *)
-        let a = a' @ a in
+        let t = map t in
+        let (a,name) = safe_ident name in (* TODO check unique *)
         field ~a ~kind name t
       end in
-      [], record fields
+      record fields
   in
   Types.new_ @@ typ name (map shape);
   (loc,[]), Types.get ()
