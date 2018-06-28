@@ -8,8 +8,8 @@ type agg_type =
 | Terms of { field : string; size : Tjson.t }
 | Histogram of string
 | Date_histogram of string
-| Filter of Query.t
-| Filters of (string * Query.t) list
+| Filter of Query.query
+| Filters of (string * Query.query) list
 | Top_hits
 | Range of string
 | Nested of string
@@ -68,7 +68,7 @@ let infer_single { name; agg; } sub =
   let doc_count () = sub ["doc_count", `Int] in
   let (cstr,shape) =
     match agg with
-    | Simple_metric field -> [Query.Field_num field], sub [ "value", `Maybe `Double ]
+    | Simple_metric field -> [Field_num field], sub [ "value", `Maybe `Double ]
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [Field_num field], buckets `Double
