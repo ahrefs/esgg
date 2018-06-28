@@ -27,7 +27,7 @@ type hits = { total: int; ~hits: hit list }
 type total = { total: int }
 type hits1 = { hits: total }
 type topCompetitors = {
-  key <doc text="urls_hashes_top10.rootdomain">:
+  key:
     int <ocaml repr="int64"> wrap
       <ocaml module="Serps.Urls_hashes_top10.Rootdomain">;
   doc_count: int;

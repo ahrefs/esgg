@@ -3,7 +3,7 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
 type positionHistogram = {
-  key <doc text="country">: string wrap <ocaml module="Positions.Country">;
+  key: string wrap <ocaml module="Positions.Country">;
   doc_count: int;
   buckets: float doc_count buckets
 }
