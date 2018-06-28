@@ -41,7 +41,7 @@ let shape_of_mapping ?excludes ?includes x : result_type =
     match U.assoc "type" json with
     | exception _ -> wrap false @@ make_properties ~default_optional path json
     | `String "nested" -> wrap true @@ make_properties ~default_optional path json
-    | `String t -> wrap false @@ simple_of_es_type path t
+    | `String t -> wrap false @@ `Ref (path, simple_of_es_type path t)
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
   and make_properties ~default_optional path json =
     match U.(get "properties" to_assoc json) with
