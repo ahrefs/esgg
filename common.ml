@@ -32,6 +32,13 @@ end
 
 type mapping = { mapping : Yojson.Basic.json; name : string option; }
 
+let to_valid_ident ~prefix s =
+  assert (s <> "");
+  let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
+  match s.[0] with '0'..'9' -> prefix ^ s | _ -> s
+
+let to_valid_modname s = String.capitalize @@ to_valid_ident ~prefix:"M_" s
+
 module ES_name : sig
 type t
 val to_ocaml : t -> string
@@ -48,7 +55,7 @@ end = struct
 
 type t = (string option * string list)
 
-let to_ocaml (modname,l) = (List.filter_map id [modname] @ l) |> List.map String.capitalize |> String.concat "."
+let to_ocaml (modname,l) = (List.filter_map id [modname] @ l) |> List.map to_valid_modname |> String.concat "."
 let get_path = snd
 let make mapping s = mapping.name, Stre.nsplitc s '.'
 let append (m,l) s = m, l @ Stre.nsplitc s '.'
@@ -129,10 +136,3 @@ let typeof mapping t : simple_type =
   | a -> simple_of_es_type t a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
-
-let to_valid_ident ~prefix s =
-  assert (s <> "");
-  let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
-  match s.[0] with '0'..'9' -> prefix ^ s | _ -> s
-
-let to_valid_modname s = String.capitalize @@ to_valid_ident ~prefix:"M_" s
