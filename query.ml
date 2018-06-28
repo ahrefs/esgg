@@ -11,18 +11,15 @@ let var_list_of_json ~desc = function
 | `Var _ as x -> x
 | _ -> Exn.fail "bad %s : expecting list or variable" desc
 
-type query =
-| Bool of (string * t list) list
+type query_t =
+| Bool of (string * query list) list
 | Field of { field : string; multi : multi; values : Tjson.t list }
 | Var of Tjson.var
 | Strings of var_list
 | Nothing
-and t = { json : Tjson.t; query : query }
+and query = { json : Tjson.t; query : query_t }
 
-type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
-type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
-
-type req = Search of { q : t; extra : constraint_t list } | Mget of var_list
+type t = Search of { q : query; extra : constraint_t list } | Mget of var_list
 
 module Variable = struct
 

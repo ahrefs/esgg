@@ -179,8 +179,6 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
   Types.new_ @@ typ name (map shape);
   (loc,[]), Types.get ()
 
-type input_vars = (string * (required * [ `Group of input_vars | `Simple of var_type option])) list
-
 let of_vars (l:input_vars) =
   let module Types = New_types() in
   let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
