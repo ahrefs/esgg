@@ -2,43 +2,57 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type sources = {
-  ?keyword_explorer: string nullable;
-  ?clickstream: string nullable
+  ?keyword_explorer:
+    string wrap <ocaml module="Keywords.Sources.Keyword_explorer"> nullable;
+  ?clickstream:
+    string wrap <ocaml module="Keywords.Sources.Clickstream"> nullable
 }
 type _source = {
-  ?parent_keyword: string nullable;
-  ?parent_volume: float nullable;
-  ?parent_traffic: float nullable;
-  ?nice_parent_volume: int nullable;
-  ?nice_parent_traffic: int nullable;
-  ?volume: float nullable;
-  ?nice_volume: int nullable;
-  ?global_volume: float nullable;
-  ?nice_global_volume: int nullable;
-  ?provider: string nullable;
-  ?country: string nullable;
-  ?keyword: string nullable;
-  ?source_file: string nullable;
-  ?source_line: int nullable;
-  ?avg_volume: float nullable;
-  ?pred_volume: float nullable;
-  ?percent_clicks_organic: float nullable;
-  ?percent_clicks_paid: float nullable;
-  ?ctr_p_organic: float nullable;
-  ?return_rate: float nullable;
-  ?clicks_per_search: float nullable;
-  ?clicks_per_search_organic: float nullable;
-  ?clicks_per_search_paid: float nullable;
-  ?difficulty: int nullable;
-  ?first_seen: string nullable;
-  ?last_update: string nullable;
-  ?serp_last_update: string nullable;
-  ?serp_features: string list nullable;
+  ?parent_keyword:
+    string wrap <ocaml module="Keywords.Parent_keyword"> nullable;
+  ?parent_volume: float wrap <ocaml module="Keywords.Parent_volume"> nullable;
+  ?parent_traffic:
+    float wrap <ocaml module="Keywords.Parent_traffic"> nullable;
+  ?nice_parent_volume:
+    int wrap <ocaml module="Keywords.Nice_parent_volume"> nullable;
+  ?nice_parent_traffic:
+    int wrap <ocaml module="Keywords.Nice_parent_traffic"> nullable;
+  ?volume: float wrap <ocaml module="Keywords.Volume"> nullable;
+  ?nice_volume: int wrap <ocaml module="Keywords.Nice_volume"> nullable;
+  ?global_volume: float wrap <ocaml module="Keywords.Global_volume"> nullable;
+  ?nice_global_volume:
+    int wrap <ocaml module="Keywords.Nice_global_volume"> nullable;
+  ?provider: string wrap <ocaml module="Keywords.Provider"> nullable;
+  ?country: string wrap <ocaml module="Keywords.Country"> nullable;
+  ?keyword: string wrap <ocaml module="Keywords.Keyword"> nullable;
+  ?source_file: string wrap <ocaml module="Keywords.Source_file"> nullable;
+  ?source_line: int wrap <ocaml module="Keywords.Source_line"> nullable;
+  ?avg_volume: float wrap <ocaml module="Keywords.Avg_volume"> nullable;
+  ?pred_volume: float wrap <ocaml module="Keywords.Pred_volume"> nullable;
+  ?percent_clicks_organic:
+    float wrap <ocaml module="Keywords.Percent_clicks_organic"> nullable;
+  ?percent_clicks_paid:
+    float wrap <ocaml module="Keywords.Percent_clicks_paid"> nullable;
+  ?ctr_p_organic: float wrap <ocaml module="Keywords.Ctr_p_organic"> nullable;
+  ?return_rate: float wrap <ocaml module="Keywords.Return_rate"> nullable;
+  ?clicks_per_search:
+    float wrap <ocaml module="Keywords.Clicks_per_search"> nullable;
+  ?clicks_per_search_organic:
+    float wrap <ocaml module="Keywords.Clicks_per_search_organic"> nullable;
+  ?clicks_per_search_paid:
+    float wrap <ocaml module="Keywords.Clicks_per_search_paid"> nullable;
+  ?difficulty: int wrap <ocaml module="Keywords.Difficulty"> nullable;
+  ?first_seen: string wrap <ocaml module="Keywords.First_seen"> nullable;
+  ?last_update: string wrap <ocaml module="Keywords.Last_update"> nullable;
+  ?serp_last_update:
+    string wrap <ocaml module="Keywords.Serp_last_update"> nullable;
+  ?serp_features:
+    string wrap <ocaml module="Keywords.Serp_features"> list nullable;
   ?sources: sources nullable;
-  ?cpc: int nullable;
-  ?nice_cpc: int nullable;
-  ?user_id: int nullable;
-  ?dashboard_id: int nullable
+  ?cpc: int wrap <ocaml module="Keywords.Cpc"> nullable;
+  ?nice_cpc: int wrap <ocaml module="Keywords.Nice_cpc"> nullable;
+  ?user_id: int wrap <ocaml module="Keywords.User_id"> nullable;
+  ?dashboard_id: int wrap <ocaml module="Keywords.Dashboard_id"> nullable
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }

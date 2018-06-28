@@ -2,30 +2,34 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type metrics = {
-  gplus: int;
-  twitter: int;
-  linkedin: int;
-  pinterest: int;
-  facebook_likes: int;
-  facebook_shares: int;
-  facebook_comments: int;
-  facebook_clicks: int;
-  facebook_comments_box: int;
-  rank: int;
-  rank1: int;
-  rank0: int;
-  shares: int
+  gplus: int wrap <ocaml module="News.Metrics.Gplus">;
+  twitter: int wrap <ocaml module="News.Metrics.Twitter">;
+  linkedin: int wrap <ocaml module="News.Metrics.Linkedin">;
+  pinterest: int wrap <ocaml module="News.Metrics.Pinterest">;
+  facebook_likes: int wrap <ocaml module="News.Metrics.Facebook_likes">;
+  facebook_shares: int wrap <ocaml module="News.Metrics.Facebook_shares">;
+  facebook_comments: int wrap <ocaml module="News.Metrics.Facebook_comments">;
+  facebook_clicks: int wrap <ocaml module="News.Metrics.Facebook_clicks">;
+  facebook_comments_box:
+    int wrap <ocaml module="News.Metrics.Facebook_comments_box">;
+  rank: int wrap <ocaml module="News.Metrics.Rank">;
+  rank1: int wrap <ocaml module="News.Metrics.Rank1">;
+  rank0: int wrap <ocaml module="News.Metrics.Rank0">;
+  shares: int wrap <ocaml module="News.Metrics.Shares">
 }
-type author = { ?name: string nullable; ~urls: string list }
+type author = {
+  ?name: string wrap <ocaml module="News.Author.Name"> nullable;
+  ~urls: string wrap <ocaml module="News.Author.Urls"> list
+}
 type _source = {
-  ?url: string nullable;
-  ?title: string nullable;
-  ?first_seen: string nullable;
-  ?next_update: string nullable;
-  ?last_update: string nullable;
+  ?url: string wrap <ocaml module="News.Url"> nullable;
+  ?title: string wrap <ocaml module="News.Title"> nullable;
+  ?first_seen: string wrap <ocaml module="News.First_seen"> nullable;
+  ?next_update: string wrap <ocaml module="News.Next_update"> nullable;
+  ?last_update: string wrap <ocaml module="News.Last_update"> nullable;
   ?metrics: metrics nullable;
   ?author: author nullable;
-  ?traffic: float nullable
+  ?traffic: float wrap <ocaml module="News.Traffic"> nullable
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }

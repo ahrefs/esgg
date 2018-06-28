@@ -2,24 +2,24 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type stats = {
-  nr_int_url: int;
-  nr_ext_url: int;
-  recognized: float;
-  real_country: string;
-  bad_country: string;
-  uul_text: string;
-  real_uul_country: string;
-  bad_uul_country: string
+  nr_int_url: int wrap <ocaml module="Serps.Stats.Nr_int_url">;
+  nr_ext_url: int wrap <ocaml module="Serps.Stats.Nr_ext_url">;
+  recognized: float wrap <ocaml module="Serps.Stats.Recognized">;
+  real_country: string wrap <ocaml module="Serps.Stats.Real_country">;
+  bad_country: string wrap <ocaml module="Serps.Stats.Bad_country">;
+  uul_text: string wrap <ocaml module="Serps.Stats.Uul_text">;
+  real_uul_country: string wrap <ocaml module="Serps.Stats.Real_uul_country">;
+  bad_uul_country: string wrap <ocaml module="Serps.Stats.Bad_uul_country">
 }
 type _source = {
-  last_update: string;
-  prev_update: string;
-  difficulty: int;
-  nice_volume: int;
-  keyword: string;
-  nice_cpc: int;
-  competition: int;
-  results: int;
+  last_update: string wrap <ocaml module="Serps.Last_update">;
+  prev_update: string wrap <ocaml module="Serps.Prev_update">;
+  difficulty: int wrap <ocaml module="Serps.Difficulty">;
+  nice_volume: int wrap <ocaml module="Serps.Nice_volume">;
+  keyword: string wrap <ocaml module="Serps.Keyword">;
+  nice_cpc: int wrap <ocaml module="Serps.Nice_cpc">;
+  competition: int wrap <ocaml module="Serps.Competition">;
+  results: int wrap <ocaml module="Serps.Results">;
   stats: stats
 }
 type hit = { _id: string; _source: _source }

@@ -2,112 +2,137 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type url_hash = {
-  exact: int <ocaml repr="int64">;
-  exact_only: int <ocaml repr="int64">;
-  prefix: int <ocaml repr="int64">;
-  domain: int <ocaml repr="int64">;
-  domain_only: int <ocaml repr="int64">;
-  subdomains: int <ocaml repr="int64">;
-  rootdomain: int <ocaml repr="int64">;
-  site: int <ocaml repr="int64">
+  exact:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Exact">;
+  exact_only:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Exact_only">;
+  prefix:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Prefix">;
+  domain:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Domain">;
+  domain_only:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Domain_only">;
+  subdomains:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Subdomains">;
+  rootdomain:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Rootdomain">;
+  site:
+    int <ocaml repr="int64"> wrap
+      <ocaml module="Serps.Positions.Url_hash.Site">
 }
-type history = { position: int; ordinal: int; block_pos: int; link_pos: int }
+type history = {
+  position: int wrap <ocaml module="Serps.Positions.History.Position">;
+  ordinal: int wrap <ocaml module="Serps.Positions.History.Ordinal">;
+  block_pos: int wrap <ocaml module="Serps.Positions.History.Block_pos">;
+  link_pos: int wrap <ocaml module="Serps.Positions.History.Link_pos">
+}
 type stats = {
-  volume: float;
-  nice_volume: int;
-  cost: float;
-  nice_cost: int;
-  ctr_p: float;
-  nr_pos: int
+  volume: float wrap <ocaml module="Serps.Positions.Stats.Volume">;
+  nice_volume: int wrap <ocaml module="Serps.Positions.Stats.Nice_volume">;
+  cost: float wrap <ocaml module="Serps.Positions.Stats.Cost">;
+  nice_cost: int wrap <ocaml module="Serps.Positions.Stats.Nice_cost">;
+  ctr_p: float wrap <ocaml module="Serps.Positions.Stats.Ctr_p">;
+  nr_pos: int wrap <ocaml module="Serps.Positions.Stats.Nr_pos">
 }
 type metrics = {
-  backlinks: int;
-  refdomains: int;
-  refclass_c: int;
-  domain_rating: int;
-  ahrefs_rank: int;
-  ahrefs_top: int;
-  gplus: int;
-  facebook: int;
-  linkedin: int;
-  nr_keywords: int;
-  traffic: float;
-  top_keyword: string;
-  top_keyword_id: string;
-  top_volume: float;
-  nice_top_volume: int
+  backlinks: int wrap <ocaml module="Serps.Positions.Metrics.Backlinks">;
+  refdomains: int wrap <ocaml module="Serps.Positions.Metrics.Refdomains">;
+  refclass_c: int wrap <ocaml module="Serps.Positions.Metrics.Refclass_c">;
+  domain_rating:
+    int wrap <ocaml module="Serps.Positions.Metrics.Domain_rating">;
+  ahrefs_rank: int wrap <ocaml module="Serps.Positions.Metrics.Ahrefs_rank">;
+  ahrefs_top: int wrap <ocaml module="Serps.Positions.Metrics.Ahrefs_top">;
+  gplus: int wrap <ocaml module="Serps.Positions.Metrics.Gplus">;
+  facebook: int wrap <ocaml module="Serps.Positions.Metrics.Facebook">;
+  linkedin: int wrap <ocaml module="Serps.Positions.Metrics.Linkedin">;
+  nr_keywords: int wrap <ocaml module="Serps.Positions.Metrics.Nr_keywords">;
+  traffic: float wrap <ocaml module="Serps.Positions.Metrics.Traffic">;
+  top_keyword:
+    string wrap <ocaml module="Serps.Positions.Metrics.Top_keyword">;
+  top_keyword_id:
+    string wrap <ocaml module="Serps.Positions.Metrics.Top_keyword_id">;
+  top_volume: float wrap <ocaml module="Serps.Positions.Metrics.Top_volume">;
+  nice_top_volume:
+    int wrap <ocaml module="Serps.Positions.Metrics.Nice_top_volume">
 }
 type positions = {
-  position: int;
-  ordinal: int;
-  block_pos: int;
-  link_pos: int;
-  type_ <json name="type">: string;
-  url: string;
+  position: int wrap <ocaml module="Serps.Positions.Position">;
+  ordinal: int wrap <ocaml module="Serps.Positions.Ordinal">;
+  block_pos: int wrap <ocaml module="Serps.Positions.Block_pos">;
+  link_pos: int wrap <ocaml module="Serps.Positions.Link_pos">;
+  type_ <json name="type">: string wrap <ocaml module="Serps.Positions.Type">;
+  url: string wrap <ocaml module="Serps.Positions.Url">;
   url_hash: url_hash;
-  url_visual: string;
-  block: string;
+  url_visual: string wrap <ocaml module="Serps.Positions.Url_visual">;
+  block: string wrap <ocaml module="Serps.Positions.Block">;
   history: history;
-  title: string;
-  title2: string;
-  description: string;
-  description2: string;
-  rating: int;
-  has_thumbnail: bool;
-  video: string;
-  prerender: string;
-  company: string;
-  features: string;
+  title: string wrap <ocaml module="Serps.Positions.Title">;
+  title2: string wrap <ocaml module="Serps.Positions.Title2">;
+  description: string wrap <ocaml module="Serps.Positions.Description">;
+  description2: string wrap <ocaml module="Serps.Positions.Description2">;
+  rating: int wrap <ocaml module="Serps.Positions.Rating">;
+  has_thumbnail: bool wrap <ocaml module="Serps.Positions.Has_thumbnail">;
+  video: string wrap <ocaml module="Serps.Positions.Video">;
+  prerender: string wrap <ocaml module="Serps.Positions.Prerender">;
+  company: string wrap <ocaml module="Serps.Positions.Company">;
+  features: string wrap <ocaml module="Serps.Positions.Features">;
   stats: stats;
   metrics: metrics
 }
 type stats1 = {
-  nr_int_url: int;
-  nr_ext_url: int;
-  recognized: float;
-  real_country: string;
-  bad_country: string;
-  uul_text: string;
-  real_uul_country: string;
-  bad_uul_country: string
+  nr_int_url: int wrap <ocaml module="Serps.Stats.Nr_int_url">;
+  nr_ext_url: int wrap <ocaml module="Serps.Stats.Nr_ext_url">;
+  recognized: float wrap <ocaml module="Serps.Stats.Recognized">;
+  real_country: string wrap <ocaml module="Serps.Stats.Real_country">;
+  bad_country: string wrap <ocaml module="Serps.Stats.Bad_country">;
+  uul_text: string wrap <ocaml module="Serps.Stats.Uul_text">;
+  real_uul_country: string wrap <ocaml module="Serps.Stats.Real_uul_country">;
+  bad_uul_country: string wrap <ocaml module="Serps.Stats.Bad_uul_country">
 }
 type _source = {
-  user_id: int;
-  dashboard_id: int;
-  keyword_id: int;
-  provider: string;
-  language: string;
-  country: string;
-  location: string;
-  first_seen: string;
-  last_update: string;
-  next_update: string;
-  prev_update: string;
-  difficulty: int;
-  parent_keyword: string;
-  parent_volume: float;
-  parent_traffic: float;
-  nice_parent_volume: int;
-  nice_parent_traffic: int;
-  volume: float;
-  nice_volume: int;
-  global_volume: float;
-  nice_global_volume: int;
-  hash: int <ocaml repr="int64">;
-  keyword: string;
-  cpc: int;
-  nice_cpc: int;
-  competition: int;
-  results: int;
+  user_id: int wrap <ocaml module="Serps.User_id">;
+  dashboard_id: int wrap <ocaml module="Serps.Dashboard_id">;
+  keyword_id: int wrap <ocaml module="Serps.Keyword_id">;
+  provider: string wrap <ocaml module="Serps.Provider">;
+  language: string wrap <ocaml module="Serps.Language">;
+  country: string wrap <ocaml module="Serps.Country">;
+  location: string wrap <ocaml module="Serps.Location">;
+  first_seen: string wrap <ocaml module="Serps.First_seen">;
+  last_update: string wrap <ocaml module="Serps.Last_update">;
+  next_update: string wrap <ocaml module="Serps.Next_update">;
+  prev_update: string wrap <ocaml module="Serps.Prev_update">;
+  difficulty: int wrap <ocaml module="Serps.Difficulty">;
+  parent_keyword: string wrap <ocaml module="Serps.Parent_keyword">;
+  parent_volume: float wrap <ocaml module="Serps.Parent_volume">;
+  parent_traffic: float wrap <ocaml module="Serps.Parent_traffic">;
+  nice_parent_volume: int wrap <ocaml module="Serps.Nice_parent_volume">;
+  nice_parent_traffic: int wrap <ocaml module="Serps.Nice_parent_traffic">;
+  volume: float wrap <ocaml module="Serps.Volume">;
+  nice_volume: int wrap <ocaml module="Serps.Nice_volume">;
+  global_volume: float wrap <ocaml module="Serps.Global_volume">;
+  nice_global_volume: int wrap <ocaml module="Serps.Nice_global_volume">;
+  hash: int <ocaml repr="int64"> wrap <ocaml module="Serps.Hash">;
+  keyword: string wrap <ocaml module="Serps.Keyword">;
+  cpc: int wrap <ocaml module="Serps.Cpc">;
+  nice_cpc: int wrap <ocaml module="Serps.Nice_cpc">;
+  competition: int wrap <ocaml module="Serps.Competition">;
+  results: int wrap <ocaml module="Serps.Results">;
   positions: positions;
-  slot: int;
-  version: int;
-  deleted: bool;
-  proxy_provider: string;
-  proxy_ip: string;
-  server: string;
-  pos_suffix: string;
-  last_rebuild: string;
+  slot: int wrap <ocaml module="Serps.Slot">;
+  version: int wrap <ocaml module="Serps.Version">;
+  deleted: bool wrap <ocaml module="Serps.Deleted">;
+  proxy_provider: string wrap <ocaml module="Serps.Proxy_provider">;
+  proxy_ip: string wrap <ocaml module="Serps.Proxy_ip">;
+  server: string wrap <ocaml module="Serps.Server">;
+  pos_suffix: string wrap <ocaml module="Serps.Pos_suffix">;
+  last_rebuild: string wrap <ocaml module="Serps.Last_rebuild">;
   stats: stats1
 }
 type doc = { _id: string; found: bool; _source: _source }
