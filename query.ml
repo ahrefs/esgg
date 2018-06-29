@@ -106,6 +106,9 @@ and extract_query json =
     | [] -> json
     | vars ->
       let label =
+        match vars with
+        | [var] -> var (* single variable group should be named same as variable *)
+        | _ ->
         match query with
         | Field { field; _ } -> field
         | _ -> String.concat "_" vars
