@@ -104,7 +104,13 @@ and extract_query json =
   let json =
     match List.filter_map (fun {Tjson.optional;name} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
     | [] -> json
-    | vars -> `Optional ({ label = String.concat "_" vars; vars }, json)
+    | vars ->
+      let label =
+        match query with
+        | Field { field; _ } -> field
+        | _ -> String.concat "_" vars
+      in
+      `Optional ({ label; vars }, json)
   in
   { query; json }
 

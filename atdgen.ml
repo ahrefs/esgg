@@ -53,7 +53,6 @@ module New_types() : sig
 open Atd_ast
 
 val new_ : module_item -> unit
-val ref_ : ?name:string -> type_expr -> type_expr
 val get : unit -> module_item list
 
 end = struct
@@ -143,7 +142,7 @@ end = struct
       `Record (loc,fields,annot)
     in
     match t with
-    | `Record r -> map_record r (* record type top top-level, no need to unnest *)
+    | `Record r -> map_record r (* record type at top-level, no need to unnest *)
     | _ -> map (Some name) t
 
   let get () =
@@ -183,7 +182,7 @@ let of_vars (l:input_vars) =
   let rec map_field (req,t) : Atd_ast.type_expr =
     let t =
       match t with
-      | `Group l -> Types.ref_ @@ map l
+      | `Group l -> map l
       | `Simple t ->
         match t with
         | None -> Lazy.force basic_json; tname "basic_json"
