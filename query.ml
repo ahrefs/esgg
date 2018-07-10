@@ -113,6 +113,7 @@ and extract_query json =
         | Field { field; _ } -> field
         | _ -> String.concat "_" vars
       in
+      let label = to_valid_ident ~prefix:"f_" label in (* XXX *)
       `Optional ({ label; vars }, json)
   in
   { query; json }
