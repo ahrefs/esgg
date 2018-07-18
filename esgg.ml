@@ -2,7 +2,7 @@ open Prelude
 
 module Json = Yojson.Basic
 
-let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd_print.format x
+let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd.Print.format x
 
 let tjson tjson = print_endline @@ Tjson.lift tjson
 

@@ -3,9 +3,9 @@ open ExtLib
 open Prelude
 open Common
 
-let loc = Atd_ast.dummy_loc
+let loc = Atd.Ast.dummy_loc
 let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
-let annots a = Atd_annot.merge @@ List.map (fun (s,l) -> annot s l) a
+let annots a = Atd.Annot.merge @@ List.map (fun (s,l) -> annot s l) a
 let list ?(a=[]) t = `List (loc,t,annots a)
 let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
 let record fields = `Record (loc,fields,[])
@@ -27,9 +27,9 @@ let of_simple_type =
   | `Double -> tname "float"
   | `Bool -> tname "bool"
 
-let wrap_ref ref t : Atd_ast.type_expr = wrap ["module",ES_name.to_ocaml ref] t
+let wrap_ref ref t : Atd.Ast.type_expr = wrap ["module",ES_name.to_ocaml ref] t
 
-let of_var_type {multi;ref;typ} : Atd_ast.type_expr =
+let of_var_type {multi;ref;typ} : Atd.Ast.type_expr =
   let t = of_simple_type typ in
   let t = match ref with Some es_name -> wrap_ref es_name t | None -> t in
   match multi with
@@ -50,7 +50,7 @@ let safe_ident name =
 
 module New_types() : sig
 
-open Atd_ast
+open Atd.Ast
 
 val new_ : module_item -> unit
 val get : unit -> module_item list
@@ -151,7 +151,7 @@ end = struct
 
 end
 
-let of_shape name (shape:result_type) : Atd_ast.full_module =
+let of_shape name (shape:result_type) : Atd.Ast.full_module =
   let module Types = New_types() in
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
@@ -179,7 +179,7 @@ let of_shape name (shape:result_type) : Atd_ast.full_module =
 let of_vars (l:input_vars) =
   let module Types = New_types() in
   let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
-  let rec map_field (req,t) : Atd_ast.type_expr =
+  let rec map_field (req,t) : Atd.Ast.type_expr =
     let t =
       match t with
       | `Group l -> map l
