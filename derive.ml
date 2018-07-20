@@ -26,11 +26,15 @@ let option_map2 op a b =
   | x, None | None, x -> x
   | Some a, Some b -> Some (op a b)
 
+let include_parents x = ES_names.fold (ES_name.fold_up ES_names.add) x x
+let parent_included path set = ES_name.fold_up (fun x acc -> acc || ES_names.mem x set) path false
+
 let shape_of_mapping ?(filter=(None,None)) x : result_type =
   let (excludes,includes) = apply2 (Option.map (es_names x)) filter in
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in
   let excludes = option_map2 ES_names.union (smake "excludes") excludes in
   let includes = option_map2 ES_names.inter (smake "includes") includes in
+  let includes = match includes with None -> None | Some set -> Some (set, include_parents set) in
   let rec make ~optional path json =
     let meta = get_meta json in
     let wrap multi t =
@@ -51,7 +55,7 @@ let shape_of_mapping ?(filter=(None,None)) x : result_type =
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
-        (match includes with None -> true | Some set -> path |> ES_name.fold_up (fun acc x -> acc || ES_names.mem x set) false) &&
+        (match includes with None -> true | Some (set,parents) -> parent_included path set || ES_names.mem path parents) &&
         not @@ get_meta x false "ignore"
       in
       match included with
