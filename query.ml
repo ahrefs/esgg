@@ -19,7 +19,7 @@ type query_t =
 | Nothing
 and query = { json : Tjson.t; query : query_t }
 
-type t = Search of { q : query; extra : constraint_t list } | Mget of var_list
+type t = Search of { q : query; extra : constraint_t list } | Mget of var_list | Get of Tjson.var
 
 module Variable = struct
 
@@ -141,11 +141,17 @@ let infer' c0 query =
 
 let infer = infer' []
 
-let resolve_mget_types ids =
+let record_single_var typ (v:Tjson.var) =
   let vars = Hashtbl.create 3 in
+  record vars v.name typ;
+  vars
+
+let resolve_mget_types ids =
   match ids with
-  | `Var (v:Tjson.var) -> record vars v.name (List `String); vars
+  | `Var (v:Tjson.var) -> record_single_var (List `String) v
   | _ -> Exn.fail "mget: only variable ids supported"
+
+let resolve_get_types = record_single_var (Type `String)
 
 let get_var json name =
   match U.member name json with
@@ -158,13 +164,17 @@ let extract json =
     let extra = List.map (fun v -> On_var (v, Eq_type `Int)) @@ List.filter_map (get_var json) ["size";"from"] in
     Search { q = extract_query q; extra }
   | exception _ ->
-    let ids =
-      match U.assoc "docs" json with
-      | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
-      | _ -> Exn.fail "unexpected docs"
-      | exception _ -> var_list_of_json ~desc:"mget ids" U.(assoc "ids" json)
-    in
-    Mget ids
+    match U.assoc "id" json with
+    | `Var v -> Get v
+    | _ -> Exn.fail "only variable id supported for get request"
+    | exception _ ->
+      let ids =
+        match U.assoc "docs" json with
+        | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
+        | _ -> Exn.fail "unexpected docs"
+        | exception _ -> var_list_of_json ~desc:"mget ids" U.(assoc "ids" json)
+      in
+      Mget ids
 
 let resolve_constraints mapping l =
   let vars = Hashtbl.create 3 in

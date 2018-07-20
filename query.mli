@@ -5,7 +5,7 @@ open Common
 type query_t
 type var_list
 type query = { json : Tjson.t; query : query_t }
-type t = Search of { q : query; extra : constraint_t list } | Mget of var_list
+type t = Search of { q : query; extra : constraint_t list } | Mget of var_list | Get of Tjson.var
 
 module Variable : sig
 
@@ -23,3 +23,4 @@ val extract : Tjson.t -> t
 val resolve_constraints : mapping -> constraint_t list -> (string, Variable.t) ExtLib.Hashtbl.t
 
 val resolve_mget_types : var_list -> (string, Variable.t) ExtLib.Hashtbl.t
+val resolve_get_types : Tjson.var -> (string, Variable.t) ExtLib.Hashtbl.t

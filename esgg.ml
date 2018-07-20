@@ -6,6 +6,7 @@ let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd.Print.for
 
 let tjson tjson = print_endline @@ Tjson.lift tjson
 
+(*
 let input_direct mapping json =
   let (vars,map,json) = Derive.derive mapping json in
   if vars <> [] then printfn "(*";
@@ -13,17 +14,24 @@ let input_direct mapping json =
   if vars <> [] then printfn "*)";
   print_string "let make = ";
   print_endline @@ Tjson.lift_ map json
+*)
 
 let show_as_record_fields vars =
   Printf.sprintf "{%s}" @@ String.concat "; " @@ List.map (fun (name,_typ) -> name) vars
 
 let input_j mapping json =
-  let (vars,map,json) = Derive.derive mapping json in
-  printfn "let make %s =" (if vars = [] then "()" else show_as_record_fields vars);
-  printfn "  %s" (Tjson.lift_to_string map json)
+  let (query,vars,map,(action,url,args,body)) = Derive.derive mapping json in
+  printfn "let type_ = %s" (match query with Search _ -> "`Search" | Get _ -> "`Get" | Mget _ -> "`Mget");
+  printfn "let make ~index:(__esgg_index,__esgg_kind) %s =" (if vars = [] then "()" else show_as_record_fields vars);
+  printfn "  %s," action;
+  printfn "  %s," url;
+  printfn "  %s," args;
+  match body with
+  | Some json -> printfn "  Some (%s)" (Tjson.lift_to_string map json)
+  | None -> printfn "  None"
 
 let vars mapping query =
-  let (vars,_,_) = Derive.derive mapping query in
+  let (_,vars,_,_) = Derive.derive mapping query in
   print_atd @@ Atdgen.of_vars vars
 
 let output mapping query = print_atd @@ Derive.output mapping query
@@ -43,7 +51,7 @@ let () =
   in
   match Action.args with
   | "output"::tl -> map_query output tl
-  | "input_direct"::tl -> map_query input_direct tl
+(*   | "input_direct"::tl -> map_query input_direct tl *)
   | "input_j"::tl -> map_query input_j tl
   | "vars"::tl -> map_query vars tl
   | ["reflect";name;mapping] -> Derive.print_reflect name (json mapping)

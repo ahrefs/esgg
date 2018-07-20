@@ -63,11 +63,14 @@ let shape_of_mapping ?excludes ?includes x : result_type =
 
 let output mapping query =
   let shape =
-    match U.assoc "query" query with
-    | exception _ ->
+    match Query.extract query with
+    | Get _ ->
+      let source = shape_of_mapping mapping in
+      `Dict ["_id", `String; "found", `Bool; "_source", `Maybe source]
+    | Mget _ ->
       let source = shape_of_mapping mapping in
       `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
-    | _ ->
+    | Search _ ->
       let source =
         let source = U.member "_source" query in
         if U.member "size" query = `Int 0 || source = `Bool false then None
@@ -147,8 +150,9 @@ let convertor (t:var_type option) unwrap name =
     sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (mapper @@ unwrap "x") name
 
 let derive mapping json =
-  let (vars,json) =
-    match Query.extract json with
+  let query = Query.extract json in
+  let (vars,json,http) =
+    match query with
     | Search { q; extra } ->
       let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
       let c2 = Query.infer' extra q in
@@ -158,8 +162,9 @@ let derive mapping json =
         | `Assoc l -> `Assoc (List.map (function "query",_ -> "query", q.json | x -> x) l)
         | _ -> assert false
       in
-      vars, json
-    | Mget ids -> Query.resolve_mget_types ids, json
+      vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
+    | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
+    | Get id -> Query.resolve_get_types id, json, ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,"[]",None) (* assuming name *)
   in
   let var_unwrap name =
     match Hashtbl.find vars name with
@@ -176,8 +181,8 @@ let derive mapping json =
     | Type typ -> Some { multi = One; ref = None; typ; }
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
-  let (vars,groups) = Tjson.vars json in
-  let vars = vars |> List.map begin fun (var:Tjson.var) ->
+  let (bindings,groups) = Tjson.vars json in
+  let bindings = bindings |> List.map begin fun (var:Tjson.var) ->
     var.name, ((if var.optional then `Optional else `Required), `Simple (var_type var.name))
   end in
   let groups = groups |> List.map begin fun {Tjson.label;vars} ->
@@ -188,4 +193,4 @@ let derive mapping json =
     in
     label, (`Optional, v)
   end in
-  vars @ groups, map, json
+  query, bindings @ groups, map, http

@@ -2,7 +2,7 @@
 
 open Common
 
-val derive : mapping -> Tjson.t -> input_vars * (string -> string) * Tjson.t
+val derive : mapping -> Tjson.t -> Query.t * input_vars * (string -> string) * (string * string * string * Tjson.t option)
 
 val output : mapping -> Tjson.t -> Atd.Ast.full_module
 
