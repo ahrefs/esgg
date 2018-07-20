@@ -5,7 +5,11 @@ open Common
 type query_t
 type var_list
 type query = { json : Tjson.t; query : query_t }
-type t = Search of { q : query; extra : constraint_t list } | Mget of var_list | Get of Tjson.var
+type source_filter = string list option * string list option
+type t =
+| Search of { q : query; extra : constraint_t list; filter : source_filter; }
+| Mget of var_list
+| Get of (Tjson.var * source_filter)
 
 module Variable : sig
 

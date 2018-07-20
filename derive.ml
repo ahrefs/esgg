@@ -20,14 +20,14 @@ let get_meta json default k =
 
 module ES_names = Set.Make(ES_name)
 let es_names mapping l = l |> List.map (ES_name.make mapping) |> ES_names.of_list
-let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
 
 let option_map2 op a b =
   match a, b with
   | x, None | None, x -> x
   | Some a, Some b -> Some (op a b)
 
-let shape_of_mapping ?excludes ?includes x : result_type =
+let shape_of_mapping ?(filter=(None,None)) x : result_type =
+  let (excludes,includes) = apply2 (Option.map (es_names x)) filter in
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in
   let excludes = option_map2 ES_names.union (smake "excludes") excludes in
   let includes = option_map2 ES_names.inter (smake "includes") includes in
@@ -61,28 +61,20 @@ let shape_of_mapping ?excludes ?includes x : result_type =
   in
   make ~optional:false (ES_name.make x "") x.mapping
 
+let result_hit source = `Dict ["_id", `String; "found", `Bool; "_source", source]
+
 let output mapping query =
   let shape =
     match Query.extract query with
-    | Get _ ->
-      let source = shape_of_mapping mapping in
-      `Dict ["_id", `String; "found", `Bool; "_source", `Maybe source]
-    | Mget _ ->
-      let source = shape_of_mapping mapping in
-      `Dict ["docs",`List (`Dict ["_id", `String; "found", `Bool; "_source", source])]
-    | Search _ ->
+    | Get (_,filter) -> result_hit @@ `Maybe (shape_of_mapping ~filter mapping)
+    | Mget _ -> `Dict ["docs",`List (result_hit (shape_of_mapping mapping))] (* TODO `Maybe *)
+    | Search { filter; _ } ->
       let source =
         let source = U.member "_source" query in
-        if U.member "size" query = `Int 0 || source = `Bool false then None
+        if U.member "size" query = `Int 0 || source = `Bool false then
+          None
         else
-          let (excludes,includes) =
-            apply2 (Option.map (es_names mapping)) @@
-            match source with
-            | `List l -> None, Some (List.map U.to_string l)
-            | `String s -> None, Some [s]
-            | _ -> (source_fields "excludes" query, source_fields "includes" query)
-          in
-          Some (shape_of_mapping ?excludes ?includes mapping)
+          Some (shape_of_mapping ~filter mapping)
       in
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
       let hits source = `Dict [
@@ -153,7 +145,7 @@ let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
     match query with
-    | Search { q; extra } ->
+    | Search { q; extra; filter=_ } ->
       let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
@@ -164,7 +156,13 @@ let derive mapping json =
       in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
-    | Get id -> Query.resolve_get_types id, json, ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,"[]",None) (* assuming name *)
+    | Get (id,(excludes,includes)) ->
+      let args =
+        ["_source_include",includes; "_source_exclude",excludes]
+        |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
+      in
+      let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,Stre.list (uncurry @@ sprintf "%S,%S") args,None) in (* assuming name *)
+      Query.resolve_get_types id, json, http
   in
   let var_unwrap name =
     match Hashtbl.find vars name with

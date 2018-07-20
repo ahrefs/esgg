@@ -19,7 +19,12 @@ type query_t =
 | Nothing
 and query = { json : Tjson.t; query : query_t }
 
-type t = Search of { q : query; extra : constraint_t list } | Mget of var_list | Get of Tjson.var
+type source_filter = string list option * string list option
+
+type t =
+| Search of { q : query; extra : constraint_t list; filter : source_filter; }
+| Mget of var_list
+| Get of (Tjson.var * source_filter)
 
 module Variable = struct
 
@@ -158,14 +163,20 @@ let get_var json name =
   | `Var v -> assert (v.Tjson.optional = false); Some v
   | _ -> None
 
+let extract_source_filtering query =
+  match U.member "_source" query with
+  | `List l -> None, Some (List.map U.to_string l)
+  | `String s -> None, Some [s]
+  | _ -> (source_fields "excludes" query, source_fields "includes" query)
+
 let extract json =
   match U.assoc "query" json with
   | q ->
     let extra = List.map (fun v -> On_var (v, Eq_type `Int)) @@ List.filter_map (get_var json) ["size";"from"] in
-    Search { q = extract_query q; extra }
+    Search { q = extract_query q; extra; filter = extract_source_filtering json }
   | exception _ ->
     match U.assoc "id" json with
-    | `Var v -> Get v
+    | `Var v -> Get (v,extract_source_filtering json)
     | _ -> Exn.fail "only variable id supported for get request"
     | exception _ ->
       let ids =
