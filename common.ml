@@ -136,3 +136,5 @@ let typeof mapping t : simple_type =
   | a -> simple_of_es_type t a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
+
+let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
