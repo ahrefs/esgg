@@ -2,7 +2,7 @@ opam-version: "1.2"
 authors: "Ahrefs"
 homepage: "https://git.ahrefs.com/ahrefs/esgg"
 maintainer: "igor@ahrefs.com"
-dev-repo: "ssh://git@git.ahrefs.com:ahrefs/esgg.git"
+dev-repo: "ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
 build: [
   [make]
