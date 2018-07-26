@@ -166,8 +166,8 @@ let get_var json name =
 let extract_source json =
   let source = U.member "_source" json in
   match U.member "size" json = `Int 0 || source = `Bool false with
-  | false -> None
-  | true ->
+  | true -> None
+  | false ->
   let (excludes,includes) =
     match source with
     | `List l -> None, Some (List.map U.to_string l)

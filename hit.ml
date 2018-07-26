@@ -52,7 +52,7 @@ let of_mapping ?(filter=empty_filter) x : result_type =
   in
   make ~optional:false (ES_name.make x "") x.mapping
 
-let doc_ source =
+let doc_ ?found source =
   let a = [
     "_id", Some `String;
   (*
@@ -60,19 +60,20 @@ let doc_ source =
     "_type", `String;
     "_score", `Maybe `Float;
   *)
-    "found", Some `Bool;
-    "_source", source
+    "found", found;
+    "_source", source;
   ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
   in
   `Dict a
 
-let doc_no_source = doc_ None
-let doc source = doc_ (Some source)
+let doc_no_source = doc_ ~found:`Bool None
+let doc source = doc_ ~found:`Bool (Some source)
+let hit source = doc_ (Some source)
 
 let hits mapping source : result_type =
   `Dict (
     List.concat [
         ["total", `Int];
-        (match source with None -> [] | Some filter -> ["hits", `List (doc @@ of_mapping ~filter mapping)]);
+        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
       ]
   )
