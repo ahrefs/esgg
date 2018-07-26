@@ -1,5 +1,4 @@
 open ExtLib
-open Prelude
 
 open Common
 
@@ -18,11 +17,10 @@ let option_map2 op a b =
 let include_parents x = ES_names.fold (ES_name.fold_up ES_names.add) x x
 let parent_included path set = ES_name.fold_up (fun x acc -> acc || ES_names.mem x set) path false
 
-let of_mapping ?(filter=(None,None)) x : result_type =
-  let (excludes,includes) = apply2 (Option.map (es_names x)) filter in
+let of_mapping ?(filter=empty_filter) x : result_type =
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in
-  let excludes = option_map2 ES_names.union (smake "excludes") excludes in
-  let includes = option_map2 ES_names.inter (smake "includes") includes in
+  let excludes = option_map2 ES_names.union (smake "excludes") (Option.map (es_names x) filter.excludes) in
+  let includes = option_map2 ES_names.inter (smake "includes") (Option.map (es_names x) filter.includes) in
   let includes = match includes with None -> None | Some set -> Some (set, include_parents set) in
   let rec make ~optional path json =
     let meta = get_meta json in
@@ -54,17 +52,27 @@ let of_mapping ?(filter=(None,None)) x : result_type =
   in
   make ~optional:false (ES_name.make x "") x.mapping
 
-let source_requested json =
-  let source = U.member "_source" json in
-  U.member "size" json = `Int 0 || source = `Bool false
+let doc_ source =
+  let a = [
+    "_id", Some `String;
+  (*
+    "_index", `String;
+    "_type", `String;
+    "_score", `Maybe `Float;
+  *)
+    "found", Some `Bool;
+    "_source", source
+  ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
+  in
+  `Dict a
 
-let doc source = `Dict [
-  "_id", `String;
-(*
-  "_index", `String;
-  "_type", `String;
-  "_score", `Maybe `Float;
-*)
-  "found", `Bool;
-  "_source", source
-]
+let doc_no_source = doc_ None
+let doc source = doc_ (Some source)
+
+let hits mapping source : result_type =
+  `Dict (
+    List.concat [
+        ["total", `Int];
+        (match source with None -> [] | Some filter -> ["hits", `List (doc @@ of_mapping ~filter mapping)]);
+      ]
+  )

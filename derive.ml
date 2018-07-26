@@ -17,22 +17,13 @@ let resolve_types mapping shape =
 let output mapping query =
   let shape =
     match Query.extract query with
-    | Get (_,filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
+    | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
+    | Get (_,None) -> Hit.doc_no_source
     | Mget _ -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping mapping))] (* TODO `Maybe *)
-    | Search { filter; _ } ->
-      let source =
-        if Hit.source_requested query then
-          None
-        else
-          Some (Hit.of_mapping ~filter mapping)
-      in
+    | Search { source; _ } ->
+      let hits = Hit.hits mapping source in
       let aggs = List.map snd @@ Aggregations.analyze query in (* XXX discarding constraints *)
-      let hits = List.concat [
-        ["total", `Int];
-        (match source with None -> [] | Some source -> ["hits", `List (Hit.doc (source:>resolve_type))]);
-      ]
-      in
-      let result = `Dict (("hits", `Dict hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
+      let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
   in
   Atdgen.of_shape "result" shape
@@ -86,7 +77,7 @@ let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
     match query with
-    | Search { q; extra; filter=_ } ->
+    | Search { q; extra; source=_ } ->
       let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze json in
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
@@ -97,10 +88,13 @@ let derive mapping json =
       in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
-    | Get (id,(excludes,includes)) ->
+    | Get (id,source) ->
       let args =
-        ["_source_include",includes; "_source_exclude",excludes]
-        |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
+        match source with
+        | None -> []
+        | Some {excludes;includes} ->
+          ["_source_include",includes; "_source_exclude",excludes]
+          |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
       in
       let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,Stre.list (uncurry @@ sprintf "%S,%S") args,None) in (* assuming name *)
       Query.resolve_get_types id, json, http
