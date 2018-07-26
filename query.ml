@@ -54,7 +54,7 @@ let lookup json x = try Some (U.assoc x json) with _ -> None
 let multi_of_qt = function "terms" -> Many | _ -> One
 
 let rec extract_clause (clause,json) =
-  match clause with
+  try match clause with
   | "must" | "must_not" | "should" | "filter" ->
     begin match json with
     | `Var v -> (json, (clause, [ {json; query=Var v} ]))
@@ -70,7 +70,9 @@ let rec extract_clause (clause,json) =
     | `Int _ | `String _ -> json, (clause, [])
     | _ -> Exn.fail "bad %S clause : expected int or string" clause
     end
-  | _ -> Exn.fail "unsupported bool clause %S" clause
+  | _ -> Exn.fail "unsupported clause"
+  with
+    exn -> Exn.fail ~exn "clause %S" clause
 and extract_query json =
   let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
   let (json,query) = match q with
