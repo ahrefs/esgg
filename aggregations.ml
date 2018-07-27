@@ -63,7 +63,7 @@ let rec make (name,x) =
 let get x =
   extract x |> fst |> List.map make
 
-let infer_single mapping { name; agg; } sub =
+let infer_single mapping ~nested { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
   let doc_count () = sub ["doc_count", `Int] in
   let (cstr,shape) =
@@ -79,15 +79,20 @@ let infer_single mapping { name; agg; } sub =
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
       let d = doc_count () in
       cstrs, `Dict [ "buckets", `Dict (l |> List.map (fun (k,_) -> k, d))]
-    | Top_hits source -> [], `Dict [ "hits", (Hit.hits mapping source :> resolve_type) ]
+    | Top_hits source -> [], `Dict [ "hits", (Hit.hits mapping ?nested source :> resolve_type) ]
     | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in
   cstr, (name, shape)
 
-let rec infer mapping { this; sub } =
-  let (constraints, subs) = List.split @@ List.map (infer mapping) sub in
+let rec infer mapping ~nested { this; sub } =
+  let nested =
+    match this.agg with
+    | Nested path -> Some (ES_name.make mapping path)
+    | _ -> nested (* Reverse_nested ? *)
+  in
+  let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
   let sub l = `Dict (l @ subs) in
-  let (cstr,desc) = infer_single mapping this sub in
+  let (cstr,desc) = infer_single mapping ~nested this sub in
   List.flatten (cstr::constraints), desc
 
-let analyze mapping query = List.map (infer mapping) (get query)
+let analyze mapping query = List.map (infer mapping ~nested:None) (get query)
