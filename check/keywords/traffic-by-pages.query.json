@@ -1,0 +1,75 @@
+{
+  "from": 0,
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": [{
+        "ids": {
+          "values": ["20abaf9d15742fcaca2a79b389919b8c-us"]
+        }
+      }]
+    }
+  },
+  "aggs": {
+    "serps": {
+      "nested": {
+        "path": "serps"
+      },
+      "aggs": {
+        "positions": {
+          "nested": {
+            "path": "serps.positions"
+          },
+          "aggs": {
+            "trafficBy": {
+              "terms": {
+                "field": "serps.positions.url_hash.rootdomain",
+                "order": {
+                  "traffic": "desc"
+                }
+              },
+              "aggs": {
+                "traffic": {
+                  "sum": {
+                    "field": "serps.positions.stats.volume"
+                  }
+                },
+                "url": {
+                  "top_hits": {
+                    "size": 1,
+                    "_source": {
+                      "includes": ["serps.positions.url"]
+                    },
+                    "sort": {
+                      "serps.positions.ordinal": "asc"
+                    }
+                  }
+                },
+                "totalKeywords": {
+                  "reverse_nested": {},
+                  "aggs": {
+                    "totalKeywords": {
+                      "cardinality": {
+                        "field": "keyword.hash"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "totalDomains": {
+              "cardinality": {
+                "field": "serps.positions.url_hash.rootdomain"
+              }
+            },
+            "totalTraffic": {
+              "sum": {
+                "field": "serps.positions.stats.volume"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

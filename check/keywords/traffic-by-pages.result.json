@@ -1,0 +1,395 @@
+{
+  "took": 6443,
+  "timed_out": false,
+  "num_reduce_phases": 2,
+  "_shards": {
+    "total": 1000,
+    "successful": 1000,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 1,
+    "max_score": 0.0,
+    "hits": []
+  },
+  "aggregations": {
+    "serps": {
+      "doc_count": 1001,
+      "positions": {
+        "doc_count": 28196,
+        "trafficBy": {
+          "doc_count_error_upper_bound": -1,
+          "sum_other_doc_count": 7086,
+          "buckets": [{
+            "key": -2231653386937785997,
+            "doc_count": 3666,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 3666,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 525,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 0
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://searchengineland.com/guide/what-is-seo"
+                  },
+                  "sort": [1]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 4.113987040033456E7
+            }
+          }, {
+            "key": 4094779560956318341,
+            "doc_count": 4386,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 4386,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 999,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 0
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://moz.com/beginners-guide-to-seo"
+                  },
+                  "sort": [1]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 3.2446592771905202E7
+            }
+          }, {
+            "key": -3384953260979888018,
+            "doc_count": 4735,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 4735,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 1000,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 0
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://en.wikipedia.org/wiki/Search_engine_optimization"
+                  },
+                  "sort": [1]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 2.669071901046548E7
+            }
+          }, {
+            "key": 6048423500337238542,
+            "doc_count": 1228,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 1228,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 954,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 5
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "http://neilpatel.com/what-is-seo/"
+                  },
+                  "sort": [6]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 1.2194077948398728E7
+            }
+          }, {
+            "key": 2114757735396091816,
+            "doc_count": 700,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 700,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 217,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 1
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://www.google.com/url?q=/settings/ads/preferences%3Fhl%3Den&sa=U&ved=0ahUKEwiW9OSY5bnZAhXD-qQKHdTBDrIQgRMIFQ&usg=AOvVaw3Ta2-zChOzuSWu870L1qCK"
+                  },
+                  "sort": [2]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 5434862.072356255
+            }
+          }, {
+            "key": 2129597915553027294,
+            "doc_count": 961,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 961,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 870,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 10
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://blog.kissmetrics.com/seo-guide/"
+                  },
+                  "sort": [12]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 5410415.394343531
+            }
+          }, {
+            "key": 3860317998083780863,
+            "doc_count": 875,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 875,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 870,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 8
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://support.google.com/webmasters/answer/35291?hl=en"
+                  },
+                  "sort": [10]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 4922301.490466804
+            }
+          }, {
+            "key": 8200748654480454701,
+            "doc_count": 825,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 825,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 403,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 8
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://searchenginewatch.com/2016/01/21/seo-basics-22-essentials-you-need-for-optimizing-your-site/"
+                  },
+                  "sort": [9]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 4731284.8250971185
+            }
+          }, {
+            "key": -3279744578572784400,
+            "doc_count": 996,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 996,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 990,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 0
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://www.180fusion.com/mkg/seo-free-consult/"
+                  },
+                  "sort": [1]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 2633531.4851333336
+            }
+          }, {
+            "key": -2813833067574798445,
+            "doc_count": 447,
+            "totalKeywords": {
+              "doc_count": 1,
+              "totalKeywords": {
+                "value": 1
+              }
+            },
+            "url": {
+              "hits": {
+                "total": 447,
+                "max_score": null,
+                "hits": [{
+                  "_index": "keywords-g-all-1",
+                  "_type": "keyword",
+                  "_id": "20abaf9d15742fcaca2a79b389919b8c-us",
+                  "_nested": {
+                    "field": "serps",
+                    "offset": 859,
+                    "_nested": {
+                      "field": "positions",
+                      "offset": 10
+                    }
+                  },
+                  "_score": null,
+                  "_source": {
+                    "url": "https://www.redevolution.com/what-is-seo"
+                  },
+                  "sort": [11]
+                }]
+              }
+            },
+            "traffic": {
+              "value": 2256579.945312032
+            }
+          }]
+        },
+        "totalDomains": {
+          "value": 411
+        },
+        "totalTraffic": {
+          "value": 1.5733291731696668E8
+        }
+      }
+    }
+  }
+}
