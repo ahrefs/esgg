@@ -52,6 +52,16 @@ let of_mapping ?(filter=empty_filter) x : result_type =
   in
   make ~optional:false (ES_name.make x "") x.mapping
 
+let get_nested path x =
+  let rec loop path x =
+    match path, x with
+    | [], _ -> x
+    | p, (`Maybe x | `List x) -> loop p x (* HACK unwrap *)
+    | k::p, `Dict l -> loop p (try List.assoc k l with exn -> Exn.fail ~exn "cannot find nested %S" k)
+    | k::_, _ -> Exn.fail "nested %S is not a dict" k
+  in
+  loop (ES_name.get_path path) x
+
 let doc_ ?found source =
   let a = [
     "_id", Some `String;
@@ -70,10 +80,10 @@ let doc_no_source = doc_ ~found:`Bool None
 let doc source = doc_ ~found:`Bool (Some source)
 let hit source = doc_ (Some source)
 
-let hits mapping source : result_type =
+let hits mapping ?(nested=ES_name.make mapping "") source : result_type =
   `Dict (
     List.concat [
         ["total", `Int];
-        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
+        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ get_nested nested @@ of_mapping ~filter mapping)]);
       ]
   )

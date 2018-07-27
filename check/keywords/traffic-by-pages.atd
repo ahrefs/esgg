@@ -3,12 +3,10 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
 type traffic = { ?value: float nullable }
-type position = {
+type _source_elem = {
   url: string wrap <ocaml module="Keywords.Serps.Positions.Url">
 }
-type serp = { ~positions: position list }
-type _source = { ?serps: serp list nullable }
-type hit = { _id: string; _source: _source }
+type hit = { _id: string; ~_source: _source_elem list }
 type hits1 = { total: int; ~hits: hit list }
 type url = { hits: hits1 }
 type totalKeywords = { value: int }
