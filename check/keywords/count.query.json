@@ -31,13 +31,11 @@
         }
       ],
       "should": [
-        [
           {
             "match_phrase": {
               "keyword.search": "online invitations"
             }
           }
-        ]
       ],
       "must_not": [
         {
