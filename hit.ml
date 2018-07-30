@@ -55,8 +55,8 @@ let of_mapping ?(filter=empty_filter) x : result_type =
 let get_nested path x =
   let rec loop path x =
     match path, x with
-    | [], _ -> x
     | p, (`Maybe x | `List x) -> loop p x (* HACK unwrap *)
+    | [], _ -> x
     | k::p, `Dict l -> loop p (try List.assoc k l with exn -> Exn.fail ~exn "cannot find nested %S" k)
     | k::_, _ -> Exn.fail "nested %S is not a dict" k
   in
