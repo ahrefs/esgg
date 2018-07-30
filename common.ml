@@ -46,6 +46,7 @@ val get_path : t -> string list
 val make : mapping -> string -> t
 val append : t -> string -> t
 val show : t -> string
+val pp : Format.formatter -> t -> unit
 val equal : t -> t -> bool
 val compare : t -> t -> int
 
@@ -60,6 +61,7 @@ let get_path = snd
 let make mapping s = mapping.name, Stre.nsplitc s '.'
 let append (m,l) s = m, l @ Stre.nsplitc s '.'
 let show (_,l) = String.concat "." l
+let pp ppf t = Format.pp_print_text ppf (show t)
 let fold_up f (m,l) acc =
   let rec loop acc = function
   | [] -> acc
@@ -104,7 +106,7 @@ type result_type = [
   | `Ref of (ES_name.t * simple_type)
   | `Maybe of result_type
   | simple_type
-  ]
+  ] [@@deriving show]
 
 type resolve_type = [
   | `Typeof of string
