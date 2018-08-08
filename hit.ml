@@ -62,9 +62,9 @@ let get_nested path x =
   in
   loop (ES_name.get_path path) x
 
-let doc_ ?found source =
+let doc_ ?(id=true) ?found source =
   let a = [
-    "_id", Some `String;
+    "_id", if id then Some `String else None;
   (*
     "_index", `String;
     "_type", `String;
@@ -78,12 +78,17 @@ let doc_ ?found source =
 
 let doc_no_source = doc_ ~found:`Bool None
 let doc source = doc_ ~found:`Bool (Some source)
-let hit source = doc_ (Some source)
+let hit ?id source = doc_ ?id (Some source)
 
-let hits mapping ?(nested=ES_name.make mapping "") source : result_type =
+let hits mapping ?nested source : result_type =
+  let hit x =
+    match nested with
+    | None -> hit x
+    | Some nested -> hit ~id:false @@ get_nested nested x
+  in
   `Dict (
     List.concat [
         ["total", `Int];
-        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ get_nested nested @@ of_mapping ~filter mapping)]);
+        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
       ]
   )
