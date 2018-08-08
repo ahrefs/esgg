@@ -1,0 +1,710 @@
+{
+    "took": 44,
+    "timed_out": false,
+    "_shards": {
+      "total": 505,
+      "successful": 505,
+      "skipped": 0,
+      "failed": 0
+    },
+    "hits": {
+      "total": 5,
+      "max_score": 0.0,
+      "hits": []
+    },
+    "aggregations": {
+      "keywords": {
+        "doc_count_error_upper_bound": 0,
+        "sum_other_doc_count": 0,
+        "buckets": [
+          {
+            "key": -3436488507272490175,
+            "doc_count": 1,
+            "lastSerp": {
+              "doc_count": 1,
+              "data": {
+                "hits": {
+                  "total": 1,
+                  "max_score": 1.0,
+                  "hits": [
+                    {
+                      "_index": "tracker-serps-0-2018.08",
+                      "_type": "serp",
+                      "_id": "ff3ffddce9579990e69270ed4995a746-g-en-us-20180804--1--1",
+                      "_score": 1.0,
+                      "_routing": "-1",
+                      "_source": {
+                        "difficulty": 55,
+                        "nice_volume": 150,
+                        "country": "us",
+                        "first_seen": "2018-08-04T01:13:47Z",
+                        "last_update": [
+                          "2018-08-04T00:00:00Z",
+                          "2018-08-05T00:00:00Z",
+                          "2018-08-06T00:00:00Z",
+                          "2018-08-07T00:00:00Z",
+                          "2018-08-08T00:00:00Z"
+                        ],
+                        "language": "en",
+                        "location": "United States",
+                        "keyword": "ahrefs keyword explorer",
+                        "hash": -3436488507272490175
+                      }
+                    }
+                  ]
+                }
+              },
+              "nest_positions": {
+                "doc_count": 121,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": [
+                    {
+                      "key": "news",
+                      "doc_count": 10
+                    },
+                    {
+                      "key": "image",
+                      "doc_count": 5
+                    },
+                    {
+                      "key": "question",
+                      "doc_count": 4
+                    },
+                    {
+                      "key": "sitelink",
+                      "doc_count": 4
+                    }
+                  ]
+                },
+                "target": {
+                  "doc_count": 1,
+                  "target_features": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                  },
+                  "organic": {
+                    "doc_count": 1,
+                    "nest_filters": {
+                      "doc_count": 1,
+                      "top_position": {
+                        "hits": {
+                          "total": 1,
+                          "max_score": null,
+                          "hits": [
+                            {
+                              "_nested": {
+                                "field": "positions",
+                                "offset": 32
+                              },
+                              "_score": null,
+                              "_source": {
+                                "block_pos": 17,
+                                "type": "organic",
+                                "url": "https://moz.com/explorer",
+                                "ordinal": 33
+                              },
+                              "sort": [
+                                33
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.7459086882832391
+                    }
+                  }
+                }
+              }
+            },
+            "firstSerp": {
+              "doc_count": 0,
+              "data": {
+                "hits": {
+                  "total": 0,
+                  "max_score": null,
+                  "hits": []
+                }
+              },
+              "nest_positions": {
+                "doc_count": 0,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": []
+                },
+                "target": {
+                  "doc_count": 0,
+                  "organic": {
+                    "doc_count": 0,
+                    "nest_filters": {
+                      "doc_count": 0,
+                      "top_position": {
+                        "hits": {
+                          "total": 0,
+                          "max_score": null,
+                          "hits": []
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": -2662549653661908022,
+            "doc_count": 1,
+            "lastSerp": {
+              "doc_count": 1,
+              "data": {
+                "hits": {
+                  "total": 1,
+                  "max_score": 1.0,
+                  "hits": [
+                    {
+                      "_index": "tracker-serps-0-2018.08",
+                      "_type": "serp",
+                      "_id": "55736b81f277ce6d22b997761536fc20-g-en-gb-20180804--1--1",
+                      "_score": 1.0,
+                      "_routing": "-1",
+                      "_source": {
+                        "difficulty": 39,
+                        "nice_volume": 1800,
+                        "country": "gb",
+                        "first_seen": "2018-08-04T00:26:34Z",
+                        "last_update": [
+                          "2018-08-04T00:00:00Z",
+                          "2018-08-05T00:00:00Z",
+                          "2018-08-06T00:00:00Z",
+                          "2018-08-07T00:00:00Z",
+                          "2018-08-08T00:00:00Z"
+                        ],
+                        "language": "en",
+                        "location": "United Kingdom",
+                        "keyword": "seo agency",
+                        "hash": -2662549653661908022
+                      }
+                    }
+                  ]
+                }
+              },
+              "nest_positions": {
+                "doc_count": 108,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": [
+                    {
+                      "key": "sitelink",
+                      "doc_count": 8
+                    }
+                  ]
+                },
+                "target": {
+                  "doc_count": 1,
+                  "target_features": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                  },
+                  "organic": {
+                    "doc_count": 1,
+                    "nest_filters": {
+                      "doc_count": 1,
+                      "top_position": {
+                        "hits": {
+                          "total": 1,
+                          "max_score": null,
+                          "hits": [
+                            {
+                              "_nested": {
+                                "field": "positions",
+                                "offset": 102
+                              },
+                              "_score": null,
+                              "_source": {
+                                "block_pos": 95,
+                                "type": "organic",
+                                "url": "https://moz.com/blog/7-lessons-learned-from-running-a-seo-agency-14225",
+                                "ordinal": 103
+                              },
+                              "sort": [
+                                103
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 6.429426606176887e-05
+                    }
+                  }
+                }
+              }
+            },
+            "firstSerp": {
+              "doc_count": 0,
+              "data": {
+                "hits": {
+                  "total": 0,
+                  "max_score": null,
+                  "hits": []
+                }
+              },
+              "nest_positions": {
+                "doc_count": 0,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": []
+                },
+                "target": {
+                  "doc_count": 0,
+                  "organic": {
+                    "doc_count": 0,
+                    "nest_filters": {
+                      "doc_count": 0,
+                      "top_position": {
+                        "hits": {
+                          "total": 0,
+                          "max_score": null,
+                          "hits": []
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": -1897568965653985584,
+            "doc_count": 1,
+            "lastSerp": {
+              "doc_count": 1,
+              "data": {
+                "hits": {
+                  "total": 1,
+                  "max_score": 1.0,
+                  "hits": [
+                    {
+                      "_index": "tracker-serps-0-2018.08",
+                      "_type": "serp",
+                      "_id": "5d02202e02718a11b3e5ea018e644353-g-en-gb-20180804--1--1",
+                      "_score": 1.0,
+                      "_routing": "-1",
+                      "_source": {
+                        "difficulty": 67,
+                        "nice_volume": 2000,
+                        "country": "gb",
+                        "first_seen": "2018-08-04T00:01:03Z",
+                        "last_update": [
+                          "2018-08-04T00:00:00Z",
+                          "2018-08-05T00:00:00Z",
+                          "2018-08-06T00:00:00Z",
+                          "2018-08-07T00:00:00Z",
+                          "2018-08-08T00:00:00Z"
+                        ],
+                        "language": "en",
+                        "location": "United Kingdom",
+                        "keyword": "most popular websites",
+                        "hash": -1897568965653985584
+                      }
+                    }
+                  ]
+                }
+              },
+              "nest_positions": {
+                "doc_count": 112,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": [
+                    {
+                      "key": "image",
+                      "doc_count": 5
+                    },
+                    {
+                      "key": "question",
+                      "doc_count": 4
+                    },
+                    {
+                      "key": "sitelink",
+                      "doc_count": 3
+                    },
+                    {
+                      "key": "snippet",
+                      "doc_count": 1
+                    }
+                  ]
+                },
+                "target": {
+                  "doc_count": 1,
+                  "target_features": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                  },
+                  "organic": {
+                    "doc_count": 1,
+                    "nest_filters": {
+                      "doc_count": 1,
+                      "top_position": {
+                        "hits": {
+                          "total": 1,
+                          "max_score": null,
+                          "hits": [
+                            {
+                              "_nested": {
+                                "field": "positions",
+                                "offset": 9
+                              },
+                              "_score": null,
+                              "_source": {
+                                "block_pos": 4,
+                                "type": "organic",
+                                "url": "https://moz.com/top500",
+                                "ordinal": 10
+                              },
+                              "sort": [
+                                10
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 141.75000000000003
+                    }
+                  }
+                }
+              }
+            },
+            "firstSerp": {
+              "doc_count": 0,
+              "data": {
+                "hits": {
+                  "total": 0,
+                  "max_score": null,
+                  "hits": []
+                }
+              },
+              "nest_positions": {
+                "doc_count": 0,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": []
+                },
+                "target": {
+                  "doc_count": 0,
+                  "organic": {
+                    "doc_count": 0,
+                    "nest_filters": {
+                      "doc_count": 0,
+                      "top_position": {
+                        "hits": {
+                          "total": 0,
+                          "max_score": null,
+                          "hits": []
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": 1303823498077642923,
+            "doc_count": 1,
+            "lastSerp": {
+              "doc_count": 1,
+              "data": {
+                "hits": {
+                  "total": 1,
+                  "max_score": 1.0,
+                  "hits": [
+                    {
+                      "_index": "tracker-serps-0-2018.08",
+                      "_type": "serp",
+                      "_id": "cc823022de8a4268d82dd461937283d9-g-en-us-20180804--1--1",
+                      "_score": 1.0,
+                      "_routing": "-1",
+                      "_source": {
+                        "difficulty": 40,
+                        "nice_volume": 450,
+                        "country": "us",
+                        "first_seen": "2018-08-04T03:14:11Z",
+                        "last_update": [
+                          "2018-08-04T00:00:00Z",
+                          "2018-08-05T00:00:00Z",
+                          "2018-08-06T00:00:00Z",
+                          "2018-08-07T00:00:00Z",
+                          "2018-08-08T00:00:00Z"
+                        ],
+                        "language": "en",
+                        "location": "United States",
+                        "keyword": "popular searchs",
+                        "hash": 1303823498077642923
+                      }
+                    }
+                  ]
+                }
+              },
+              "nest_positions": {
+                "doc_count": 105,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": [
+                    {
+                      "key": "image",
+                      "doc_count": 6
+                    }
+                  ]
+                },
+                "target": {
+                  "doc_count": 1,
+                  "target_features": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": []
+                  },
+                  "organic": {
+                    "doc_count": 1,
+                    "nest_filters": {
+                      "doc_count": 1,
+                      "top_position": {
+                        "hits": {
+                          "total": 1,
+                          "max_score": null,
+                          "hits": [
+                            {
+                              "_nested": {
+                                "field": "positions",
+                                "offset": 69
+                              },
+                              "_score": null,
+                              "_source": {
+                                "block_pos": 65,
+                                "type": "organic",
+                                "url": "https://moz.com/beginners-guide-to-seo/keyword-research",
+                                "ordinal": 70
+                              },
+                              "sort": [
+                                70
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 4.991028208168224e-05
+                    }
+                  }
+                }
+              }
+            },
+            "firstSerp": {
+              "doc_count": 0,
+              "data": {
+                "hits": {
+                  "total": 0,
+                  "max_score": null,
+                  "hits": []
+                }
+              },
+              "nest_positions": {
+                "doc_count": 0,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": []
+                },
+                "target": {
+                  "doc_count": 0,
+                  "organic": {
+                    "doc_count": 0,
+                    "nest_filters": {
+                      "doc_count": 0,
+                      "top_position": {
+                        "hits": {
+                          "total": 0,
+                          "max_score": null,
+                          "hits": []
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "key": 3548543863702969251,
+            "doc_count": 1,
+            "lastSerp": {
+              "doc_count": 1,
+              "data": {
+                "hits": {
+                  "total": 1,
+                  "max_score": 1.0,
+                  "hits": [
+                    {
+                      "_index": "tracker-serps-0-2018.08",
+                      "_type": "serp",
+                      "_id": "f1b1e4c6aa12993559c422b0be6d5e21-g-en-gb-20180804--1--1",
+                      "_score": 1.0,
+                      "_routing": "-1",
+                      "_source": {
+                        "difficulty": 28,
+                        "nice_volume": 400,
+                        "country": "gb",
+                        "first_seen": "2018-08-04T00:15:01Z",
+                        "last_update": [
+                          "2018-08-04T00:00:00Z",
+                          "2018-08-05T00:00:00Z",
+                          "2018-08-06T00:00:00Z",
+                          "2018-08-07T00:00:00Z",
+                          "2018-08-08T00:00:00Z"
+                        ],
+                        "language": "en",
+                        "location": "United Kingdom",
+                        "keyword": "moz bar",
+                        "hash": 3548543863702969251
+                      }
+                    }
+                  ]
+                }
+              },
+              "nest_positions": {
+                "doc_count": 117,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": [
+                    {
+                      "key": "news",
+                      "doc_count": 10
+                    },
+                    {
+                      "key": "image",
+                      "doc_count": 5
+                    },
+                    {
+                      "key": "question",
+                      "doc_count": 4
+                    }
+                  ]
+                },
+                "target": {
+                  "doc_count": 4,
+                  "target_features": {
+                    "doc_count_error_upper_bound": 0,
+                    "sum_other_doc_count": 0,
+                    "buckets": [
+                      {
+                        "key": "image",
+                        "doc_count": 2
+                      }
+                    ]
+                  },
+                  "organic": {
+                    "doc_count": 4,
+                    "nest_filters": {
+                      "doc_count": 1,
+                      "top_position": {
+                        "hits": {
+                          "total": 1,
+                          "max_score": null,
+                          "hits": [
+                            {
+                              "_nested": {
+                                "field": "positions",
+                                "offset": 0
+                              },
+                              "_score": null,
+                              "_source": {
+                                "block_pos": 1,
+                                "type": "organic",
+                                "url": "https://moz.com/products/pro/seo-toolbar",
+                                "ordinal": 1
+                              },
+                              "sort": [
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 161.37694862800322
+                    }
+                  }
+                }
+              }
+            },
+            "firstSerp": {
+              "doc_count": 0,
+              "data": {
+                "hits": {
+                  "total": 0,
+                  "max_score": null,
+                  "hits": []
+                }
+              },
+              "nest_positions": {
+                "doc_count": 0,
+                "serp_features": {
+                  "doc_count_error_upper_bound": 0,
+                  "sum_other_doc_count": 0,
+                  "buckets": []
+                },
+                "target": {
+                  "doc_count": 0,
+                  "organic": {
+                    "doc_count": 0,
+                    "nest_filters": {
+                      "doc_count": 0,
+                      "top_position": {
+                        "hits": {
+                          "total": 0,
+                          "max_score": null,
+                          "hits": []
+                        }
+                      }
+                    },
+                    "traffic": {
+                      "value": 0.0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+}

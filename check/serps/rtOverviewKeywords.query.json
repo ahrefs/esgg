@@ -1,0 +1,272 @@
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "dashboard_id": $projectId
+          }
+        },
+        {
+          "term": {
+            "provider": $source
+          }
+        },
+        {
+          "terms": {
+            "hash": $keywordsHashes
+          }
+        }
+      ],
+      "should": [
+        {
+          "range": {
+            "last_update": {
+              "gte": $dateFrom,
+              "lte": $dateFrom
+            }
+          }
+        },
+        {
+          "range": {
+            "last_update": {
+              "gte": $dateTill,
+              "lte": $dateTill
+            }
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "keywords": {
+      "terms": {
+        "size": $size,
+        "field": "hash"
+      },
+      "aggs": {
+        "firstSerp": {
+          "filter": {
+            "range": {
+              "last_update": {
+                "gte": $dateFrom,
+                "lte": $dateFrom
+              }
+            }
+          },
+          "aggs": {
+            "nest_positions": {
+              "nested": {
+                "path": "positions"
+              },
+              "aggs": {
+                "target": {
+                  "filter": {
+                    "bool": {
+                      "filter": [
+                        {
+                          "term": $urlHashInlcludeFilter
+                        }
+                      ]
+                    }
+                  },
+                  "aggs": {
+                    "organic": {
+                      "filter": {
+                        "bool": {
+                          "filter": {
+                            "range": {
+                              "positions.block_pos": {
+                                "gte": 1,
+                                "lte": 100
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "aggs": {
+                        "nest_filters": {
+                          "filter": {
+                            "bool": {
+                              "must_not": [
+                                {
+                                  "term": $urlHashExcludeFilter
+                                }
+                              ]
+                            }
+                          },
+                          "aggs": {
+                            "top_position": {
+                              "top_hits": {
+                                "size": 1,
+                                "_source": [
+                                  "positions.type",
+                                  "positions.block_pos",
+                                  "positions.url"
+                                ],
+                                "sort": [
+                                  {
+                                    "positions.ordinal": "asc"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "traffic": {
+                          "sum": {
+                            "field": "positions.stats.volume"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "serp_features": {
+                  "terms": {
+                    "field": "positions.type",
+                    "size": 100,
+                    "exclude": [
+                      "organic",
+                      "local_teaser",
+                      "local_pack"
+                    ]
+                  }
+                }
+              }
+            },
+            "data": {
+              "top_hits": {
+                "size": 1,
+                "_source": [
+                  "last_update"
+                ]
+              }
+            }
+          }
+        },
+        "lastSerp": {
+          "filter": {
+            "range": {
+              "last_update": {
+                "gte": $dateTill,
+                "lte": $dateTill
+              }
+            }
+          },
+          "aggs": {
+            "nest_positions": {
+              "nested": {
+                "path": "positions"
+              },
+              "aggs": {
+                "target": {
+                  "filter": {
+                    "bool": {
+                      "filter": {
+                        "term": $urlHashInlcludeFilter
+                      }
+                    }
+                  },
+                  "aggs": {
+                    "organic": {
+                      "filter": {
+                        "bool": {
+                          "filter": {
+                            "range": {
+                              "positions.block_pos": {
+                                "gte": 1,
+                                "lte": 100
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "aggs": {
+                        "nest_filters": {
+                          "filter": {
+                            "bool": {
+                              "must_not": [
+                                {
+                                  "term": $urlHashExcludeFilter
+                                }
+                              ]
+                            }
+                          },
+                          "aggs": {
+                            "top_position": {
+                              "top_hits": {
+                                "size": 1,
+                                "_source": [
+                                  "positions.type",
+                                  "positions.block_pos",
+                                  "positions.url",
+                                  "positions.ordinal"
+                                ],
+                                "sort": [
+                                  {
+                                    "positions.ordinal": "asc"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "traffic": {
+                          "sum": {
+                            "field": "positions.stats.volume"
+                          }
+                        }
+                      }
+                    },
+                    "target_features": {
+                      "terms": {
+                        "field": "positions.type",
+                        "size": 100,
+                        "exclude": [
+                          "organic",
+                          "local_teaser",
+                          "local_pack"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "serp_features": {
+                  "terms": {
+                    "field": "positions.type",
+                    "size": 100,
+                    "exclude": [
+                      "organic",
+                      "local_teaser",
+                      "local_pack"
+                    ]
+                  }
+                }
+              }
+            },
+            "data": {
+              "top_hits": {
+                "size": 1,
+                "_source": [
+                  "first_seen",
+                  "last_update",
+                  "keyword",
+                  "language",
+                  "country",
+                  "location",
+                  "nice_volume",
+                  "difficulty",
+                  "tags",
+                  "hash"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
