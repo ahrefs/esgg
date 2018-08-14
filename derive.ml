@@ -14,7 +14,7 @@ let resolve_types mapping shape =
   in
   map shape
 
-let output mapping query =
+let output ~init mapping query =
   let shape =
     match Query.extract query with
     | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
@@ -26,7 +26,7 @@ let output mapping query =
       let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
   in
-  Atdgen.of_shape "result" shape
+  Atdgen.of_shape ~init "result" shape
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in

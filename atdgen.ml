@@ -191,8 +191,17 @@ end = struct
 
 end
 
-let of_shape name (shape:result_type) : Atd.Ast.full_module =
+let make_abstract init types =
+  let name (`Type (_,(name,_,_),_)) = name in
+  types |> List.map begin fun t ->
+    match List.find (fun i -> name i = name t) init with (* match by name, because initial types are not renamed *)
+    | exception Not_found -> t
+    | _ -> typ (name t) (tname "abstract")
+  end
+
+let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   let module Types = New_types() in
+  List.iter Types.new_ init;
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
   let rec map shape =
@@ -214,10 +223,11 @@ let of_shape name (shape:result_type) : Atd.Ast.full_module =
       record fields
   in
   Types.new_ @@ typ name (map shape);
-  (loc,[]), Types.get ()
+  (loc,[]), (make_abstract init (Types.get ()))
 
-let of_vars (l:input_vars) =
+let of_vars ~init (l:input_vars) =
   let module Types = New_types() in
+  List.iter Types.new_ init;
   let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
   let rec map_field (req,t) : Atd.Ast.type_expr =
     let t =
@@ -237,4 +247,11 @@ let of_vars (l:input_vars) =
     | _ -> record (List.map (fun (n,t) -> field n (map_field t)) l)
   in
   Types.new_ @@ typ "input" (map l);
-  (loc,[]), (Types.get ())
+  (loc,[]), (make_abstract init (Types.get ()))
+
+let parse_file filename =
+  let open Atd in
+  Control.with_open_in_txt filename begin fun ch ->
+    let lexbuf = Lexing.from_channel ch in
+    snd @@ Parser.full_module Lexer.token lexbuf
+  end
