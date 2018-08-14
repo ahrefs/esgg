@@ -48,6 +48,44 @@ let safe_ident name =
   | Some s -> ["json",["name",name]], s
   | None -> [], name
 
+(* diligent copy of Ast.amap_type_expr *)
+let rec reloc_type_expr f (x : Atd.Ast.type_expr) =
+  match x with
+      `Sum (loc, vl, a) ->  `Sum (f loc, List.map (reloc_variant f) vl, reloc_annot f a)
+    | `Record (loc, fl, a) -> `Record (f loc, List.map (reloc_field f) fl, reloc_annot f a)
+    | `Tuple (loc, tl, a) -> `Tuple (f loc, List.map (reloc_cell f) tl, reloc_annot f a)
+    | `List (loc, t, a) -> `List (f loc, reloc_type_expr f t, reloc_annot f a)
+    | `Option (loc, t, a) -> `Option (f loc, reloc_type_expr f t, reloc_annot f a)
+    | `Nullable (loc, t, a) -> `Nullable (f loc, reloc_type_expr f t, reloc_annot f a)
+    | `Shared (loc, t, a) -> `Shared (f loc, reloc_type_expr f t, reloc_annot f a)
+    | `Wrap (loc, t, a) -> `Wrap (f loc, reloc_type_expr f t, reloc_annot f a)
+    | `Tvar (loc, s) -> `Tvar (f loc, s)
+    | `Name (loc, (loc2, name, args), a) ->
+        `Name (f loc, (f loc2, name, List.map (reloc_type_expr f) args), reloc_annot f a)
+
+and reloc_variant f = function
+    `Variant (loc, (name, a), o) ->
+      let o =
+        match o with
+            None -> None
+          | Some x -> Some (reloc_type_expr f x)
+      in
+      `Variant (f loc, (name, reloc_annot f a), o)
+  | `Inherit (loc, x) ->
+      `Inherit (f loc, reloc_type_expr f x)
+
+and reloc_field f = function
+    `Field (loc, (name, kind, a), x) ->
+      `Field (f loc, (name, kind, reloc_annot f a), reloc_type_expr f x)
+  | `Inherit (loc, x) ->
+      `Inherit (f loc, reloc_type_expr f x)
+
+and reloc_cell f (loc, x, a) =
+  (f loc, reloc_type_expr f x, reloc_annot f a)
+
+and reloc_annot f = List.map (fun (s,(loc,a)) -> (s,(f loc,List.map (fun (s,(loc,a)) -> (s,(f loc,a))) a)))
+
+
 module New_types() : sig
 
 open Atd.Ast
@@ -98,9 +136,11 @@ end = struct
     | _ -> assert false
 
   let ref_ ?name t =
+    let reloc = reloc_type_expr (fun _loc -> Atd.Ast.dummy_loc) in
+    let t = reloc t in
     match t with
     | `Record _ ->
-      begin match List.find (fun (`Type (_,_,v)) -> t = v) !types with
+      begin match List.find (fun (`Type (_,_,v)) -> t = reloc v) !types with
       | `Type (_,(name,[],_),_) -> tname name
       | _ -> assert false (* parametric type cannot match *)
       | exception _ ->
