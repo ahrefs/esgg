@@ -6,7 +6,7 @@ type traffic = { ?value: float nullable }
 type _source = {
   url: string wrap <ocaml module="Keywords.Serps.Positions.Url">
 }
-type hit = { _id: string; _source: _source }
+type hit = { _source: _source }
 type hits1 = { total: int; ~hits: hit list }
 type url = { hits: hits1 }
 type totalKeywords = { value: int }

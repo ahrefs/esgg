@@ -36,9 +36,25 @@ type _source = {
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
 type traffic = { ?value: float nullable }
-type total = { total: int }
-type top = { hits: total }
-type have_rd = { doc_count: int; top2: top }
+type _source1 = {
+  nice_volume: int wrap <ocaml module="Positions.Nice_volume">;
+  keyword: string wrap <ocaml module="Positions.Keyword">;
+  block_pos: int wrap <ocaml module="Positions.Block_pos">;
+  type_ <json name="type">: string wrap <ocaml module="Positions.Type">;
+  url: string wrap <ocaml module="Positions.Url">;
+  serp_features: string wrap <ocaml module="Positions.Serp_features">
+}
+type hit1 = { _id: string; _source: _source1 }
+type hits1 = { total: int; ~hits: hit1 list }
+type top = { hits: hits1 }
+type metrics = {
+  refdomains: int wrap <ocaml module="Positions.Metrics.Refdomains">
+}
+type metrics1 = { metrics: metrics }
+type hit2 = { _id: string; _source: metrics1 }
+type hits2 = { total: int; ~hits: hit2 list }
+type top2 = { hits: hits2 }
+type have_rd = { doc_count: int; top2: top2 }
 type topPages = {
   key:
     int <ocaml repr="int64"> wrap

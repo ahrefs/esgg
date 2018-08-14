@@ -7,7 +7,7 @@ type _source = {
   type_ <json name="type">: string wrap <ocaml module="Serps.Positions.Type">;
   url: string wrap <ocaml module="Serps.Positions.Url">
 }
-type hit = { _id: string; _source: _source }
+type hit = { _source: _source }
 type hits1 = { total: int; ~hits: hit list }
 type top_position = { hits: hits1 }
 type nest_filters = { doc_count: int; top_position: top_position }
@@ -41,7 +41,7 @@ type _source1 = {
   type_ <json name="type">: string wrap <ocaml module="Serps.Positions.Type">;
   url: string wrap <ocaml module="Serps.Positions.Url">
 }
-type hit2 = { _id: string; _source: _source1 }
+type hit2 = { _source: _source1 }
 type hits3 = { total: int; ~hits: hit2 list }
 type top_position1 = { hits: hits3 }
 type nest_filters1 = { doc_count: int; top_position: top_position1 }

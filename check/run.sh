@@ -14,7 +14,7 @@ function check {
   echo $name
   (
   set -e
-  cmd ../esgg.native output $(basename $dir) $dir/mapping.json $name.query.json > check.atd
+  cmd ../esgg.native output -name $(basename $dir) $dir/mapping.json $name.query.json > check.atd
   cmd cp check.atd $name.atd
   cmd atdgen -t -open Mapping check.atd
   cmd atdgen -j -open Mapping check.atd
