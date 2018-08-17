@@ -67,6 +67,7 @@
     "competition": { "type": "long" },
     "results": { "type": "long" },
     "positions": {
+      "_meta": { "multi": true },
       "properties": {
         "position": { "type": "long" },
         "ordinal": { "type": "long" },

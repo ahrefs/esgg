@@ -12,7 +12,7 @@ type stats = {
   bad_uul_country: string wrap <ocaml module="Serps.Stats.Bad_uul_country">
 }
 type _source = {
-  last_update: string wrap <ocaml module="Serps.Last_update">;
+  ~last_update: string wrap <ocaml module="Serps.Last_update"> list;
   prev_update: string wrap <ocaml module="Serps.Prev_update">;
   difficulty: int wrap <ocaml module="Serps.Difficulty">;
   nice_volume: int wrap <ocaml module="Serps.Nice_volume">;
@@ -24,14 +24,17 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type total = { total: int }
-type hits1 = { hits: total }
+type position = { url: string wrap <ocaml module="Serps.Positions.Url"> }
+type positions = { ~positions: position list }
+type hit1 = { _id: string; _source: positions }
+type hits1 = { total: int; ~hits: hit1 list }
+type hits2 = { hits: hits1 }
 type topCompetitors = {
   key:
     int <ocaml repr="int64"> wrap
       <ocaml module="Serps.Urls_hashes_top10.Rootdomain">;
   doc_count: int;
-  hits: hits1
+  hits: hits2
 }
 type aggregations = { topCompetitors: topCompetitors buckets }
 type result = { hits: hits; aggregations: aggregations }

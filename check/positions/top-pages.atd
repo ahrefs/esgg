@@ -31,7 +31,7 @@ type _source = {
   has_thumbnail: bool wrap <ocaml module="Positions.Has_thumbnail">;
   video: string wrap <ocaml module="Positions.Video">;
   stats: stats;
-  serp_features: string wrap <ocaml module="Positions.Serp_features">
+  ~serp_features: string wrap <ocaml module="Positions.Serp_features"> list
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
@@ -42,7 +42,7 @@ type _source1 = {
   block_pos: int wrap <ocaml module="Positions.Block_pos">;
   type_ <json name="type">: string wrap <ocaml module="Positions.Type">;
   url: string wrap <ocaml module="Positions.Url">;
-  serp_features: string wrap <ocaml module="Positions.Serp_features">
+  ~serp_features: string wrap <ocaml module="Positions.Serp_features"> list
 }
 type hit1 = { _id: string; _source: _source1 }
 type hits1 = { total: int; ~hits: hit1 list }

@@ -163,7 +163,7 @@
       }
     },
     "ad_hash": { "type": "long" },
-    "serp_features": { "type": "keyword" },
+    "serp_features": { "type": "keyword", "_meta": { "multi": true } },
     "serp_structure": {
       "properties": {
         "nr_type": { "type": "long" },
