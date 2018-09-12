@@ -197,13 +197,20 @@ let var_equal v1 v2 =
     if (v1.optional:bool) <> v2.optional then Exn.fail "var %S optional or not, huh?" v1.name;
     true
 
+module SS = Set.Make(String)
+
+let group_equal g1 g2 =
+  match String.equal g1.label g2.label with
+  | false -> false
+  | true ->
+    if not @@ SS.equal (SS.of_list g1.vars) (SS.of_list g2.vars) then Exn.fail "group %S inconsistent" g1.label;
+    true
+
 let get_vars ~optional (v:t) =
   List.unique ~cmp:var_equal (fold ~optional (fun acc x -> match x with `Var var -> var::acc | _ -> acc) [] v)
 
-module SS = Set.Make(String)
-
 let vars (v:t) =
-  let groups = fold_ (fun acc x -> match x with `Optional (g,_) -> g::acc | _ -> acc) [] v in
+  let groups = List.unique ~cmp:group_equal @@ fold_ (fun acc x -> match x with `Optional (g,_) -> g::acc | _ -> acc) [] v in
   let optional_vars = List.fold_left (fun acc g -> List.fold_left (fun acc v -> SS.add v acc) acc g.vars) SS.empty groups in
   let all_vars = get_vars ~optional:true v in
   if debug_dump then
