@@ -22,7 +22,7 @@ let output ~init mapping query =
     | Mget _ -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping mapping))] (* TODO `Maybe *)
     | Search { source; _ } ->
       let hits = Hit.hits mapping source in
-      let aggs = List.map snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
+      let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
       let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
   in
@@ -78,10 +78,12 @@ let derive mapping json =
   let (vars,json,http) =
     match query with
     | Search { q; extra; source=_ } ->
-      let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze mapping json in
+      let (agg_json, aggs) = Aggregations.analyze mapping json in
+      let c1 = List.concat @@ fst @@ List.split aggs in
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
       let json = Tjson.replace json "query" q.json in
+      let json = Tjson.replace (Tjson.replace json "aggregations" agg_json) "aggs" agg_json in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
     | Get (id,source) ->

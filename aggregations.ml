@@ -20,22 +20,28 @@ type t = { this : single; sub : t list; }
 
 let analyze_single name agg_type json =
   let field () = U.(get "field" to_string json) in
-  let agg =
+  let (json, agg) =
+    match agg_type with
+    | "filter" -> let q = Query.extract_query json in q.json, Filter q
+    | "filters" ->
+      let filters = json |> U.member "filters" |> U.to_assoc |> List.map (fun (k,v) -> k, Query.extract_query v) in
+      let json = Tjson.replace json "filters" (`Assoc (List.map (fun (k,q) -> k, q.Query.json) filters)) in
+      json, Filters filters
+    | _ ->
+    json,
     match agg_type with
     | "max" | "min" | "avg" | "sum" -> Simple_metric (field ())
     | "cardinality" -> Cardinality (field ())
     | "terms" | "significant_terms" -> Terms { field = field (); size = U.member "size" json }
     | "histogram" -> Histogram (field ())
     | "date_histogram" -> Date_histogram (field ())
-    | "filter" -> Filter (Query.extract_query json)
-    | "filters" -> Filters (json |> U.member "filters" |> U.to_assoc |> List.map (fun (k,v) -> k, Query.extract_query v))
     | "top_hits" -> Top_hits (Query.extract_source json)
     | "range" -> Range (field ()) (* TODO keyed *)
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in
-  { name; agg; }
+  json, { name; agg; }
 
 let extract x =
   let open U in
@@ -53,15 +59,17 @@ let rec make (name,x) =
     let (sub,rest) = extract x in
     match rest with
     | [agg_type,x] ->
-      let this = analyze_single name agg_type x in
+      let json, this = analyze_single name agg_type x in
       let sub = List.map make sub in
-      { this; sub }
+      let json = `Assoc [(agg_type, `Assoc [ name, json ]); "aggregations", `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)] in
+      json, { this; sub = List.map snd sub }
     | _ -> Exn.fail "no aggregation?"
   with
     exn -> Exn.fail ~exn "aggregation %S" name
 
 let get x =
-  extract x |> fst |> List.map make
+  let sub = extract x |> fst |> List.map make in
+  `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub), List.map snd sub
 
 let infer_single mapping ~nested { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
@@ -95,4 +103,6 @@ let rec infer mapping ~nested { this; sub } =
   let (cstr,desc) = infer_single mapping ~nested this sub in
   List.flatten (cstr::constraints), desc
 
-let analyze mapping query = List.map (infer mapping ~nested:None) (get query)
+let analyze mapping query =
+  let (json,sub) = get query in
+  json, List.map (infer mapping ~nested:None) sub
