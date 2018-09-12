@@ -4,8 +4,10 @@ open Printf
 open ExtLib
 open Prelude
 
-type var = { optional : bool; name : string }
-type group = { label : string; vars : string list }
+let debug_dump = false
+
+type var = { optional : bool; name : string } [@@deriving show]
+type group = { label : string; vars : string list } [@@deriving show]
 
 type t = [
 | `Assoc of (string * t) list
@@ -204,7 +206,16 @@ let vars (v:t) =
   let groups = fold_ (fun acc x -> match x with `Optional (g,_) -> g::acc | _ -> acc) [] v in
   let optional_vars = List.fold_left (fun acc g -> List.fold_left (fun acc v -> SS.add v acc) acc g.vars) SS.empty groups in
   let all_vars = get_vars ~optional:true v in
-  all_vars |> List.iter (fun v -> if SS.mem v.name optional_vars <> v.optional then Exn.fail "optional or not? %S" v.name);
+  if debug_dump then
+  begin
+    printfn "optional groups:";
+    List.iter (fun g -> printfn "  %s" (show_group g)) groups;
+    printfn "optional_vars:";
+    SS.iter (fun s -> printfn "  %s" s) optional_vars;
+    printfn "all_vars:";
+    List.iter (fun v -> printfn "  %s" (show_var v)) all_vars;
+  end;
+  all_vars |> List.iter (fun v -> if SS.mem v.name optional_vars <> v.optional then Exn.fail "%S optional or not?" v.name);
   let not_optional_vars = List.filter (fun v -> not @@ SS.mem v.name optional_vars) all_vars in
   not_optional_vars, groups
 
