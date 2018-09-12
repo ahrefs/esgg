@@ -81,11 +81,7 @@ let derive mapping json =
       let c1 = List.concat @@ fst @@ List.split @@ Aggregations.analyze mapping json in
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
-      let json =
-        match json with
-        | `Assoc l -> `Assoc (List.map (function "query",_ -> "query", q.json | x -> x) l)
-        | _ -> assert false
-      in
+      let json = Tjson.replace json "query" q.json in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
     | Get (id,source) ->
