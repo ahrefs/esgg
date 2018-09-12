@@ -72,14 +72,15 @@ let rec extract_clause (clause,json) =
   with
     exn -> Exn.fail ~exn "clause %S" clause
 and extract_query json =
-  let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
-  let (json,query) = match q with
-  | "function_score", (`Assoc l as j) ->
+  let (qt,qv) = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
+  let (json,query) = match qt, qv with
+  | ("function_score"|"nested"), `Assoc l ->
     begin match List.assoc "query" l with
-    | exception _ -> json, Nothing
+    | exception _ when qt = "nested" -> Exn.fail "nested query requires query, duh"
+    | exception _ when qt = "function_score" -> json, Nothing
     | q ->
       let { json; query } = extract_query q in
-      `Assoc ["function_score", Tjson.replace j "query" json], query
+      `Assoc [qt, Tjson.replace qv "query" json], query
     end
   | "bool", `Assoc l ->
     let bool = List.map extract_clause l in
@@ -90,10 +91,10 @@ and extract_query json =
   | ("match_all"|"match_none"), _ -> json, Nothing
   | _qt, `Var x -> json, Var x
   | "range", `Assoc [_f, `Var x] -> json, Var x
-  | qt, v ->
+  | _ ->
     let field, values =
       (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
-      match qt, v with
+      match qt, qv with
       | "exists", `Assoc ["field", `String f] -> f, []
       | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
       | "term", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
