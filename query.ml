@@ -89,6 +89,7 @@ and extract_query json =
   | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
   | ("match_all"|"match_none"), _ -> json, Nothing
   | _qt, `Var x -> json, Var x
+  | "range", `Assoc [_f, `Var x] -> json, Var x
   | qt, v ->
     let field, values =
       (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
