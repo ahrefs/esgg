@@ -61,7 +61,7 @@ let rec make (name,x) =
     | [agg_type,x] ->
       let json, this = analyze_single name agg_type x in
       let sub = List.map make sub in
-      let json = `Assoc [(agg_type, `Assoc [ name, json ]); "aggregations", `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)] in
+      let json = `Assoc [(agg_type, json); "aggregations", `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)] in
       json, { this; sub = List.map snd sub }
     | _ -> Exn.fail "no aggregation?"
   with
