@@ -111,6 +111,7 @@ and extract_query json =
     match List.filter_map (fun {Tjson.optional;name} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
     | [] -> json
     | vars ->
+      if Tjson.debug_dump then printfn "introducing optional scope for : %s" (String.concat " " vars);
       let label =
         match vars with
         | [var] -> var (* single variable group should be named same as variable *)

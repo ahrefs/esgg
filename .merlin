@@ -6,3 +6,4 @@ PKG devkit
 PKG atd
 PKG easy-format
 PKG jsonm
+PKG ppx_deriving.std
