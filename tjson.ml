@@ -249,3 +249,8 @@ let rec to_yojson_exn : t -> Yojson.json = function
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)
 | `String _ | `Float _ | `Int _ | `Bool _ | `Null as x -> x
+
+let replace json k v =
+  match json with
+  | `Assoc l -> `Assoc (List.map (function (k',_) when String.equal k k' -> k, v | x -> x) l)
+  | _ -> assert false

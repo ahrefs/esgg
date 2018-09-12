@@ -74,12 +74,12 @@ let rec extract_clause (clause,json) =
 and extract_query json =
   let q = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
   let (json,query) = match q with
-  | "function_score", `Assoc l ->
+  | "function_score", (`Assoc l as j) ->
     begin match List.assoc "query" l with
     | exception _ -> json, Nothing
     | q ->
       let { json; query } = extract_query q in
-      `Assoc ["function_score", `Assoc (("query",json)::List.remove_assoc "query" l)], query
+      `Assoc ["function_score", Tjson.replace j "query" json], query
     end
   | "bool", `Assoc l ->
     let bool = List.map extract_clause l in
