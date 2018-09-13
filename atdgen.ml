@@ -155,7 +155,7 @@ end = struct
     let rec map name t =
       match t with
       | `Record r -> ref_ ?name (map_record r)
-      | `Sum (_loc, _variants, _annot) -> assert false
+      | `Sum (_loc, _variants, _annot) -> Exn.fail "variants are not supported"
       | `Tuple (loc, cells, annot) -> `Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
       | `List (loc, t, annot) ->
         let name =

@@ -80,7 +80,7 @@ let parse s : t =
     | `As -> arr [] k d
     | `Float _ as v -> let v = match int_of_string (sub_decoded d s) with exception _ -> v | i -> `Int i in k v d
     | `Null | `Bool _ | `String _ | `Var _ as v -> k v d
-    | _ -> assert false
+    | `Ae | `Oe | `Name _ -> assert false
   and arr vs k d =
     match lexeme d with
     | `Ae -> k (`List (List.rev vs)) d

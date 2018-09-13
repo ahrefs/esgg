@@ -37,6 +37,18 @@ let vars init mapping query =
 let output init mapping query =
   print_atd @@ Derive.output ~init mapping query
 
+let help () = [
+  "ElasticSearch Guided (code) Generator";
+  "";
+  "Supported commands are :";
+  "  input_j [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # generate OCaml function to invoke query with substitutions";
+  "  vars [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive atd input type for the ES query";
+  "  output [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive output atd of ES query";
+  "  reflect <name> <mapping.json> # reflect mapping into OCaml module";
+  "  tjson <file.json> # lift json template to code";
+  "  parse_json <file.json> # debug json template parsing";
+] |> List.iter print_endline
+
 let () =
   let json fname = Json.from_file ~fname fname in
   let template file = try Tjson.parse @@ Std.input_file file with exn -> Exn.fail ~exn "load %S" file in
@@ -65,4 +77,7 @@ let () =
   | ["reflect";name;mapping] -> Derive.print_reflect name (json mapping)
   | ["tjson";file] -> tjson (template file)
   | ["parse_json";file] -> Tjson.print_parse_json (Std.input_file file)
-  | _ -> assert false
+  | [] | ["-h"|"-help"|"--help"] -> help ()
+  | _ ->
+    prerr_endline "Didn't get that! Try `esgg -h`";
+    exit 2
