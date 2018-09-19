@@ -45,7 +45,8 @@ type _source = {
   ?author: author nullable;
   ?traffic: float wrap <ocaml module="News.Traffic"> nullable
 }
-type hit = { _id: string; _source: _source }
+type highlight = { ~content: string wrap <ocaml module="News.Content"> list }
+type hit = { _id: string; _source: _source; highlight: highlight }
 type hits = { total: int; ~hits: hit list }
 type countByWords = { doc_count: int }
 type aggregations = { countByWords: countByWords buckets }

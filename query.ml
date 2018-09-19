@@ -20,7 +20,7 @@ type query_t =
 and query = { json : Tjson.t; query : query_t }
 
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
 | Mget of var_list
 | Get of (Tjson.var * source_filter option)
 
@@ -179,11 +179,16 @@ let extract_source json =
   in
   Some { excludes; includes; }
 
+let extract_highlight json =
+  match U.opt "highlight" id json with
+  | None -> None
+  | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
+
 let extract json =
   match U.assoc "query" json with
   | q ->
     let extra = List.map (fun v -> On_var (v, Eq_type `Int)) @@ List.filter_map (get_var json) ["size";"from"] in
-    Search { q = extract_query q; extra; source = extract_source json }
+    Search { q = extract_query q; extra; source = extract_source json; highlight = extract_highlight json; }
   | exception _ ->
     match U.assoc "id" json with
     | `Var v -> Get (v, extract_source json)
