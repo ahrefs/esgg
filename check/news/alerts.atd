@@ -24,20 +24,24 @@ type tags = {
     string wrap <ocaml module="News.Tags.Twitter_creator_id"> nullable
 }
 type metrics = {
-  gplus: int wrap <ocaml module="News.Metrics.Gplus">;
-  twitter: int wrap <ocaml module="News.Metrics.Twitter">;
-  linkedin: int wrap <ocaml module="News.Metrics.Linkedin">;
-  pinterest: int wrap <ocaml module="News.Metrics.Pinterest">;
-  facebook_likes: int wrap <ocaml module="News.Metrics.Facebook_likes">;
-  facebook_shares: int wrap <ocaml module="News.Metrics.Facebook_shares">;
-  facebook_comments: int wrap <ocaml module="News.Metrics.Facebook_comments">;
-  facebook_clicks: int wrap <ocaml module="News.Metrics.Facebook_clicks">;
-  facebook_comments_box:
-    int wrap <ocaml module="News.Metrics.Facebook_comments_box">;
-  rank: int wrap <ocaml module="News.Metrics.Rank">;
-  rank1: int wrap <ocaml module="News.Metrics.Rank1">;
-  rank0: int wrap <ocaml module="News.Metrics.Rank0">;
-  shares: int wrap <ocaml module="News.Metrics.Shares">
+  ?gplus: int wrap <ocaml module="News.Metrics.Gplus"> nullable;
+  ?twitter: int wrap <ocaml module="News.Metrics.Twitter"> nullable;
+  ?linkedin: int wrap <ocaml module="News.Metrics.Linkedin"> nullable;
+  ?pinterest: int wrap <ocaml module="News.Metrics.Pinterest"> nullable;
+  ?facebook_likes:
+    int wrap <ocaml module="News.Metrics.Facebook_likes"> nullable;
+  ?facebook_shares:
+    int wrap <ocaml module="News.Metrics.Facebook_shares"> nullable;
+  ?facebook_comments:
+    int wrap <ocaml module="News.Metrics.Facebook_comments"> nullable;
+  ?facebook_clicks:
+    int wrap <ocaml module="News.Metrics.Facebook_clicks"> nullable;
+  ?facebook_comments_box:
+    int wrap <ocaml module="News.Metrics.Facebook_comments_box"> nullable;
+  ?rank: int wrap <ocaml module="News.Metrics.Rank"> nullable;
+  ?rank1: int wrap <ocaml module="News.Metrics.Rank1"> nullable;
+  ?rank0: int wrap <ocaml module="News.Metrics.Rank0"> nullable;
+  ?shares: int wrap <ocaml module="News.Metrics.Shares"> nullable
 }
 type t_10m = {
   gplus: int wrap <ocaml module="News.Deltas.M_10m.Gplus">;
