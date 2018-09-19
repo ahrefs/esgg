@@ -1,0 +1,56 @@
+{
+    "from": 0,
+    "size": 5,
+    "timeout": "59s",
+    "sort": [
+        {
+            "_score": {
+                "order": "desc"
+            }
+        }
+    ],
+    "query": {
+        "function_score": {
+            "query": {
+                "bool": {
+                    "must": {
+                        "query_string": {
+                            "query": "content:(\"content marketing\"~6) OR title:(content marketing) OR title:(\"content marketing\"^10)",
+                            "default_operator": "AND"
+                        }
+                    }
+                }
+            },
+            "functions": [
+                {
+                    "field_value_factor": {
+                        "field": "metrics.rank",
+                        "modifier": "sqrt"
+                    }
+                },
+                {
+                    "field_value_factor": {
+                        "field": "se_metrics.domain_rating"
+                    }
+                }
+            ]
+        }
+    },
+    "highlight":{"order":"score","encoder":"html","fields":{"content":{"fragment_size":130,"number_of_fragments":1,"no_match_size":130}}},
+    "_source": [
+        "content_metrics.words",
+        "traffic",
+        "metrics",
+        "url",
+        "title",
+        "publish_time",
+        "se_metrics",
+        "author",
+        "last_update",
+        "next_update",
+        "first_seen",
+        "category_tier1",
+        "tags.og_description",
+        "tags.og_image"
+    ]
+}

@@ -121,6 +121,7 @@
       }
     },
     "metrics": {
+      "_meta": { "fields_default_optional": true },
       "properties": {
         "gplus": { "type": "long" },
         "twitter": { "type": "long" },
@@ -138,7 +139,7 @@
       }
     },
     "deltas": {
-      "_meta": { "fields_default_optional": true },
+      "_meta": { "optional": true, "fields_default_optional": true },
       "properties": {
         "10m": {
           "properties": {

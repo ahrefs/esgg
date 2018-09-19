@@ -1,0 +1,288 @@
+{
+  "took": 147,
+  "timed_out": false,
+  "_shards": {
+    "total": 980,
+    "successful": 980,
+    "failed": 0
+  },
+  "hits": {
+    "total": 522773,
+    "max_score": 1377981.8,
+    "hits": [
+      {
+        "_index": "pages-news-en-4",
+        "_type": "page",
+        "_id": "715ea213d4d6794bef29f7710c2d7fa4",
+        "_score": 1377981.8,
+        "_source": {
+          "se_metrics": {
+            "refclass_c": 102,
+            "domain_rating": 91,
+            "refdomains": 93,
+            "refips": 115
+          },
+          "first_seen": "2017-01-05T22:23:00Z",
+          "publish_time": "2017-01-05T22:00:00Z",
+          "author": {
+            "urls": [
+              "https://www.entrepreneur.com/author/thomas-smale",
+              "https://www.entrepreneur.com/article/Thomas%20Smale"
+            ],
+            "name": "Thomas Smale"
+          },
+          "last_update": "2018-08-27T23:13:27Z",
+          "content_metrics": {
+            "words": 1195
+          },
+          "metrics": {
+            "gplus": 0,
+            "facebook": 24286,
+            "pinterest": 515,
+            "linkedin": 2837,
+            "facebook_clicks": 0,
+            "rank0": 24286,
+            "shares": 33410,
+            "twitter": 8609,
+            "facebook_likes": 0,
+            "facebook_shares": 24286,
+            "facebook_comments_box": 0,
+            "rank": 8609,
+            "facebook_comments": 0,
+            "new_rank": 0,
+            "new_shares": 0
+          },
+          "title": "6 Tools to Turbocharge Your Content Marketing in 2017",
+          "next_update": "2018-09-26T11:29:19Z",
+          "url": "https://www.entrepreneur.com/article/287309",
+          "traffic": 0.213032,
+          "tags": {
+            "og_description": "Buffer. Almighty. Press. SumoMe. Why not use them all together in one turbocharged work flow?",
+            "og_image": "https://assets.entrepreneur.com/content/3x2/2000/20160201183859-plumber-plumbing-water-union-sink-tools.jpeg"
+          }
+        },
+        "highlight": {
+          "content": [
+            "available to enhance your <em>content marketing</em> game plan for 2017? Related:  The 5 Ultimate <em>Content</em>-<em>Marketing</em> Tools And exactly how are"
+          ]
+        }
+      },
+      {
+        "_index": "pages-news-en-4",
+        "_type": "page",
+        "_id": "d8d87ae23745be2ec224a4c66cef8c2a",
+        "_score": 1120894.5,
+        "_source": {
+          "se_metrics": {
+            "refclass_c": 1,
+            "domain_rating": 93,
+            "refdomains": 1,
+            "refips": 1
+          },
+          "first_seen": "2017-08-17T12:53:55Z",
+          "publish_time": "2017-08-17T12:53:10Z",
+          "author": {
+            "urls": [
+              "https://medium.com/@almightypress"
+            ],
+            "name": null
+          },
+          "last_update": "2018-09-11T19:38:56Z",
+          "content_metrics": {
+            "words": 729
+          },
+          "metrics": {
+            "gplus": 0,
+            "facebook": 7098,
+            "pinterest": 0,
+            "linkedin": 1,
+            "facebook_clicks": 0,
+            "rank0": 12858,
+            "shares": 19956,
+            "twitter": 12858,
+            "facebook_likes": 0,
+            "facebook_shares": 7098,
+            "facebook_comments_box": 0,
+            "rank": 7098,
+            "facebook_comments": 0,
+            "new_rank": 0,
+            "new_shares": 0
+          },
+          "title": "Top 7 Essential Content Marketing Tools You Need in 2017",
+          "next_update": "2018-10-05T14:44:21Z",
+          "url": "https://medium.com/@almightypress/top-7-essential-content-marketing-tools-you-need-in-2017-1e3d62aaa1fa",
+          "traffic": 0,
+          "tags": {
+            "og_description": "Content marketing has arrived in an era where automation plays a major role in its success. It continues to change rapidly due to the…",
+            "og_image": "https://cdn-images-1.medium.com/max/1200/1*Mu5sLb5QV9cFMfzOzabC9w.png"
+          }
+        },
+        "highlight": {
+          "content": [
+            " — https:&#x2F;&#x2F;almighty.press Aug 17, 2017 Top 7 Essential <em>Content Marketing</em> Tools You Need in 2017 <em>Content marketing</em> has arrived in an era where automation"
+          ]
+        }
+      },
+      {
+        "_index": "pages-news-en-4",
+        "_type": "page",
+        "_id": "47056ca47e77bb68635003ae71b1e8d0",
+        "_score": 1024574.3,
+        "_source": {
+          "se_metrics": {
+            "refclass_c": 16,
+            "domain_rating": 93,
+            "refdomains": 12,
+            "refips": 17
+          },
+          "first_seen": "2017-08-26T09:12:26Z",
+          "publish_time": "2017-08-25T07:29:26Z",
+          "author": {
+            "urls": [
+              "https://medium.com/@almightypress"
+            ],
+            "name": null
+          },
+          "last_update": "2018-09-15T17:25:02Z",
+          "content_metrics": {
+            "words": 800
+          },
+          "metrics": {
+            "gplus": 0,
+            "facebook": 5752,
+            "pinterest": 378,
+            "linkedin": 1018,
+            "facebook_clicks": 0,
+            "rank0": 17281,
+            "shares": 23411,
+            "twitter": 17281,
+            "facebook_likes": 0,
+            "facebook_shares": 5752,
+            "facebook_comments_box": 0,
+            "rank": 5752,
+            "facebook_comments": 0,
+            "new_rank": 2,
+            "new_shares": 2
+          },
+          "title": "5 Things You Need To Know About Content Marketing To Be Successful",
+          "next_update": "2018-10-14T20:41:40Z",
+          "url": "https://medium.com/@almightypress/5-things-you-need-to-know-about-content-marketing-to-be-successful-f4bf54429b61",
+          "traffic": 0.000415,
+          "tags": {
+            "og_description": "Based on Content Marketing Institute’s recent study, content marketing is getting more popular with more than 35 percent of North American…",
+            "og_image": "https://cdn-images-1.medium.com/max/1200/0*Xj6gRq7dzfR3eOu8.png"
+          }
+        },
+        "highlight": {
+          "content": [
+            "To Know About <em>Content Marketing</em> To Be Successful Based on <em>Content Marketing</em> Institute’s recent study, <em>content marketing</em> is getting more"
+          ]
+        }
+      },
+      {
+        "_index": "pages-news-en-4",
+        "_type": "page",
+        "_id": "c0277fb748dffe56ec7912e6d3c2f9fe",
+        "_score": 657130.9,
+        "_source": {
+          "se_metrics": {
+            "refclass_c": 2495,
+            "domain_rating": 92,
+            "refdomains": 3521,
+            "refips": 3092
+          },
+          "first_seen": "2015-01-23T09:22:39Z",
+          "publish_time": "2015-01-23T09:22:39Z",
+          "author": {
+            "urls": [],
+            "name": "Jesse Mawhinney"
+          },
+          "last_update": "2018-09-18T03:55:14Z",
+          "content_metrics": {
+            "words": 1131
+          },
+          "metrics": {
+            "gplus": 0,
+            "facebook": 1626,
+            "pinterest": 119,
+            "linkedin": 5554,
+            "facebook_clicks": 0,
+            "rank0": 2953,
+            "shares": 4698,
+            "twitter": 2953,
+            "facebook_likes": 0,
+            "facebook_shares": 1626,
+            "facebook_comments_box": 0,
+            "rank": 2495,
+            "facebook_comments": 0,
+            "new_rank": 194,
+            "new_shares": 231
+          },
+          "title": "45 Visual Content Marketing Statistics You Should Know in 2018",
+          "next_update": "2018-09-23T09:09:30Z",
+          "url": "https://blog.hubspot.com/marketing/visual-content-marketing-strategy",
+          "traffic": 725.208416,
+          "tags": {
+            "og_description": "What does the visual content landscape look like for 2018? Here are 45 statistics that will give you a sneak peek.",
+            "og_image": "https://blog.hubspot.com/hubfs/visual-content-marketing-statistics.jpg?t=1537190315328"
+          }
+        },
+        "highlight": {
+          "content": [
+            "and promotion?  Take our free <em>Content Marketing</em> Certification course. ) 45 Visual <em>Content Marketing</em> Statistics You Should Know in 2018"
+          ]
+        }
+      },
+      {
+        "_index": "pages-news-en-4",
+        "_type": "page",
+        "_id": "69e99ecfd031d60576a1ec03a0026913",
+        "_score": 577922.75,
+        "_source": {
+          "se_metrics": {
+            "refclass_c": 218,
+            "domain_rating": 87,
+            "refdomains": 230,
+            "refips": 233
+          },
+          "first_seen": "2016-08-03T10:28:35Z",
+          "publish_time": "2016-08-03T10:00:33Z",
+          "last_update": "2018-08-31T20:18:32Z",
+          "content_metrics": {
+            "words": 2227
+          },
+          "metrics": {
+            "gplus": 0,
+            "facebook": 1544,
+            "pinterest": 191,
+            "linkedin": 2524,
+            "facebook_clicks": 0,
+            "rank0": 1544,
+            "shares": 3074,
+            "twitter": 1339,
+            "facebook_likes": 0,
+            "facebook_shares": 1544,
+            "facebook_comments_box": 0,
+            "rank": 1339,
+            "facebook_comments": 0,
+            "new_rank": 0,
+            "new_shares": 0
+          },
+          "title": "The Biggest Content Marketing Trends in 2017",
+          "next_update": "2018-09-22T03:49:03Z",
+          "url": "https://contentmarketinginstitute.com/2016/08/content-marketing-trends/",
+          "traffic": 159.904593,
+          "tags": {
+            "og_description": "Joe Pulizzi shares what’s on trend for content marketing now and in 2017, from writing to technology, and documented strategies – Content Marketing Institute",
+            "og_image": "https://contentmarketinginstitute.com/wp-content/uploads/2016/08/content-marketing-trends.png"
+          }
+        },
+        "highlight": {
+          "content": [
+            "In answer to this, <em>Content Marketing</em> World offers a specific workshop solely on  how to create a documented <em>content marketing</em> strategy . To"
+          ]
+        }
+      }
+    ]
+  }
+}
