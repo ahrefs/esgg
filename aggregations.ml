@@ -88,7 +88,7 @@ let infer_single mapping ~nested { name; agg; } sub =
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
       let d = doc_count () in
       cstrs, `Dict [ "buckets", `Dict (l |> List.map (fun (k,_) -> k, d))]
-    | Top_hits source -> [], `Dict [ "hits", (Hit.hits mapping ?nested source :> resolve_type) ]
+    | Top_hits source -> [], `Dict [ "hits", (Hit.hits mapping ~highlight:None (*?*) ?nested source :> resolve_type) ]
     | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in
   cstr, (name, shape)

@@ -14,14 +14,26 @@ let resolve_types mapping shape =
   in
   map shape
 
+let derive_highlight mapping hl =
+  match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
+  | `Dict l ->
+    let l = l |> List.map begin function
+    | (k, (`List _ | `Dict _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
+    | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
+    | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
+    end in
+    `Dict l
+  | _ -> Exn.fail "derive_highlight: expected Dict after projecting fields over mapping"
+
 let output ~init mapping query =
   let shape =
     match Query.extract query with
     | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
     | Get (_,None) -> Hit.doc_no_source
     | Mget _ -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping mapping))] (* TODO `Maybe *)
-    | Search { source; _ } ->
-      let hits = Hit.hits mapping source in
+    | Search { source; highlight; _ } ->
+      let highlight = Option.map (derive_highlight mapping) highlight in
+      let hits = Hit.hits mapping ~highlight source in
       let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
       let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
       resolve_types mapping result
@@ -77,7 +89,7 @@ let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
     match query with
-    | Search { q; extra; source=_ } ->
+    | Search { q; extra; source=_; highlight=_; } ->
       let (agg_json, aggs) = Aggregations.analyze mapping json in
       let c1 = List.concat @@ fst @@ List.split aggs in
       let c2 = Query.infer' extra q in
