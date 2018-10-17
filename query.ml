@@ -198,7 +198,10 @@ let extract json =
         match U.assoc "docs" json with
         | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
         | _ -> Exn.fail "unexpected docs"
-        | exception _ -> var_list_of_json ~desc:"mget ids" U.(assoc "ids" json)
+        | exception _ ->
+          match U.(assoc "ids" json) with
+          | ids -> var_list_of_json ~desc:"mget ids" ids
+          | exception _ -> Exn.fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
       in
       Mget ids
 
