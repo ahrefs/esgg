@@ -1,13 +1,15 @@
-opam-version: "1.2"
+opam-version: "2.0"
 authors: "Ahrefs"
 homepage: "https://git.ahrefs.com/ahrefs/esgg"
 maintainer: "igor@ahrefs.com"
-dev-repo: "ssh://git@git.ahrefs.com/ahrefs/esgg.git"
+dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
 build: [
   [make]
+  [make "test"] {with-test}
 ]
 depends: [
+  "ocaml" { >= "4.03.0" }
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "yojson"
@@ -18,4 +20,3 @@ depends: [
   "jsonm"
   "ppx_deriving"
 ]
-available: [ ocaml-version >= "4.03.0" ]
