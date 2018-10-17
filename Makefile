@@ -4,11 +4,12 @@
 build:
 	ocamlbuild -use-ocamlfind -package yojson,extlib,devkit,atd,easy-format,jsonm,ppx_deriving.std esgg.native
 
-test:
+test: build
 	./test/run.sh
 
-check:
+check: build
 	./check/run.sh
 
 clean:
 	ocamlbuild -clean
+	cd check && ocamlbuild -clean
