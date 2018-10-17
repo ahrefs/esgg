@@ -206,6 +206,11 @@ let extract json =
       Mget ids
 
 let resolve_constraints mapping l =
+  let typeof field =
+    let name = ES_name.make mapping field in
+    let typ = typeof mapping name in
+    name, typ
+  in
   let vars = Hashtbl.create 3 in
   l |> List.iter begin function
   | On_var (var,t) ->
@@ -214,11 +219,15 @@ let resolve_constraints mapping l =
     | Eq_list typ -> List typ
     | Eq_any -> Any
     | Eq_field (multi,field) ->
-      let name = ES_name.make mapping field in
-      let typ = typeof mapping name in
+      let (name,typ) = typeof field in
       Property (multi,name,typ)
     in
     record vars var.name t
-  | Field_num _ | Field_date _ -> ()
+  | Field_num f ->
+    begin match snd @@ typeof f with
+    | `Int | `Int64 | `Double -> ()
+    | `String | `Bool as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
+    end
+  | Field_date _ -> ()
   end;
   vars
