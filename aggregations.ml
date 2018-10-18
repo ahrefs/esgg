@@ -3,7 +3,7 @@ open ExtLib
 open Common
 
 type agg_type =
-| Simple_metric of [`Same | `Double] * string
+| Simple_metric of [`MinMax | `Avg | `Sum ] * string
 | Cardinality of string
 | Terms of { field : string; size : Tjson.t }
 | Histogram of string
@@ -30,8 +30,9 @@ let analyze_single name agg_type json =
     | _ ->
     json,
     match agg_type with
-    | "max" | "min" | "sum" -> Simple_metric (`Same, field ())
-    | "avg" -> Simple_metric (`Double, field ())
+    | "max" | "min" -> Simple_metric (`MinMax, field ())
+    | "sum" -> Simple_metric (`Sum, field ())
+    | "avg" -> Simple_metric (`Avg, field ())
     | "cardinality" -> Cardinality (field ())
     | "terms" | "significant_terms" -> Terms { field = field (); size = U.member "size" json }
     | "histogram" -> Histogram (field ())
@@ -78,13 +79,15 @@ let infer_single mapping ~nested { name; agg; } sub =
   let doc_count () = sub ["doc_count", `Int] in
   let (cstr,shape) =
     match agg with
-    | Simple_metric (type_hint, field) ->
+    | Simple_metric (metric, field) ->
       let typ =
-        match type_hint with
-        | `Same -> `Typeof field
-        | `Double -> `Double
+        match metric with
+        | `MinMax -> `Typeof field
+        | `Sum when typeof_ mapping field = `Bool -> `Int
+        | `Sum -> `Typeof field
+        | `Avg -> `Double
       in
-      [Field_num field], sub [ "value", `Maybe typ ]
+      [], sub [ "value", `Maybe typ ]
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [Field_num field], buckets `Double
