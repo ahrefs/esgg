@@ -2,17 +2,13 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
-type value = {
-  ?value: float wrap <ocaml module="Positions.Stats.Volume"> nullable
-}
+type value = { value: float wrap <ocaml module="Positions.Stats.Volume"> }
 type monthlyTraffic = {
   key: string wrap <ocaml module="Positions.Country">;
   doc_count: int;
   buckets: value
 }
-type buckets1 = {
-  ?value: float wrap <ocaml module="Positions.Stats.Cost"> nullable
-}
+type buckets1 = { value: float wrap <ocaml module="Positions.Stats.Cost"> }
 type monthlyCost = {
   key: string wrap <ocaml module="Positions.Country">;
   doc_count: int;

@@ -35,11 +35,9 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type traffic = {
-  ?value: float wrap <ocaml module="Positions.Stats.Volume"> nullable
-}
+type traffic = { value: float wrap <ocaml module="Positions.Stats.Volume"> }
 type traffic_value = {
-  ?value: float wrap <ocaml module="Positions.Stats.Cost"> nullable
+  value: float wrap <ocaml module="Positions.Stats.Cost">
 }
 type _source1 = {
   nice_volume: int wrap <ocaml module="Positions.Nice_volume">;

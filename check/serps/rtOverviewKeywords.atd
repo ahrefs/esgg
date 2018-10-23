@@ -12,7 +12,7 @@ type hits1 = { total: int; ~hits: hit list }
 type top_position = { hits: hits1 }
 type nest_filters = { doc_count: int; top_position: top_position }
 type traffic = {
-  ?value: float wrap <ocaml module="Serps.Positions.Stats.Volume"> nullable
+  value: float wrap <ocaml module="Serps.Positions.Stats.Volume">
 }
 type organic = {
   doc_count: int;
