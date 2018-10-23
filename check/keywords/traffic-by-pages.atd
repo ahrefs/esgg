@@ -2,9 +2,7 @@
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type hits = { total: int }
-type traffic = {
-  value: float wrap <ocaml module="Keywords.Serps.Positions.Stats.Volume">
-}
+type traffic = { value: float }
 type _source = {
   url: string wrap <ocaml module="Keywords.Serps.Positions.Url">
 }

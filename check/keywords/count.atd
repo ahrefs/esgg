@@ -57,6 +57,6 @@ type _source = {
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
 type byMonth = { key: int; doc_count: int; key_as_string: string }
-type totalVolume = { value: int wrap <ocaml module="Keywords.Nice_volume"> }
+type totalVolume = { value: int }
 type aggregations = { byMonth: byMonth buckets; totalVolume: totalVolume }
 type result = { hits: hits; aggregations: aggregations }

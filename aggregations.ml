@@ -80,11 +80,13 @@ let infer_single mapping ~nested { name; agg; } sub =
   let (cstr,shape) =
     match agg with
     | Simple_metric (metric, field) ->
+      let field_type = (typeof_ mapping field :> resolve_type) in
       let typ =
         match metric with
-        | `MinMax -> `Maybe (`Typeof field)
-        | `Sum when typeof_ mapping field = `Bool -> `Int
-        | `Sum -> `Typeof field
+(*         | `MinMax -> `Maybe (`Typeof field) *)
+        | `MinMax -> `Maybe field_type (* TODO use Typeof, but need meta annotation to fallback to field_type *)
+        | `Sum when field_type = `Bool -> `Int
+        | `Sum -> field_type
         | `Avg -> `Maybe `Double
       in
       [], sub [ "value", typ ]

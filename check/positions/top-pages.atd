@@ -35,10 +35,7 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type traffic = { value: float wrap <ocaml module="Positions.Stats.Volume"> }
-type traffic_value = {
-  value: float wrap <ocaml module="Positions.Stats.Cost">
-}
+type traffic = { value: float }
 type _source1 = {
   nice_volume: int wrap <ocaml module="Positions.Nice_volume">;
   keyword: string wrap <ocaml module="Positions.Keyword">;
@@ -64,7 +61,7 @@ type topPages = {
       <ocaml module="Positions.Url_hash.Exact_only">;
   doc_count: int;
   traffic: traffic;
-  traffic_value: traffic_value;
+  traffic_value: traffic;
   top: top;
   have_rd: have_rd
 }
