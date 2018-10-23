@@ -82,12 +82,12 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Simple_metric (metric, field) ->
       let typ =
         match metric with
-        | `MinMax -> `Typeof field
+        | `MinMax -> `Maybe (`Typeof field)
         | `Sum when typeof_ mapping field = `Bool -> `Int
         | `Sum -> `Typeof field
-        | `Avg -> `Double
+        | `Avg -> `Maybe `Double
       in
-      [], sub [ "value", `Maybe typ ]
+      [], sub [ "value", typ ]
     | Cardinality _field -> [], sub ["value", `Int ]
     | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [Field_num field], buckets `Double
