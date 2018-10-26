@@ -85,9 +85,12 @@ let infer_single mapping ~nested { name; agg; } sub =
         match metric with
 (*         | `MinMax -> `Maybe (`Typeof field) *)
         | `MinMax -> `Maybe field_type (* TODO use Typeof, but need meta annotation to fallback to field_type *)
-        | `Sum when field_type = `Bool -> `Int
-        | `Sum -> field_type
         | `Avg -> `Maybe `Double
+        | `Sum ->
+          match field_type with
+          | `Bool -> `Int
+          | `Int | `Int64 -> `Dict ["override int as float hack", `Int]
+          | _ -> field_type
       in
       [], sub [ "value", typ ]
     | Cardinality _field -> [], sub ["value", `Int ]

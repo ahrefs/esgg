@@ -205,6 +205,7 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   List.iter Types.new_ (snd init);
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
+  Types.new_ @@ typ "int_as_float" (wrap ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"] (tname "float"));
   let rec map shape =
     match shape with
     | #simple_type as t -> of_simple_type t
@@ -214,6 +215,7 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
+    | `Dict ["value", `Dict ["override int as float hack", `Int]] -> record [field "value" (tname "int_as_float")]
     | `Dict fields ->
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
