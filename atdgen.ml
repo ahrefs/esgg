@@ -14,7 +14,7 @@ let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
 let tname ?a t = pname ?a t []
 let nullable ?(a=[]) t = `Nullable (loc,t,annots a)
 let option ?(a=[]) t = `Option (loc,t,annots a)
-let wrap ocaml t = `Wrap (loc,t,annots ["ocaml",ocaml])
+let wrap t ocaml = `Wrap (loc,t,annots ["ocaml",ocaml])
 let tvar t = `Tvar (loc,t)
 let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
 let typ ?a name t = ptyp ?a name [] t
@@ -27,7 +27,7 @@ let of_simple_type =
   | `Double -> tname "float"
   | `Bool -> tname "bool"
 
-let wrap_ref ref t : Atd.Ast.type_expr = wrap ["module",ES_name.to_ocaml ref] t
+let wrap_ref ref t : Atd.Ast.type_expr = wrap t ["module",ES_name.to_ocaml ref]
 
 let of_var_type {multi;ref;typ} : Atd.Ast.type_expr =
   let t = of_simple_type typ in
@@ -205,7 +205,10 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   List.iter Types.new_ (snd init);
   Types.new_ @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.new_ @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
-  Types.new_ @@ typ "int_as_float" (wrap ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"] (tname "float"));
+  Types.new_ @@ typ "int_as_float" (wrap (tname "float") ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"]);
+  Types.new_ @@ ptyp "value_agg'" ["a"] (record [field "value" (tvar "a")]);
+  Types.new_ @@ ptyp "value_agg" ["a"]
+    (wrap (pname "value_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value; } -> value"; "unwrap", "fun value -> { value; }"]);
   let rec map shape =
     match shape with
     | #simple_type as t -> of_simple_type t
@@ -215,7 +218,8 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
-    | `Dict ["value", `Dict ["override int as float hack", `Int]] -> record [field "value" (tname "int_as_float")]
+    | `Dict ["value", `Dict ["override int as float hack", `Int]] -> pname "value_agg" [tname "int_as_float"]
+    | `Dict ["value", t] -> pname "value_agg" [map t]
     | `Dict fields ->
       let fields = fields |> List.map begin fun (name,t) ->
         let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
