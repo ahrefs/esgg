@@ -3,6 +3,11 @@ type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type int_as_float =
   float wrap <ocaml t="int" wrap="int_of_float" unwrap="float_of_int">
+type 'a value_agg' = { value: 'a }
+type 'a value_agg =
+  'a value_agg' wrap
+    <ocaml
+       t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
 type history = {
   position: int wrap <ocaml module="Positions.History.Position">;
   ordinal: int wrap <ocaml module="Positions.History.Ordinal">;
@@ -37,7 +42,6 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type traffic = { value: float }
 type _source1 = {
   nice_volume: int wrap <ocaml module="Positions.Nice_volume">;
   keyword: string wrap <ocaml module="Positions.Keyword">;
@@ -62,15 +66,14 @@ type topPages = {
     int <ocaml repr="int64"> wrap
       <ocaml module="Positions.Url_hash.Exact_only">;
   doc_count: int;
-  traffic: traffic;
-  traffic_value: traffic;
+  traffic: float value_agg;
+  traffic_value: float value_agg;
   top: top;
   have_rd: have_rd
 }
-type totalPages = { value: int }
 type aggregations = {
   topPages: topPages buckets;
-  totalPages: totalPages;
-  totalTraffic: traffic
+  totalPages: int value_agg;
+  totalTraffic: float value_agg
 }
 type result = { hits: hits; aggregations: aggregations }
