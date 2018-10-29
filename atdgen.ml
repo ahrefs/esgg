@@ -36,15 +36,74 @@ let of_var_type {multi;ref;typ} : Atd.Ast.type_expr =
   | One -> t
   | Many -> list t
 
+(* http://caml.inria.fr/pub/docs/manual-ocaml-4.07/manual049.html *)
+let ocaml_keywords = [
+"and";
+"as";
+"asr";
+"assert";
+"begin";
+"class";
+"constraint";
+"do";
+"done";
+"downto";
+"else";
+"end";
+"exception";
+"external";
+"false";
+"for";
+"fun";
+"function";
+"functor";
+"if";
+"in";
+"include";
+"inherit";
+"initializer";
+"land";
+"lazy";
+"let";
+"lor";
+"lsl";
+"lsr";
+"lxor";
+"match";
+"method";
+"mod";
+"module";
+"mutable";
+"new";
+"nonrec";
+"object";
+"of";
+"open!";
+"open";
+"or";
+"private";
+"rec";
+"sig";
+"struct";
+"then";
+"to";
+"true";
+"try";
+"type";
+"val";
+"virtual";
+"when";
+"while";
+"with";
+]
+
 let safe_ident name =
   let safe =
-    match name with
-    | "type" -> Some "type_"
-    | "new" -> Some "new_"
-    | "class" -> Some "class_"
-    | s ->
-      let s' = to_valid_ident ~prefix:"t_" s in
-      if s = s' then None else Some s'
+    if List.mem name ocaml_keywords then
+      Some (name ^ "_")
+    else
+      let s' = to_valid_ident ~prefix:"t_" name in
+      if name = s' then None else Some s'
   in
   match safe with
   | Some s -> ["json",["name",name]], s
