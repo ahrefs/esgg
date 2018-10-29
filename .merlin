@@ -1,9 +1,0 @@
-B _build
-S .
-FLG -w +a-4-40-42-44-48 -strict-sequence -strict-formats
-PKG yojson
-PKG devkit
-PKG atd
-PKG easy-format
-PKG jsonm
-PKG ppx_deriving.std
