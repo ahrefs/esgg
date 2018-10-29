@@ -4,8 +4,15 @@
  (ci_build
   (flags (:standard (:include dune_flags.sexp) -warn-error +A-d))))
 
+(library
+ (name esgglib)
+ (wrapped false)
+ (modules (:standard \ esgg))
+ (libraries threads yojson extlib devkit atd easy-format jsonm)
+ (preprocess (pps ppx_deriving.std)))
+
 (executable
  (name esgg)
  (public_name esgg)
- (libraries threads yojson extlib devkit atd easy-format jsonm)
- (preprocess (pps ppx_deriving.std)))
+ (modules esgg)
+ (libraries esgglib))
