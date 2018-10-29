@@ -41,6 +41,7 @@ let safe_ident name =
     match name with
     | "type" -> Some "type_"
     | "new" -> Some "new_"
+    | "class" -> Some "class_"
     | s ->
       let s' = to_valid_ident ~prefix:"t_" s in
       if s = s' then None else Some s'
