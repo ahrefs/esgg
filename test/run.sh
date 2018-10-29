@@ -13,8 +13,8 @@ function run() {
   echo -n "$dir ... "
   (
   set -e
-  cmd ../esgg.native output $dir/mapping.json $dir/query.json > $dir/output.atd
-  cmd ../esgg.native vars $dir/mapping.json $dir/query.json > $dir/input.atd
+  cmd dune exec ../esgg.exe -- output $dir/mapping.json $dir/query.json > $dir/output.atd
+  cmd dune exec ../esgg.exe -- vars $dir/mapping.json $dir/query.json > $dir/input.atd
   ) && echo "ok"
 }
 

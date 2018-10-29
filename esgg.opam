@@ -5,13 +5,13 @@ maintainer: "igor@ahrefs.com"
 dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
 build: [
-  [make]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "--root" "." "--only-packages" name "--promote" "ignore" "--no-config" "--profile" "dev" "-j" jobs]
   [make "test"] {with-test}
 ]
 depends: [
+  "dune" {build & < "1.4.0"}
   "ocaml" { >= "4.03.0" }
-  "ocamlfind" {build}
-  "ocamlbuild" {build}
   "yojson"
   "extlib"
   "devkit"
@@ -20,3 +20,4 @@ depends: [
   "jsonm"
   "ppx_deriving"
 ]
+version: "git"
