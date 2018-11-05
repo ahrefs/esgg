@@ -6,7 +6,7 @@ Tests
 
 `make check` runs tests in [check/](check/) verifying
 that atd description of output (generated from query) can indeed unserialize ES output from that actual query.
-Tests take somewhat long time because multiple separate invocations of ocamlbuild for each test, this could be improved.
+Tests take somewhat long time because multiple separate invocations of dune for each test, this could be improved.
 Also adding new tests is currently a bit too manual.
 
 `make test` runs regression tests in [test/](test/) verifying
