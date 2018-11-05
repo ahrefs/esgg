@@ -14,12 +14,11 @@ function check {
   echo $name
   (
   set -e
-  cmd ../esgg.native output -name $(basename $dir) $dir/mapping.json $name.query.json > check.atd
+  cmd dune exec ../esgg.exe -- output -name $(basename $dir) $dir/mapping.json $name.query.json > check.atd
   cmd cp check.atd $name.atd
   cmd atdgen -t -open Mapping check.atd
   cmd atdgen -j -open Mapping check.atd
-  cmd ocamlbuild -use-ocamlfind -pkg atdgen,extlib run.byte
-  cmd ./run.byte < $name.result.json
+  cmd dune exec ./run.bc -- < $name.result.json
   )
 }
 
@@ -28,7 +27,7 @@ if [ $# -eq 0 ]; then
   for p in **/mapping.json ; do
     name=$(basename $(dirname $p))
     printf "\n" >> mapping.ml
-    ../esgg.native reflect $name $p >> mapping.ml
+    dune exec ../esgg.exe -- reflect $name $p >> mapping.ml
   done
   for p in **/*.query.json ; do
     check $p
