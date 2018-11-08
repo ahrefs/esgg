@@ -13,10 +13,12 @@ function run() {
   echo -n "$dir ... "
   (
   set -e
-  cmd dune exec ../esgg.exe -- output $dir/mapping.json $dir/query.json > $dir/output.atd
-  cmd dune exec ../esgg.exe -- vars $dir/mapping.json $dir/query.json > $dir/input.atd
+  cmd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json > $dir/output.atd
+  cmd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json > $dir/input.atd
   ) && echo "ok"
 }
+
+cmd dune build ../esgg.exe
 
 if [ $# -eq 0 ]; then
   for p in */mapping.json ; do

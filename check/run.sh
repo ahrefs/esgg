@@ -14,20 +14,22 @@ function check {
   echo $name
   (
   set -e
-  cmd dune exec ../esgg.exe -- output -name $(basename $dir) $dir/mapping.json $name.query.json > check.atd
+  cmd ../_build/default/esgg.exe output -name $(basename $dir) $dir/mapping.json $name.query.json > check.atd
   cmd cp check.atd $name.atd
   cmd atdgen -t -open Mapping check.atd
   cmd atdgen -j -open Mapping check.atd
-  cmd dune exec ./run.bc -- < $name.result.json
+  cmd dune exec --root . ./run.bc -- < $name.result.json
   )
 }
+
+cmd dune build ../esgg.exe
 
 if [ $# -eq 0 ]; then
   printf "open Common\n" > mapping.ml
   for p in **/mapping.json ; do
     name=$(basename $(dirname $p))
     printf "\n" >> mapping.ml
-    dune exec ../esgg.exe -- reflect $name $p >> mapping.ml
+    cmd ../_build/default/esgg.exe reflect $name $p >> mapping.ml
   done
   for p in **/*.query.json ; do
     check $p
