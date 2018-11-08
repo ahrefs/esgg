@@ -15,6 +15,7 @@ function run() {
   set -e
   cmd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json > $dir/output.atd
   cmd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json > $dir/input.atd
+  cmd ../_build/default/esgg.exe input_j $dir/mapping.json $dir/query.json > $dir/query.ml
   ) && echo "ok"
 }
 
