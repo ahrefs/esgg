@@ -102,6 +102,7 @@ let empty_filter = { excludes = None; includes = None }
 
 type result_type = [
   | `List of result_type
+  | `Object of result_type
   | `Dict of (string * result_type) list
   | `Ref of (ES_name.t * simple_type)
   | `Maybe of result_type
@@ -111,6 +112,7 @@ type result_type = [
 type resolve_type = [
   | `Typeof of string
   | `List of resolve_type
+  | `Object of resolve_type
   | `Dict of (string * resolve_type) list
   | `Ref of (ES_name.t * simple_type)
   | `Maybe of resolve_type

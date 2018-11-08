@@ -275,7 +275,7 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Maybe t -> nullable @@ map t
     | `Ref (ref,t) -> wrap_ref ref (of_simple_type t)
     | `List t -> list (map t)
-    | `Assoc (k,v) -> list ~a:["json",["repr","object"]] (tuple [map k; map v])
+    | `Object t -> list ~a:["json",["repr","object"]] (tuple [map `String; map t])
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
     | `Dict ["value", `Dict ["override int as float hack", `Int]] -> pname "value_agg" [tname "int_as_float"]

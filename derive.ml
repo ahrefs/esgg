@@ -7,6 +7,7 @@ open Common
 let resolve_types mapping shape =
   let rec map : resolve_type -> result_type = function
   | `List t -> `List (map t)
+  | `Object t -> `Object (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
   | `Maybe t -> `Maybe (map t)
@@ -18,7 +19,7 @@ let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
   | `Dict l ->
     let l = l |> List.map begin function
-    | (k, (`List _ | `Dict _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
+    | (k, (`List _ | `Dict _ | `Object _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
     | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
     | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
     end in
