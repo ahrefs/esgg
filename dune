@@ -4,6 +4,8 @@
  (ci_build
   (flags (:standard (:include dune_flags.sexp) -warn-error +A-d))))
 
+; Use a library with all the code except the entry point to be able to
+; use `dune utop`.
 (library
  (name esgglib)
  (wrapped false)
