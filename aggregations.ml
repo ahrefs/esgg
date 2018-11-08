@@ -10,6 +10,7 @@ type agg_type =
 | Date_histogram of string
 | Filter of Query.query
 | Filters of (string * Query.query) list
+| Filters_dynamic
 | Top_hits of source_filter option
 | Range of string
 | Nested of string
@@ -24,9 +25,14 @@ let analyze_single name agg_type json =
     match agg_type with
     | "filter" -> let q = Query.extract_query json in q.json, Filter q
     | "filters" ->
-      let filters = json |> U.member "filters" |> U.to_assoc |> List.map (fun (k,v) -> k, Query.extract_query v) in
-      let json = Tjson.replace json "filters" (`Assoc (List.map (fun (k,q) -> k, q.Query.json) filters)) in
-      json, Filters filters
+      begin match json |> U.member "filters" with
+      | `Assoc a ->
+        let filters = List.map (fun (k,v) -> k, Query.extract_query v) a in
+        let json = Tjson.replace json "filters" (`Assoc (List.map (fun (k,q) -> k, q.Query.json) filters)) in
+        json, Filters filters
+      | `Var _ -> json, Filters_dynamic
+      | _ -> Exn.fail "filters: expecting either dict or variable"
+      end
     | _ ->
     json,
     match agg_type with
@@ -103,7 +109,9 @@ let infer_single mapping ~nested { name; agg; } sub =
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
       let d = doc_count () in
       cstrs, `Dict [ "buckets", `Dict (l |> List.map (fun (k,_) -> k, d))]
-    | Top_hits source -> [], `Dict [ "hits", (Hit.hits mapping ~highlight:None (*?*) ?nested source :> resolve_type) ]
+    | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
+      [], `Dict [ "buckets", `Object (doc_count ()) ]
+    | Top_hits source -> [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight:None (*?*) ?nested source) :> (string * resolve_type) list) ]
     | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
   in
   cstr, (name, shape)

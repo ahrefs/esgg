@@ -81,15 +81,15 @@ let doc_no_source = doc_ ~found:`Bool None
 let doc source = doc_ ~found:`Bool (Some source)
 let hit ?highlight ?id source = doc_ ?highlight ?id (Some source)
 
-let hits mapping ?nested ~highlight source : result_type =
+let hits_ mapping ?nested ~highlight source : (string * result_type) list =
   let hit x =
     match nested with
     | None -> hit ?highlight x
     | Some nested -> hit ~id:false ?highlight (get_nested nested x)
   in
-  `Dict (
-    List.concat [
-        ["total", `Int];
-        (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
-      ]
-  )
+  List.concat [
+      ["total", `Int];
+      (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
+    ]
+
+let hits mapping ?nested ~highlight source : result_type = `Dict (hits_ mapping ?nested ~highlight source)
