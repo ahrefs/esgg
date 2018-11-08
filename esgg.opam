@@ -10,7 +10,7 @@ build: [
   [make "test"] {with-test}
 ]
 depends: [
-  "dune" {build & < "1.4.0"}
+  "dune" {build & != "1.4.0"}
   "ocaml" { >= "4.03.0" }
   "yojson"
   "extlib"
