@@ -13,7 +13,6 @@ let field ?(kind=`Required) ?(a=[]) n t = `Field (loc, (n, kind, annots a), t)
 let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
 let tname ?a t = pname ?a t []
 let nullable ?(a=[]) t = `Nullable (loc,t,annots a)
-let option ?(a=[]) t = `Option (loc,t,annots a)
 let wrap t ocaml = `Wrap (loc,t,annots ["ocaml",ocaml])
 let tvar t = `Tvar (loc,t)
 let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
@@ -307,7 +306,7 @@ let of_vars ~init (l:input_vars) =
     in
     match req with
     | `Required -> t
-    | `Optional -> option t
+    | `Optional -> nullable t
   and map l =
     match l with
     | [] -> tname "unit"
