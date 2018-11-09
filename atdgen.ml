@@ -259,6 +259,13 @@ let make_abstract ((_loc,annot),init) types =
     | _ -> `Type (loc, (name t,[],annot),tname "abstract")
   end
 
+let safe_record map fields =
+  fields |> List.map begin fun (name,t) ->
+    let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
+    let (a,name) = safe_ident name in (* TODO check unique *)
+    field ~a ~kind name (map t)
+  end |> record
+
 let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   let module Types = New_types() in
   List.iter Types.new_ (snd init);
@@ -279,14 +286,7 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
     | `Dict ["value", `Dict ["override int as float hack", `Int]] -> pname "value_agg" [tname "int_as_float"]
     | `Dict ["value", t] -> pname "value_agg" [map t]
-    | `Dict fields ->
-      let fields = fields |> List.map begin fun (name,t) ->
-        let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
-        let t = map t in
-        let (a,name) = safe_ident name in (* TODO check unique *)
-        field ~a ~kind name t
-      end in
-      record fields
+    | `Dict fields -> safe_record map fields
   in
   Types.new_ @@ typ name (map shape);
   (loc,[]), (make_abstract init (Types.get ()))
@@ -295,7 +295,7 @@ let of_vars ~init (l:input_vars) =
   let module Types = New_types() in
   List.iter Types.new_ (snd (init:Atd.Ast.full_module));
   let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
-  let rec map_field (req,t) : Atd.Ast.type_expr =
+  let rec map_field (req,t) : (_ * Atd.Ast.type_expr) =
     let t =
       match t with
       | `Group l -> map l
@@ -305,12 +305,16 @@ let of_vars ~init (l:input_vars) =
         | Some t -> of_var_type t
     in
     match req with
-    | `Required -> t
-    | `Optional -> nullable t
+    | `Required -> `Required, t
+    | `Optional -> `Optional, nullable t
   and map l =
     match l with
     | [] -> tname "unit"
-    | _ -> record (List.map (fun (n,t) -> field n (map_field t)) l)
+    | _ -> l |> List.map begin fun (name,value) ->
+      let (a,name) = safe_ident name in (* TODO check unique *)
+      let (kind,t) = map_field value in
+      field ~a ~kind name t
+     end |> record
   in
   Types.new_ @@ typ "input" (map l);
   (loc,[]), (make_abstract init (Types.get ()))

@@ -5,6 +5,6 @@ type publish_time = {
 }
 type input = {
   query: string;
-  max_words: int wrap <ocaml module="Words"> nullable;
-  publish_time: publish_time nullable
+  ?max_words: int wrap <ocaml module="Words"> nullable;
+  ?publish_time: publish_time nullable
 }
