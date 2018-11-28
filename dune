@@ -1,8 +1,6 @@
 (env
- (dev
-  (flags (:include dune_flags.sexp)))
- (ci_build
-  (flags (:standard (:include dune_flags.sexp) -warn-error +A-d))))
+ (ci_build (flags (:standard (:include dune_flags.sexp) -warn-error +A-d)))
+ (_ (flags (:include dune_flags.sexp))))
 
 ; Use a library with all the code except the entry point to be able to
 ; use `dune utop`.
