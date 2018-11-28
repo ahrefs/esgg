@@ -6,7 +6,7 @@ dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
 build: [
   ["dune" "subst"] {pinned}
-  ["dune" "build" "--root" "." "--only-packages" name "--promote" "ignore" "--no-config" "--profile" "dev" "-j" jobs]
+  ["dune" "build" "-p" name "-j" jobs]
   [make "test"] {with-test}
 ]
 depends: [
