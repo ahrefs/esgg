@@ -122,7 +122,7 @@ type resolve_type = [
 let simple_of_es_type name t =
   match t with
   | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path name) -> `Int64 (* hack *)
-  | "long" -> `Int
+  | "long" | "murmur3" -> `Int
   | "keyword" | "text" -> `String
   | "ip" -> `String
   | "date" -> `String
