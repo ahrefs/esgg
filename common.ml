@@ -122,12 +122,13 @@ type resolve_type = [
 let simple_of_es_type name t =
   match t with
   | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path name) -> `Int64 (* hack *)
-  | "long" | "murmur3" -> `Int
+  | "long" -> `Int
   | "keyword" | "text" -> `String
   | "ip" -> `String
   | "date" -> `String
   | "double" | "float" -> `Double
   | "boolean" -> `Bool
+  | "murmur3" -> `Int64
   | _ -> Exn.fail "simple_of_es_type: cannot handle %S" t
 
 let typeof mapping t : simple_type =
