@@ -112,7 +112,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
     | Top_hits source -> [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight:None (*?*) ?nested source) :> (string * resolve_type) list) ]
-    | Range field -> [Field_num field], `Dict [ "buckets", `List (doc_count ()) ]
+    | Range field -> [Field_num field], buckets `String
   in
   cstr, (name, shape)
 
