@@ -13,6 +13,7 @@ type agg_type =
 | Filters_dynamic
 | Top_hits of source_filter option
 | Range of string
+| Range_keyed of string * string list
 | Nested of string
 | Reverse_nested
 
@@ -44,7 +45,10 @@ let analyze_single name agg_type json =
     | "histogram" -> Histogram (field ())
     | "date_histogram" -> Date_histogram (field ())
     | "top_hits" -> Top_hits (Query.extract_source json)
-    | "range" -> Range (field ()) (* TODO keyed *)
+    | "range" when U.(opt "keyed" to_bool json) = Some true ->
+      let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
+      Range_keyed (field (), keys)
+    | "range" -> Range (field ())
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
@@ -83,6 +87,10 @@ let get x =
 let infer_single mapping ~nested { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
   let doc_count () = sub ["doc_count", `Int] in
+  let keyed_buckets keys =
+    let d = doc_count () in
+    `Dict [ "buckets", `Dict (List.map (fun k -> k, d) keys)]
+  in
   let (cstr,shape) =
     match agg with
     | Simple_metric (metric, field) ->
@@ -107,12 +115,12 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filter q -> Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
-      let d = doc_count () in
-      cstrs, `Dict [ "buckets", `Dict (l |> List.map (fun (k,_) -> k, d))]
+      cstrs, keyed_buckets (List.map fst l)
     | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
     | Top_hits source -> [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight:None (*?*) ?nested source) :> (string * resolve_type) list) ]
     | Range field -> [Field_num field], buckets `String
+    | Range_keyed (field,keys) -> [Field_num field], keyed_buckets keys
   in
   cstr, (name, shape)
 
