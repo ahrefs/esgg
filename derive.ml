@@ -31,7 +31,8 @@ let output ~init mapping query =
     match Query.extract query with
     | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
     | Get (_,None) -> Hit.doc_no_source
-    | Mget _ -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping mapping))] (* TODO `Maybe *)
+    | Mget (_, Some filter) -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping ~filter mapping))] (* TODO `Maybe *)
+    | Mget (_,None) -> `Dict ["docs",`List Hit.doc_no_source] (* TODO `Maybe *)
     | Search { source; highlight; _ } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
       let hits = Hit.hits mapping ~highlight source in
@@ -86,6 +87,16 @@ let convertor (t:var_type option) unwrap name =
     in
     sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (mapper @@ unwrap "x") name
 
+let source_args source =
+  match source with
+  | None -> []
+  | Some {excludes;includes} ->
+    ["_source_include",includes; "_source_exclude",excludes]
+    |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
+
+let source_args_to_string args =
+  Stre.list (uncurry @@ sprintf "%S,%S") args
+
 let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
@@ -98,16 +109,12 @@ let derive mapping json =
       let json = Tjson.replace json "query" q.json in
       let json = Tjson.replace (Tjson.replace json "aggregations" agg_json) "aggs" agg_json in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
-    | Mget ids -> Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]","[]",Some json)
+    | Mget (ids, source) ->
+      let args = source |> source_args |> source_args_to_string in
+      Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some json)
     | Get (id,source) ->
-      let args =
-        match source with
-        | None -> []
-        | Some {excludes;includes} ->
-          ["_source_include",includes; "_source_exclude",excludes]
-          |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
-      in
-      let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,Stre.list (uncurry @@ sprintf "%S,%S") args,None) in (* assuming name *)
+      let args = source |> source_args |> source_args_to_string in
+      let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,args,None) in (* assuming name *)
       Query.resolve_get_types id, json, http
   in
   let var_unwrap name =
