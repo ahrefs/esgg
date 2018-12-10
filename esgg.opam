@@ -4,6 +4,7 @@ homepage: "https://git.ahrefs.com/ahrefs/esgg"
 maintainer: "igor@ahrefs.com"
 dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
+synopsis: "Query generator for elasticsearch"
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
