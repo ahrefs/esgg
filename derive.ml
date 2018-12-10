@@ -97,6 +97,15 @@ let source_args source =
 let source_args_to_string args =
   Stre.list (uncurry @@ sprintf "%S,%S") args
 
+let filter_mget_json json =
+  match U.assoc "docs" json with
+  | `List l -> `Assoc [("docs", `List l)]
+  | _ -> Exn.fail "unexpected docs"
+  | exception _ ->
+    match U.assoc "ids" json with
+    | ids -> `Assoc [("ids", ids)]
+    | exception _ -> Exn.fail "mget body must contain a ids or docs field"
+
 let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
@@ -111,7 +120,7 @@ let derive mapping json =
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget (ids, source) ->
       let args = source |> source_args |> source_args_to_string in
-      Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some json)
+      Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some (filter_mget_json json))
     | Get (id,source) ->
       let args = source |> source_args |> source_args_to_string in
       let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,args,None) in (* assuming name *)
