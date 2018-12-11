@@ -15,7 +15,7 @@ type agg_type =
 | Range of string
 | Range_keyed of string * string list
 | Nested of string
-| Reverse_nested
+| Reverse_nested of string option
 
 type single = { name : string; agg : agg_type; }
 type t = { this : single; sub : t list; }
@@ -50,7 +50,7 @@ let analyze_single name agg_type json =
       Range_keyed (field (), keys)
     | "range" -> Range (field ())
     | "nested" -> Nested U.(get "path" to_string json)
-    | "reverse_nested" -> Reverse_nested
+    | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
   in
   json, { name; agg; }
@@ -111,7 +111,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
     | Histogram field -> [Field_num field], buckets `Double
     | Date_histogram field -> [Field_date field], buckets `Int ~extra:["key_as_string", `String]
-    | Nested _ | Reverse_nested -> [], doc_count ()
+    | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
@@ -128,7 +128,8 @@ let rec infer mapping ~nested { this; sub } =
   let nested =
     match this.agg with
     | Nested path -> Some (ES_name.make mapping path)
-    | _ -> nested (* Reverse_nested ? *)
+    | Reverse_nested path -> (match path with Some path -> Some (ES_name.make mapping path) | None -> None)
+    | _ -> nested
   in
   let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
   let sub l = `Dict (l @ subs) in
