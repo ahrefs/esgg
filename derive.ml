@@ -87,6 +87,7 @@ let convertor (t:var_type option) unwrap name =
     in
     sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (mapper @@ unwrap "x") name
 
+(** Turn source related fields from json into query parameters. *)
 let source_args source =
   match source with
   | None -> []
@@ -97,14 +98,11 @@ let source_args source =
 let source_args_to_string args =
   Stre.list (uncurry @@ sprintf "%S,%S") args
 
-let filter_mget_json json =
-  match U.assoc "docs" json with
-  | `List l -> `Assoc [("docs", `List l)]
-  | _ -> Exn.fail "unexpected docs"
-  | exception _ ->
-    match U.assoc "ids" json with
-    | ids -> `Assoc [("ids", ids)]
-    | exception _ -> Exn.fail "mget body must contain a ids or docs field"
+(** Filter out the [_esgg] field from the json if it exist. *)
+let filter_conf json =
+  match json with
+  | `Assoc l -> `Assoc (List.filter (fun (k, _v) -> k <> "_esgg") l)
+  | j -> j
 
 let derive mapping json =
   let query = Query.extract json in
@@ -120,7 +118,7 @@ let derive mapping json =
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget (ids, source) ->
       let args = source |> source_args |> source_args_to_string in
-      Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some (filter_mget_json json))
+      Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some (filter_conf json))
     | Get (id,source) ->
       let args = source |> source_args |> source_args_to_string in
       let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,args,None) in (* assuming name *)
