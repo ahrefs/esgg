@@ -7,7 +7,7 @@ type var_list
 type query = { json : Tjson.t; query : query_t }
 type t =
 | Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
-| Mget of (var_list * source_filter option)
+| Mget of (var_list * Tjson.t * Tjson.t)
 | Get of (Tjson.var * source_filter option)
 
 module Variable : sig
