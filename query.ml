@@ -166,6 +166,11 @@ let get_var json name =
   | `Var v -> assert (v.Tjson.optional = false); Some v
   | _ -> None
 
+let extract_conf json =
+  match U.member "_esgg" json with
+  | `Null -> `Assoc []
+  | j -> j
+
 let extract_source json =
   let source = U.member "_source" json in
   match U.member "size" json = `Int 0 || source = `Bool false with
@@ -203,7 +208,7 @@ let extract json =
           | ids -> var_list_of_json ~desc:"mget ids" ids
           | exception _ -> Exn.fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
       in
-      Mget (ids, extract_source json)
+      Mget (ids, extract_source (extract_conf json))
 
 let resolve_constraints mapping l =
   let typeof field =
