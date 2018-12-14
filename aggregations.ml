@@ -21,7 +21,14 @@ type single = { name : string; agg : agg_type; }
 type t = { this : single; sub : t list; }
 
 let analyze_single name agg_type json =
-  let field () = U.(get "field" to_string json) in
+  let field () =
+    try U.(get "field" to_string json) with
+     _ ->
+      try
+        (* TODO parse painless *) U.(get "inline" to_string @@ member "script" json)
+      with
+        _ -> Exn.fail "failed to get aggregation field"
+  in
   let (json, agg) =
     match agg_type with
     | "filter" -> let q = Query.extract_query json in q.json, Filter q
