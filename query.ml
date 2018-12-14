@@ -21,7 +21,7 @@ and query = { json : Tjson.t; query : query_t }
 
 type t =
 | Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
-| Mget of var_list
+| Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
 | Get of (Tjson.var * source_filter option)
 
 module Variable = struct
@@ -166,6 +166,11 @@ let get_var json name =
   | `Var v -> assert (v.Tjson.optional = false); Some v
   | _ -> None
 
+let extract_conf json =
+  match U.member "_esgg" json with
+  | `Null -> `Assoc []
+  | j -> j
+
 let extract_source json =
   let source = U.member "_source" json in
   match U.member "size" json = `Int 0 || source = `Bool false with
@@ -184,6 +189,12 @@ let extract_highlight json =
   | None -> None
   | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
 
+(** Filter out the [_esgg] field from the json if it exist. *)
+let filter_out_conf json =
+  match json with
+  | `Assoc l -> `Assoc (List.filter (fun (k, _v) -> k <> "_esgg") l)
+  | j -> j
+
 let extract json =
   match U.assoc "query" json with
   | q ->
@@ -194,6 +205,8 @@ let extract json =
     | `Var v -> Get (v, extract_source json)
     | _ -> Exn.fail "only variable id supported for get request"
     | exception _ ->
+      let conf = extract_conf json in
+      let json = filter_out_conf json in
       let ids =
         match U.assoc "docs" json with
         | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
@@ -203,7 +216,7 @@ let extract json =
           | ids -> var_list_of_json ~desc:"mget ids" ids
           | exception _ -> Exn.fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
       in
-      Mget ids
+      Mget { ids; json; conf }
 
 let resolve_constraints mapping l =
   let typeof field =
