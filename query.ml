@@ -21,7 +21,7 @@ and query = { json : Tjson.t; query : query_t }
 
 type t =
 | Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
-| Mget of (var_list * Tjson.t * Tjson.t)
+| Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
 | Get of (Tjson.var * source_filter option)
 
 module Variable = struct
@@ -216,7 +216,7 @@ let extract json =
           | ids -> var_list_of_json ~desc:"mget ids" ids
           | exception _ -> Exn.fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
       in
-      Mget (ids, json, conf)
+      Mget { ids; json; conf }
 
 let resolve_constraints mapping l =
   let typeof field =
