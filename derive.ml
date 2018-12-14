@@ -31,7 +31,7 @@ let output ~init mapping query =
     match Query.extract query with
     | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
     | Get (_,None) -> Hit.doc_no_source
-    | Mget (_, _, conf) ->
+    | Mget { conf; _ } ->
       begin match Query.extract_source conf with
         | None -> `Dict ["docs",`List Hit.doc_no_source] (* TODO `Maybe *)
         | Some filter -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping ~filter mapping))] (* TODO `Maybe *)
@@ -113,7 +113,7 @@ let derive mapping json =
       let json = Tjson.replace json "query" q.json in
       let json = Tjson.replace (Tjson.replace json "aggregations" agg_json) "aggs" agg_json in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
-    | Mget (ids, json, conf) ->
+    | Mget { ids; json; conf } ->
       let args = conf |> Query.extract_source |> source_args |> source_args_to_string in
       Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some json)
     | Get (id,source) ->
