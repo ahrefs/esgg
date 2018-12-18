@@ -3,6 +3,8 @@ open Prelude
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
+type value = Field of string | Script of string
+
 module U = struct
 
 (** @return specified [name] from [json] dict or [`Null] when [name] is absent.
@@ -95,7 +97,7 @@ type required = [ `Required | `Optional ] [@@deriving show]
 
 type input_vars = (string * (required * [ `Group of input_vars | `Simple of var_type option])) list
 type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
-type constraint_t = On_var of Tjson.var * var_eq | Field_num of string | Field_date of string
+type constraint_t = On_var of Tjson.var * var_eq | Field_num of value | Field_date of value
 
 type source_filter = { excludes : string list option; includes : string list option }
 let empty_filter = { excludes = None; includes = None }
@@ -110,7 +112,7 @@ type result_type = [
   ] [@@deriving show]
 
 type resolve_type = [
-  | `Typeof of string
+  | `Typeof of value
   | `List of resolve_type
   | `Object of resolve_type
   | `Dict of (string * resolve_type) list
@@ -144,9 +146,10 @@ let typeof mapping t : simple_type =
   | a -> simple_of_es_type t a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
-let typeof_ mapping s =
-  match s with
-  | "_score" -> `Int
-  | _ -> typeof mapping (ES_name.make mapping s)
+let typeof_ mapping value =
+  match value with
+  | Script "_score" -> `Int
+  | Script s -> Exn.fail "script support is rudimentary : %S" s
+  | Field f -> typeof mapping (ES_name.make mapping f)
 
 let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)

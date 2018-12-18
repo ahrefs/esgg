@@ -9,7 +9,8 @@ let resolve_types mapping shape =
   | `List t -> `List (map t)
   | `Object t -> `Object (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
-  | `Typeof x -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
+  | `Typeof (Field x) -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
+  | `Typeof (Script _) -> Exn.fail "cannot type scripts"
   | `Maybe t -> `Maybe (map t)
   | `Int64 | `Int | `String | `Double | `Bool | `Ref _ as t -> t
   in
