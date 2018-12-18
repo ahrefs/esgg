@@ -25,7 +25,7 @@ function check {
 cmd dune build ../esgg.exe
 
 if [ $# -eq 0 ]; then
-  printf "open Common\n" > mapping.ml
+  printf "include Common\n" > mapping.ml
   for p in **/mapping.json ; do
     name=$(basename $(dirname $p))
     printf "\n" >> mapping.ml

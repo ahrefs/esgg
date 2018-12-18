@@ -9,6 +9,8 @@ struct
   let unwrap x = x
 end
 
+module Json = Yojson.Basic
+
 (* ES types *)
 module Long_ = struct type t = int end
 module Int64_ = struct type t = int64 end

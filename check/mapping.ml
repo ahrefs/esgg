@@ -1,4 +1,4 @@
-open Common
+include Common
 
 module Keywords = struct
   module Parent_keyword = Id_(Keyword_)

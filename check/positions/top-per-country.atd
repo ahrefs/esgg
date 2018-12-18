@@ -8,6 +8,7 @@ type 'a value_agg =
   'a value_agg' wrap
     <ocaml
        t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
+type basic_json <ocaml module="Json" t="json"> = abstract
 type history = {
   position: int wrap <ocaml module="Positions.History.Position">;
   ordinal: int wrap <ocaml module="Positions.History.Ordinal">;
