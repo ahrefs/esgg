@@ -10,9 +10,9 @@ let resolve_types mapping shape =
   | `Object t -> `Object (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Typeof (Field x) -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
-  | `Typeof (Script _) -> Exn.fail "cannot type scripts"
+  | `Typeof (Script _) -> `Json
   | `Maybe t -> `Maybe (map t)
-  | `Int64 | `Int | `String | `Double | `Bool | `Ref _ as t -> t
+  | `Json | `Int64 | `Int | `String | `Double | `Bool | `Ref _ as t -> t
   in
   map shape
 
@@ -73,6 +73,16 @@ let convert_wire_type = function
 | `String -> sprintf "Json.to_string (`String %s)"
 | `Double -> sprintf "Json.to_string (`Double %s)"
 | `Bool -> sprintf "string_of_bool %s"
+| `Json -> sprintf "Json.to_string %s"
+
+let map_wire_type typ =
+  sprintf @@ match typ with
+  | `Int -> "`Int %s"
+  | `Int64 -> "`String (Int64.to_string %s)"
+  | `String -> "`String %s"
+  | `Double -> "`Double %s"
+  | `Bool -> "`Bool %s"
+  | `Json -> "%s"
 
 let convertor (t:var_type option) unwrap name =
   match t with
@@ -80,16 +90,7 @@ let convertor (t:var_type option) unwrap name =
   | Some {multi;typ;ref=_} ->
   match multi with
   | One -> convert_wire_type typ (unwrap name)
-  | Many ->
-    let mapper =
-      sprintf @@ match typ with
-      | `Int -> "`Int %s"
-      | `Int64 -> "`String (Int64.to_string %s)"
-      | `String -> "`String %s"
-      | `Double -> "`Double %s"
-      | `Bool -> "`Bool %s"
-    in
-    sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (mapper @@ unwrap "x") name
+  | Many -> sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (map_wire_type typ (unwrap "x")) name
 
 (** Turn source related fields from json into query parameters. *)
 let source_args source =

@@ -3,7 +3,8 @@ open Prelude
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
-type value = Field of string | Script of string
+type 'a or_var = Static of 'a | Dynamic of Tjson.var
+type value = Field of string | Script of string or_var
 
 module U = struct
 
@@ -76,7 +77,7 @@ let compare = compare
 
 end
 
-type simple_type = [ `Int | `Int64 | `String | `Double | `Bool ]
+type simple_type = [ `Int | `Int64 | `String | `Double | `Bool | `Json ]
 
 let show_simple_type = function
 | `Int -> "int"
@@ -84,6 +85,7 @@ let show_simple_type = function
 | `String -> "string"
 | `Double -> "float"
 | `Bool -> "bool"
+| `Json -> "json"
 
 let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
@@ -148,8 +150,8 @@ let typeof mapping t : simple_type =
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
 let typeof_ mapping value =
   match value with
-  | Script "_score" -> `Int
-  | Script s -> Exn.fail "script support is rudimentary : %S" s
+  | Script (Static "_score") -> `Int
+  | Script _ -> `Json
   | Field f -> typeof mapping (ES_name.make mapping f)
 
 let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)

@@ -25,6 +25,7 @@ let of_simple_type =
   | `String -> tname "string"
   | `Double -> tname "float"
   | `Bool -> tname "bool"
+  | `Json -> tname "basic_json"
 
 let wrap_ref ref t : Atd.Ast.type_expr = wrap t ["module",ES_name.to_ocaml ref]
 
@@ -266,6 +267,8 @@ let safe_record map fields =
     field ~a ~kind name (map t)
   end |> record
 
+let basic_json = typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")
+
 let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   let module Types = New_types() in
   List.iter Types.new_ (snd init);
@@ -275,6 +278,7 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   Types.new_ @@ ptyp "value_agg'" ["a"] (record [field "value" (tvar "a")]);
   Types.new_ @@ ptyp "value_agg" ["a"]
     (wrap (pname "value_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value; } -> value"; "unwrap", "fun value -> { value; }"]);
+  Types.new_ @@ basic_json;
   let rec map shape =
     match shape with
     | #simple_type as t -> of_simple_type t
@@ -294,14 +298,14 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
 let of_vars ~init (l:input_vars) =
   let module Types = New_types() in
   List.iter Types.new_ (snd (init:Atd.Ast.full_module));
-  let basic_json = lazy (Types.new_ @@ typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")) in
+  Types.new_ basic_json;
   let rec map_field (req,t) : (_ * Atd.Ast.type_expr) =
     let t =
       match t with
       | `Group l -> map l
       | `Simple t ->
         match t with
-        | None -> Lazy.force basic_json; tname "basic_json"
+        | None -> tname "basic_json"
         | Some t -> of_var_type t
     in
     match req with
