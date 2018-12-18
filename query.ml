@@ -236,11 +236,12 @@ let resolve_constraints mapping l =
       Property (multi,name,typ)
     in
     record vars var.name t
-  | Field_num f ->
+  | Field_num (Field f) ->
     begin match snd @@ typeof f with
     | `Int | `Int64 | `Double -> ()
     | `String | `Bool as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
+  | Field_num (Script _) -> ()
   | Field_date _ -> ()
   end;
   vars

@@ -3,17 +3,17 @@ open ExtLib
 open Common
 
 type agg_type =
-| Simple_metric of [`MinMax | `Avg | `Sum ] * string
-| Cardinality of string
-| Terms of { field : string; size : Tjson.t }
-| Histogram of string
-| Date_histogram of string
+| Simple_metric of [`MinMax | `Avg | `Sum ] * value
+| Cardinality of value
+| Terms of { term : value; size : Tjson.t }
+| Histogram of value
+| Date_histogram of value
 | Filter of Query.query
 | Filters of (string * Query.query) list
 | Filters_dynamic
 | Top_hits of source_filter option
-| Range of string
-| Range_keyed of string * string list
+| Range of value
+| Range_keyed of value * string list
 | Nested of string
 | Reverse_nested of string option
 
@@ -21,13 +21,17 @@ type single = { name : string; agg : agg_type; }
 type t = { this : single; sub : t list; }
 
 let analyze_single name agg_type json =
-  let field () =
-    try U.(get "field" to_string json) with
-     _ ->
-      try
-        (* TODO parse painless *) U.(get "inline" to_string @@ member "script" json)
-      with
-        _ -> Exn.fail "failed to get aggregation field"
+  let value () =
+    match U.member "field" json with
+    | `String s -> Field s
+(*     | `Var v -> Variable v *)
+    | `Null ->
+      begin match U.member "inline" @@ U.member "script" json with
+      | `String s -> Script s (* TODO parse painless *)
+      | exception exn -> Exn.fail ~exn "failed to get aggregation field"
+      | _ -> Exn.fail "expected string as inline script"
+      end
+    | _ -> Exn.fail "bad aggregation field"
   in
   let (json, agg) =
     match agg_type with
@@ -44,18 +48,18 @@ let analyze_single name agg_type json =
     | _ ->
     json,
     match agg_type with
-    | "max" | "min" -> Simple_metric (`MinMax, field ())
-    | "sum" -> Simple_metric (`Sum, field ())
-    | "avg" -> Simple_metric (`Avg, field ())
-    | "cardinality" -> Cardinality (field ())
-    | "terms" | "significant_terms" -> Terms { field = field (); size = U.member "size" json }
-    | "histogram" -> Histogram (field ())
-    | "date_histogram" -> Date_histogram (field ())
+    | "max" | "min" -> Simple_metric (`MinMax, value ())
+    | "sum" -> Simple_metric (`Sum, value ())
+    | "avg" -> Simple_metric (`Avg, value ())
+    | "cardinality" -> Cardinality (value ())
+    | "terms" | "significant_terms" -> Terms { term = value (); size = U.member "size" json }
+    | "histogram" -> Histogram (value ())
+    | "date_histogram" -> Date_histogram (value ())
     | "top_hits" -> Top_hits (Query.extract_source json)
     | "range" when U.(opt "keyed" to_bool json) = Some true ->
       let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
-      Range_keyed (field (), keys)
-    | "range" -> Range (field ())
+      Range_keyed (value (), keys)
+    | "range" -> Range (value ())
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | _ -> Exn.fail "unknown aggregation type %S" agg_type
@@ -100,24 +104,24 @@ let infer_single mapping ~nested { name; agg; } sub =
   in
   let (cstr,shape) =
     match agg with
-    | Simple_metric (metric, field) ->
-      let field_type = (typeof_ mapping field :> resolve_type) in
+    | Simple_metric (metric, value) ->
+      let value_type = (typeof_ mapping value :> resolve_type) in
       let typ =
         match metric with
-(*         | `MinMax -> `Maybe (`Typeof field) *)
-        | `MinMax -> `Maybe field_type (* TODO use Typeof, but need meta annotation to fallback to field_type *)
+(*         | `MinMax -> `Maybe (`Typeof value) *)
+        | `MinMax -> `Maybe value_type (* TODO use Typeof, but need meta annotation to fallback to value_type *)
         | `Avg -> `Maybe `Double
         | `Sum ->
-          match field_type with
+          match value_type with
           | `Bool -> `Int
           | `Int | `Int64 -> `Dict ["override int as float hack", `Int]
-          | _ -> field_type
+          | _ -> value_type
       in
       [], sub [ "value", typ ]
-    | Cardinality _field -> [], sub ["value", `Int ]
-    | Terms { field; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof field)
-    | Histogram field -> [Field_num field], buckets `Double
-    | Date_histogram field -> [Field_date field], buckets `Int ~extra:["key_as_string", `String]
+    | Cardinality _value -> [], sub ["value", `Int ]
+    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof term)
+    | Histogram value -> [Field_num value], buckets `Double
+    | Date_histogram value -> [Field_date value], buckets `Int ~extra:["key_as_string", `String]
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
@@ -126,8 +130,8 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
     | Top_hits source -> [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight:None (*?*) ?nested source) :> (string * resolve_type) list) ]
-    | Range field -> [Field_num field], buckets `String
-    | Range_keyed (field,keys) -> [Field_num field], keyed_buckets keys
+    | Range value -> [Field_num value], buckets `String
+    | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
   in
   cstr, (name, shape)
 
