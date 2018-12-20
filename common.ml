@@ -1,5 +1,5 @@
 open ExtLib
-open Prelude
+open Devkit
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
