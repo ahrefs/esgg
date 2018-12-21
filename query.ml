@@ -239,7 +239,7 @@ let resolve_constraints mapping l =
   | Field_num (Field f) ->
     begin match snd @@ typeof f with
     | `Int | `Int64 | `Double -> ()
-    | `String | `Bool as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
+    | `String | `Bool | `Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
   | Field_num (Script _) -> ()
   | Field_date _ -> ()
