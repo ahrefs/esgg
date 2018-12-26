@@ -1,8 +1,7 @@
 #! /usr/bin/env bash
 set -e -u
 
-. ./ci-utils/prelude.sh
-. ./ci-utils/opam-setup.sh
+. /shared/ci-utils/opam-setup.sh
 
 echo "-- install opam deps"
 cmd opam install . --deps-only
