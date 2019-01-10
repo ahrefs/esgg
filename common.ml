@@ -150,7 +150,7 @@ let typeof mapping t : simple_type =
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
 let typeof_ mapping value =
   match value with
-  | Script (Static "_score") -> `Int
+  | Script (Static "_score") -> `Double
   | Script _ -> `Json
   | Field f -> typeof mapping (ES_name.make mapping f)
 
