@@ -64,7 +64,7 @@ type perDomain = {
     int <ocaml repr="int64"> wrap <ocaml module="News.Url_hash.Domain_only">;
   doc_count: int;
   top: top;
-  max_score: int nullable value_agg
+  max_score: float nullable value_agg
 }
 type aggregations = {
   perDomain: perDomain buckets;
