@@ -12,7 +12,7 @@ type agg_type =
 | Filter of Query.query
 | Filters of (string * Query.query) list
 | Filters_dynamic
-| Top_hits of source_filter option
+| Top_hits of { source : source_filter option; highlight : string list option; }
 | Range of value
 | Range_keyed of value * string list
 | Nested of string
@@ -57,7 +57,7 @@ let analyze_single name agg_type json =
     | "terms" | "significant_terms" -> Terms { term = value (); size = U.member "size" json }
     | "histogram" -> Histogram (value ())
     | "date_histogram" -> Date_histogram (value ())
-    | "top_hits" -> Top_hits (Query.extract_source json)
+    | "top_hits" -> Top_hits { source = Query.extract_source json; highlight = Query.extract_highlight json; }
     | "range" when U.(opt "keyed" to_bool json) = Some true ->
       let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
       Range_keyed (value (), keys)
@@ -97,6 +97,17 @@ let get x =
   let sub = extract x |> fst |> List.map make in
   `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub), List.map snd sub
 
+let derive_highlight mapping hl =
+  match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
+  | `Dict l ->
+    let l = l |> List.map begin function
+    | (k, (`List _ | `Dict _ | `Object _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
+    | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
+    | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
+    end in
+    `Dict l
+  | _ -> Exn.fail "derive_highlight: expected Dict after projecting fields over mapping"
+
 let infer_single mapping ~nested { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
   let doc_count () = sub ["doc_count", `Int] in
@@ -131,7 +142,9 @@ let infer_single mapping ~nested { name; agg; } sub =
       cstrs, keyed_buckets (List.map fst l)
     | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
-    | Top_hits source -> [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight:None (*?*) ?nested source) :> (string * resolve_type) list) ]
+    | Top_hits { source; highlight; } ->
+      let highlight = Option.map (derive_highlight mapping) highlight in
+      [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source) :> (string * resolve_type) list) ]
     | Range value -> [Field_num value], buckets `String
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
   in

@@ -18,6 +18,7 @@ end
 
 val extract_query : Tjson.t -> query
 val extract_source : Tjson.t -> source_filter option
+val extract_highlight : Tjson.t -> string list option
 
 val infer' : constraint_t list -> query -> constraint_t list
 val infer : query -> constraint_t list

@@ -16,17 +16,6 @@ let resolve_types mapping shape =
   in
   map shape
 
-let derive_highlight mapping hl =
-  match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
-  | `Dict l ->
-    let l = l |> List.map begin function
-    | (k, (`List _ | `Dict _ | `Object _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
-    | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
-    | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
-    end in
-    `Dict l
-  | _ -> Exn.fail "derive_highlight: expected Dict after projecting fields over mapping"
-
 let output ~init mapping query =
   let shape =
     match Query.extract query with
@@ -38,7 +27,7 @@ let output ~init mapping query =
         | Some filter -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping ~filter mapping))] (* TODO `Maybe *)
       end
     | Search { source; highlight; _ } ->
-      let highlight = Option.map (derive_highlight mapping) highlight in
+      let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
       let hits = Hit.hits mapping ~highlight source in
       let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
       let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
