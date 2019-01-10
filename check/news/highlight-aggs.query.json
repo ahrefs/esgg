@@ -1,0 +1,118 @@
+{
+    "from": 0,
+    "size": 0,
+    "timeout": "59s",
+    "aggregations": {
+        "perDomain": {
+            "terms": {
+                "size": 500,
+                "field": "url_hash.domain_only",
+                "order": {
+                    "max_score": "desc"
+                }
+            },
+            "aggs": {
+                "top": {
+                    "top_hits": {
+                        "size": 1,
+                        "sort": [
+                            {
+                                "_score": {
+                                    "order": "desc"
+                                }
+                            }
+                        ],
+                        "highlight": {
+                          "order": "score",
+                          "pre_tags": [
+                            "#####AHREFS-HIGHLIGHT#####"
+                          ],
+                          "post_tags": [
+                            "#####/AHREFS_HIGHLIGHT#####"
+                          ],
+                          "encoder": "html",
+                          "fields": {
+                            "content": {
+                              "fragment_size": 130,
+                              "number_of_fragments": 1,
+                              "no_match_size": 130
+                            }
+                          }
+                        },
+                        "_source": [
+                            "content_metrics.words",
+                            "traffic",
+                            "metrics",
+                            "url",
+                            "title",
+                            "publish_time",
+                            "se_metrics",
+                            "author",
+                            "last_update",
+                            "next_update",
+                            "first_seen",
+                            "category_tier1",
+                            "tags.og_description",
+                            "tags.og_image"
+                        ]
+                    }
+                },
+                "max_score": {
+                    "max": {
+                        "script": {
+                            "inline": "_score"
+                        }
+                    }
+                }
+            }
+        },
+        "perDomainTotal": {
+            "cardinality": {
+                "field": "url_hash.domain_only"
+            }
+        }
+    },
+    "query": {
+        "function_score": {
+            "query": {
+                "bool": {
+                    "must": {
+                        "query_string": {
+                            "query": "content:(\"venom\") OR title:(venom) OR title:(\"venom\"^10)",
+                            "default_operator": "AND"
+                        }
+                    }
+                }
+            },
+            "functions": [
+                {
+                    "field_value_factor": {
+                        "field": "metrics.rank",
+                        "modifier": "sqrt"
+                    }
+                },
+                {
+                    "field_value_factor": {
+                        "field": "se_metrics.domain_rating"
+                    }
+                }
+            ]
+        }
+    },
+    "_source": [
+        "content_metrics.words",
+        "traffic",
+        "metrics",
+        "url",
+        "title",
+        "publish_time",
+        "se_metrics",
+        "author",
+        "last_update",
+        "next_update",
+        "first_seen",
+        "category_tier1",
+        "tags.og_description",
+        "tags.og_image"
+    ]
+}
