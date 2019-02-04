@@ -5,6 +5,7 @@ open Common
 
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
+| Value_count of value
 | Cardinality of value
 | Terms of { term : value; size : Tjson.t }
 | Histogram of value
@@ -53,6 +54,7 @@ let analyze_single name agg_type json =
     | "max" | "min" -> Simple_metric (`MinMax, value ())
     | "sum" -> Simple_metric (`Sum, value ())
     | "avg" -> Simple_metric (`Avg, value ())
+    | "value_count" -> Value_count (value ())
     | "cardinality" -> Cardinality (value ())
     | "terms" | "significant_terms" -> Terms { term = value (); size = U.member "size" json }
     | "histogram" -> Histogram (value ())
@@ -131,7 +133,7 @@ let infer_single mapping ~nested { name; agg; } sub =
           | _ -> value_type
       in
       [], sub [ "value", typ ]
-    | Cardinality _value -> [], sub ["value", `Int ]
+    | Cardinality _value | Value_count _value -> [], sub ["value", `Int ]
     | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof term)
     | Histogram value -> [Field_num value], buckets `Double
     | Date_histogram value -> [Field_date value], buckets `Int ~extra:["key_as_string", `String]
