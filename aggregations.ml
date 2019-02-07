@@ -11,6 +11,7 @@ type agg_type =
 | Histogram of value
 | Date_histogram of value
 | Filter of Query.query
+| Filter_dynamic
 | Filters of (string * Query.query) list
 | Filters_dynamic
 | Top_hits of { source : source_filter option; highlight : string list option; }
@@ -38,7 +39,12 @@ let analyze_single name agg_type json =
   in
   let (json, agg) =
     match agg_type with
-    | "filter" -> let q = Query.extract_query json in q.json, Filter q
+    | "filter" ->
+      begin match json with
+      | `Var _ -> json, Filter_dynamic
+      | `Assoc _ -> let q = Query.extract_query json in q.json, Filter q
+      | _ -> Exn.fail "filter: expecting either dict or variable"
+      end
     | "filters" ->
       begin match json |> U.member "filters" with
       | `Assoc a ->
@@ -142,7 +148,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filters l ->  (* TODO other_bucket *)
       let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
       cstrs, keyed_buckets (List.map fst l)
-    | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
+    | Filters_dynamic | Filter_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
