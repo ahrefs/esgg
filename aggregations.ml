@@ -10,9 +10,8 @@ type agg_type =
 | Terms of { term : value; size : Tjson.t }
 | Histogram of value
 | Date_histogram of value
-| Filter of Query.query
-| Filter_dynamic
-| Filters of (string * Query.query) list
+| Filter of Query.query or_var
+| Filters of (string * Query.query or_var) list
 | Filters_dynamic
 | Top_hits of { source : source_filter option; highlight : string list option; }
 | Range of value
@@ -22,6 +21,14 @@ type agg_type =
 
 type single = { name : string; agg : agg_type; }
 type t = { this : single; sub : t list; }
+
+let split2 l = List.map (fun (k,x) -> k, fst x) l, List.map (fun (k,x) -> k, snd x) l
+
+let analyze_filter json =
+  match json with
+  | `Var v -> json, Dynamic v
+  | `Assoc _ -> let q = Query.extract_query json in q.json, Static q
+  | _ -> Exn.fail "filter: expecting either dict or variable"
 
 let analyze_single name agg_type json =
   let value () =
@@ -39,17 +46,12 @@ let analyze_single name agg_type json =
   in
   let (json, agg) =
     match agg_type with
-    | "filter" ->
-      begin match json with
-      | `Var _ -> json, Filter_dynamic
-      | `Assoc _ -> let q = Query.extract_query json in q.json, Filter q
-      | _ -> Exn.fail "filter: expecting either dict or variable"
-      end
+    | "filter" -> let (json,f) = analyze_filter json in json, Filter f
     | "filters" ->
       begin match json |> U.member "filters" with
       | `Assoc a ->
-        let filters = List.map (fun (k,v) -> k, Query.extract_query v) a in
-        let json = Tjson.replace json "filters" (`Assoc (List.map (fun (k,q) -> k, q.Query.json) filters)) in
+        let (jsons,filters) = split2 @@ List.map (fun (k,v) -> k, analyze_filter v) a in
+        let json = Tjson.replace json "filters" (`Assoc jsons) in
         json, Filters filters
       | `Var _ -> json, Filters_dynamic
       | _ -> Exn.fail "filters: expecting either dict or variable"
@@ -144,11 +146,11 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Histogram value -> [Field_num value], buckets `Double
     | Date_histogram value -> [Field_date value], buckets `Int ~extra:["key_as_string", `String]
     | Nested _ | Reverse_nested _ -> [], doc_count ()
-    | Filter q -> Query.infer q, doc_count ()
+    | Filter q -> dynamic_default [] Query.infer q, doc_count ()
     | Filters l ->  (* TODO other_bucket *)
-      let cstrs = l |> List.map snd |> List.map Query.infer |> List.flatten in
-      cstrs, keyed_buckets (List.map fst l)
-    | Filters_dynamic | Filter_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
+      let constraints = l |> List.map snd |> List.map (dynamic_default [] Query.infer) |> List.flatten in
+      constraints, keyed_buckets (List.map fst l)
+    | Filters_dynamic -> (* by convention assume dynamic filters will be an assoc and so output will be assoc too *)
       [], `Dict [ "buckets", `Object (doc_count ()) ]
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
