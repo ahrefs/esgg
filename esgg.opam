@@ -1,10 +1,10 @@
 opam-version: "2.0"
 authors: "Ahrefs"
 homepage: "https://git.ahrefs.com/ahrefs/esgg"
+synopsis: "Elasticsearch guided (code) generator"
 maintainer: "igor@ahrefs.com"
 dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
 bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
-synopsis: "Query generator for elasticsearch"
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
@@ -15,11 +15,10 @@ depends: [
   "ocaml" { >= "4.03.0" }
   "yojson"
   "extlib"
-  "devkit"
+  "devkit" {> "0.7"}
   "atd" {>= "1.13.0" & < "2.0.0"}
   "easy-format"
   "jsonm"
   "ppx_deriving"
   "mybuild"
 ]
-version: "git"
