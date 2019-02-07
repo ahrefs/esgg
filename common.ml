@@ -40,7 +40,11 @@ let to_valid_ident ~prefix s =
   let s = String.map (function ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' as c) -> c | _ -> '_') s in
   match s.[0] with '0'..'9' -> prefix ^ s | _ -> s
 
-let to_valid_modname s = String.capitalize @@ to_valid_ident ~prefix:"M_" s
+let to_valid_modname s =
+  let s = to_valid_ident ~prefix:"M_" s in
+  match s.[0] with
+  | 'a'..'z' | 'A'..'Z' -> String.capitalize_ascii s
+  | _ -> "M_" ^ s
 
 module ES_name : sig
 type t
