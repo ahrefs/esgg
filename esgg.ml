@@ -3,8 +3,6 @@ open Devkit
 
 module Json = Yojson.Basic
 
-let long_version = sprintf "%s [%s@%s]" Version.id Version.user Version.host
-
 let print_atd x = print_endline @@ Easy_format.Pretty.to_string @@ Atd.Print.format x
 
 let tjson tjson = print_endline @@ Tjson.lift tjson
@@ -85,7 +83,7 @@ let () =
   | ["reflect";name;mapping] -> Derive.print_reflect name (json mapping)
   | ["tjson";file] -> tjson (template file)
   | ["parse_json";file] -> Tjson.print_parse_json (Std.input_file file)
-  | "version" :: [] -> print_endline long_version
+  | ["version"|"-version"|"--version"] -> print_endline Version.id
   | [] | ["-h"|"-help"|"--help"] -> help ()
   | _ ->
     prerr_endline "Didn't get that! Try `esgg -h`";
