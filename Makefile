@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: build clean test check
+.PHONY: build clean test check release
 
 build:
 	dune build esgg.exe
@@ -12,3 +12,6 @@ check: build
 
 clean:
 	dune clean
+
+release:
+	./make_release.sh
