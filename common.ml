@@ -4,6 +4,10 @@ open Devkit
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
 type 'a or_var = Static of 'a | Dynamic of Tjson.var
+let dynamic_default default f x =
+  match x with
+  | Static x -> f x
+  | Dynamic _ -> default
 type value = Field of string | Script of string or_var
 
 module U = struct
