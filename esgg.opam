@@ -20,5 +20,6 @@ depends: [
   "easy-format"
   "jsonm"
   "ppx_deriving"
+  "mybuild"
 ]
 version: "git"
