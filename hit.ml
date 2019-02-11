@@ -79,7 +79,7 @@ let doc_ ?(id=true) ?found ?highlight source =
   `Dict a
 
 let doc_no_source = doc_ ~found:`Bool None
-let doc source = doc_ ~found:`Bool (Some source)
+let doc source = doc_ ~found:`Bool (Some (`Maybe source))
 let hit ?highlight ?id source = doc_ ?highlight ?id (Some source)
 
 let hits_ mapping ?nested ~highlight source : (string * result_type) list =
