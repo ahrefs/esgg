@@ -23,8 +23,8 @@ let output ~init mapping query =
     | Get (_,None) -> Hit.doc_no_source
     | Mget { conf; _ } ->
       begin match Query.extract_source conf with
-        | None -> `Dict ["docs",`List Hit.doc_no_source] (* TODO `Maybe *)
-        | Some filter -> `Dict ["docs",`List (Hit.doc (Hit.of_mapping ~filter mapping))] (* TODO `Maybe *)
+        | None -> `Dict ["docs",`List Hit.doc_no_source]
+        | Some filter -> `Dict ["docs",`List (Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping))]
       end
     | Search { source; highlight; _ } ->
       let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
