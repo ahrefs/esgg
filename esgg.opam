@@ -16,7 +16,7 @@ depends: [
   "yojson"
   "extlib"
   "devkit" {> "0.7"}
-  "atd" {>= "1.13.0" & < "2.0.0"}
+  "atd" {>= "2.0.0"}
   "easy-format"
   "jsonm"
   "ppx_deriving"

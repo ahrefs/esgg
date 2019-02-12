@@ -6,16 +6,16 @@ open Common
 let loc = Atd.Ast.dummy_loc
 let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
 let annots a = Atd.Annot.merge @@ List.map (fun (s,l) -> annot s l) a
-let list ?(a=[]) t = `List (loc,t,annots a)
-let tuple l = `Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
-let record fields = `Record (loc,fields,[])
-let field ?(kind=`Required) ?(a=[]) n t = `Field (loc, (n, kind, annots a), t)
-let pname ?(a=[]) t params = `Name (loc,(loc,t,params),annots a)
+let list ?(a=[]) t = Atd.Ast.List (loc,t,annots a)
+let tuple l = Atd.Ast.Tuple (loc, List.map (fun t -> (loc,t,[])) l, [])
+let record fields = Atd.Ast.Record (loc,fields,[])
+let field ?(kind=Atd.Ast.Required) ?(a=[]) n t = `Field (loc, (n, kind, annots a), t)
+let pname ?(a=[]) t params = Atd.Ast.Name (loc,(loc,t,params),annots a)
 let tname ?a t = pname ?a t []
-let nullable ?(a=[]) t = `Nullable (loc,t,annots a)
-let wrap t ocaml = `Wrap (loc,t,annots ["ocaml",ocaml])
-let tvar t = `Tvar (loc,t)
-let ptyp ?(a=[]) name params t = `Type (loc, (name,params,annots a), t)
+let nullable ?(a=[]) t = Atd.Ast.Nullable (loc,t,annots a)
+let wrap t ocaml = Atd.Ast.Wrap (loc,t,annots ["ocaml",ocaml])
+let tvar t = Atd.Ast.Tvar (loc,t)
+let ptyp ?(a=[]) name params t = Atd.Ast.Type (loc, (name,params,annots a), t)
 let typ ?a name t = ptyp ?a name [] t
 
 let of_simple_type =
@@ -112,28 +112,28 @@ let safe_ident name =
 (* diligent copy of Ast.amap_type_expr *)
 let rec reloc_type_expr f (x : Atd.Ast.type_expr) =
   match x with
-      `Sum (loc, vl, a) ->  `Sum (f loc, List.map (reloc_variant f) vl, reloc_annot f a)
-    | `Record (loc, fl, a) -> `Record (f loc, List.map (reloc_field f) fl, reloc_annot f a)
-    | `Tuple (loc, tl, a) -> `Tuple (f loc, List.map (reloc_cell f) tl, reloc_annot f a)
-    | `List (loc, t, a) -> `List (f loc, reloc_type_expr f t, reloc_annot f a)
-    | `Option (loc, t, a) -> `Option (f loc, reloc_type_expr f t, reloc_annot f a)
-    | `Nullable (loc, t, a) -> `Nullable (f loc, reloc_type_expr f t, reloc_annot f a)
-    | `Shared (loc, t, a) -> `Shared (f loc, reloc_type_expr f t, reloc_annot f a)
-    | `Wrap (loc, t, a) -> `Wrap (f loc, reloc_type_expr f t, reloc_annot f a)
-    | `Tvar (loc, s) -> `Tvar (f loc, s)
-    | `Name (loc, (loc2, name, args), a) ->
-        `Name (f loc, (f loc2, name, List.map (reloc_type_expr f) args), reloc_annot f a)
+      Atd.Ast.Sum (loc, vl, a) -> Atd.Ast.Sum (f loc, List.map (reloc_variant f) vl, reloc_annot f a)
+    | Record (loc, fl, a) -> Record (f loc, List.map (reloc_field f) fl, reloc_annot f a)
+    | Tuple (loc, tl, a) -> Tuple (f loc, List.map (reloc_cell f) tl, reloc_annot f a)
+    | List (loc, t, a) -> List (f loc, reloc_type_expr f t, reloc_annot f a)
+    | Option (loc, t, a) -> Option (f loc, reloc_type_expr f t, reloc_annot f a)
+    | Nullable (loc, t, a) -> Nullable (f loc, reloc_type_expr f t, reloc_annot f a)
+    | Shared (loc, t, a) -> Shared (f loc, reloc_type_expr f t, reloc_annot f a)
+    | Wrap (loc, t, a) -> Wrap (f loc, reloc_type_expr f t, reloc_annot f a)
+    | Tvar (loc, s) -> Tvar (f loc, s)
+    | Name (loc, (loc2, name, args), a) ->
+        Name (f loc, (f loc2, name, List.map (reloc_type_expr f) args), reloc_annot f a)
 
 and reloc_variant f = function
-    `Variant (loc, (name, a), o) ->
+    Atd.Ast.Variant (loc, (name, a), o) ->
       let o =
         match o with
             None -> None
           | Some x -> Some (reloc_type_expr f x)
       in
-      `Variant (f loc, (name, reloc_annot f a), o)
-  | `Inherit (loc, x) ->
-      `Inherit (f loc, reloc_type_expr f x)
+      Variant (f loc, (name, reloc_annot f a), o)
+  | Inherit (loc, x) ->
+      Inherit (f loc, reloc_type_expr f x)
 
 and reloc_field f = function
     `Field (loc, (name, kind, a), x) ->
@@ -164,7 +164,7 @@ end = struct
       (match name with Some name -> [ name, name ] | None -> [])
       @
       match t with
-      | `Record (_,[`Field (_,(name,_,_),_)],_) -> [ name, name ]
+      | Atd.Ast.Record (_,[`Field (_,(name,_,_),_)],_) -> [ name, name ]
       | _ -> []
     in
     let candidates = if candidates = [] then [ "t", "t0" ] else candidates in
@@ -186,23 +186,23 @@ end = struct
 
   let new_ typ =
     tuck types typ;
-    let `Type (_,(name,_,_),_) = typ in
+    let Atd.Ast.Type (_,(name,_,_),_) = typ in
     assert (not @@ Hashtbl.mem names name);
     Hashtbl.add names name ()
 
   (* atdgen does topological sorting itself, but still lets try to keep natural order *)
   let replace name typ =
-    match List.partition (function`Type (_,(n,_,_),_) -> n = name) !types with
-    | [`Type (loc,(n,tp,annot),_)], rest -> types := (`Type (loc,(n,tp,annot),typ)) :: rest
+    match List.partition (function Atd.Ast.Type (_,(n,_,_),_) -> n = name) !types with
+    | [Atd.Ast.Type (loc,(n,tp,annot),_)], rest -> types := (Type (loc,(n,tp,annot),typ)) :: rest
     | _ -> assert false
 
   let ref_ ?name t =
     let reloc = reloc_type_expr (fun _loc -> Atd.Ast.dummy_loc) in
     let t = reloc t in
     match t with
-    | `Record _ ->
-      begin match List.find (fun (`Type (_,_,v)) -> t = reloc v) !types with
-      | `Type (_,(name,[],_),_) -> tname name
+    | Atd.Ast.Record _ ->
+      begin match List.find (fun (Atd.Ast.Type (_,_,v)) -> t = reloc v) !types with
+      | Atd.Ast.Type (_,(name,[],_),_) -> tname name
       | _ -> assert false (* parametric type cannot match *)
       | exception _ ->
         let name = fresh_name ?name t in
@@ -215,54 +215,54 @@ end = struct
   let unrecord name t =
     let rec map name t =
       match t with
-      | `Record r -> ref_ ?name (map_record r)
-      | `Sum (_loc, _variants, _annot) -> Exn.fail "variants are not supported"
-      | `Tuple (loc, cells, annot) -> `Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
-      | `List (loc, t, annot) ->
+      | Atd.Ast.Record (loc, fields, annot) -> ref_ ?name (map_record (loc, fields, annot))
+      | Sum (_loc, _variants, _annot) -> Exn.fail "variants are not supported"
+      | Tuple (loc, cells, annot) -> Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
+      | List (loc, t, annot) ->
         let name =
           match name with
           | Some name when String.ends_with name "s" && String.length name > 1 -> Some (String.slice ~last:(-1) name)
           | Some name -> Some (name ^ "_elem")
           | None -> None
         in
-        `List (loc, map name t, annot)
-      | `Option (loc, t, annot) -> `Option (loc, map name t, annot)
-      | `Nullable (loc, t, annot) -> `Nullable (loc, map name t, annot)
-      | `Shared (loc, t, annot) -> `Shared (loc, map name t, annot)
-      | `Wrap (loc, t, annot) -> `Wrap (loc, map name t, annot)
-      | `Name (loc, (loc', n, tl), annot) ->
+        List (loc, map name t, annot)
+      | Option (loc, t, annot) -> Option (loc, map name t, annot)
+      | Nullable (loc, t, annot) -> Nullable (loc, map name t, annot)
+      | Shared (loc, t, annot) -> Shared (loc, map name t, annot)
+      | Wrap (loc, t, annot) -> Wrap (loc, map name t, annot)
+      | Name (loc, (loc', n, tl), annot) ->
         let name = match n, tl with "buckets", [_] -> name | _ -> None in
-        `Name (loc, (loc', n, List.map (map name) tl), annot)
-      | `Tvar _ -> t
+        Name (loc, (loc', n, List.map (map name) tl), annot)
+      | Tvar _ -> t
     and map_record (loc,fields,annot) =
       let fields = fields |> List.map begin function
       | `Inherit _ -> Exn.fail "inherit not supported"
       | `Field (loc,(name,_,_ as f),t) -> `Field (loc, f, map (Some name) t)
       end
       in
-      `Record (loc,fields,annot)
+      Record (loc,fields,annot)
     in
     match t with
-    | `Record r -> map_record r (* record type at top-level, no need to unnest *)
+    | Atd.Ast.Record (loc, fields, annot) -> map_record (loc, fields, annot) (* record type at top-level, no need to unnest *)
     | _ -> map (Some name) t
 
   let get () =
-    !types |> List.rev |> List.iter (function `Type (_,(name,_,_),t) -> replace name (unrecord name t));
+    !types |> List.rev |> List.iter (function Atd.Ast.Type (_,(name,_,_),t) -> replace name (unrecord name t));
     List.rev !types
 
 end
 
 let make_abstract ((_loc,annot),init) types =
-  let name (`Type (_,(name,_,_),_)) = name in
+  let name (Atd.Ast.Type (_,(name,_,_),_)) = name in
   types |> List.map begin fun t ->
     match List.find (fun i -> name i = name t) init with (* match by name, because initial types are not renamed *)
     | exception Not_found -> t
-    | _ -> `Type (loc, (name t,[],annot),tname "abstract")
+    | _ -> Atd.Ast.Type (loc, (name t,[],annot),tname "abstract")
   end
 
 let safe_record map fields =
   fields |> List.map begin fun (name,t) ->
-    let kind = match t with `Maybe _ -> `Optional | `List _ -> `With_default | _ -> `Required in
+    let kind = match t with `Maybe _ -> Atd.Ast.Optional | `List _ -> With_default | _ -> Required in
     let (a,name) = safe_ident name in (* TODO check unique *)
     field ~a ~kind name (map t)
   end |> record
@@ -309,8 +309,8 @@ let of_vars ~init (l:input_vars) =
         | Some t -> of_var_type t
     in
     match req with
-    | `Required -> `Required, t
-    | `Optional -> `Optional, nullable t
+    | `Required -> Atd.Ast.Required, t
+    | `Optional -> Optional, nullable t
   and map l =
     match l with
     | [] -> tname "unit"
