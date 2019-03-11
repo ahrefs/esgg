@@ -37,7 +37,7 @@ let to_list f = function `List l -> List.map f l | _ -> Exn.fail "expected list"
 
 end
 
-type mapping = { mapping : Yojson.Basic.json; name : string option; }
+type mapping = { mapping : Yojson.Basic.t; name : string option; }
 
 let to_valid_ident ~prefix s =
   assert (s <> "");
