@@ -250,7 +250,7 @@ let print_parse_json s =
   in
   show @@ Jsonm.decoder @@ `String s
 
-let rec to_yojson_exn : t -> Yojson.json = function
+let rec to_yojson_exn : t -> Yojson.t = function
 | `Var {optional; name} -> Exn.fail "to_yojson_exn `Var %S%s" name (if optional then "?" else "")
 | `Optional (g, _) -> Exn.fail "to_yojson_exn `Optional %S" g.label
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)

@@ -267,7 +267,7 @@ let safe_record map fields =
     field ~a ~kind name (map t)
   end |> record
 
-let basic_json = typ "basic_json" ~a:["ocaml",["module","Json";"t","json"]] (tname "abstract")
+let basic_json = typ "basic_json" ~a:["ocaml",["module","Json";"t","t"]] (tname "abstract")
 
 let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
   let module Types = New_types() in
