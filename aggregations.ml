@@ -36,11 +36,15 @@ let analyze_single name agg_type json =
     | `String s -> Field s
 (*     | `Var v -> Variable v *)
     | `Null ->
-      begin match U.member "inline" @@ U.member "script" json with
-      | `String s -> Script (Static s) (* TODO parse painless *)
-      | `Var v -> Script (Dynamic v)
+      begin match U.assoc "script" json with
       | exception exn -> Exn.fail ~exn "failed to get aggregation field"
-      | _ -> Exn.fail "expected string as inline script"
+      | script ->
+        try
+          match U.member "inline" script, U.member "id" script with
+          | x, `Null -> Script (`Painless, var_or U.to_string x)
+          | `Null, x -> Script (`Id, var_or U.to_string x)
+          | _ -> Exn.fail "inline and id cannot be used together"
+        with exn -> Exn.fail ~exn "script"
       end
     | _ -> Exn.fail "bad aggregation field"
   in
