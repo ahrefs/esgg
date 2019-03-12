@@ -13,3 +13,6 @@ cmd make clean build
 
 echo "+++ test"
 cmd make test check
+
+echo "+++ diff"
+cmd git diff --no-ext-diff --quiet --exit-code || (echo "git diff dirty"; git status; exit 1)
