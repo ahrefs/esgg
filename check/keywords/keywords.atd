@@ -8,7 +8,7 @@ type 'a value_agg =
   'a value_agg' wrap
     <ocaml
        t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
-type basic_json <ocaml module="Json" t="json"> = abstract
+type basic_json <ocaml module="Json" t="t"> = abstract
 type sources = {
   ?keyword_explorer:
     string wrap <ocaml module="Keywords.Sources.Keyword_explorer"> nullable;
