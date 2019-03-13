@@ -37,24 +37,25 @@ let output ~init mapping query =
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in
-  let rec iter hash nr_indent (name,x) =
+  let rec iter nr_indent (name,x) =
     let indent = String.make nr_indent ' ' in
-    let hash = hash || String.exists name "hash" in
+    let meta = get_meta x in
+    let repr = get_repr_opt meta in
     match U.member "type" x, U.member "properties" x with
     | `String typ, `Null ->
-      let typ = if typ = "long" && hash then "int64" else typ in
+      let typ = Option.default typ repr in
       printfn "%smodule %s = %s(%s)" indent (to_valid_modname name) (extern "Id") (to_valid_modname @@ extern typ)
     | (`Null | `String "nested"), `Assoc props ->
       let modul = to_valid_modname name in
       printfn "%smodule %s = struct" indent modul;
-      List.iter (iter hash (nr_indent+2)) props;
+      List.iter (iter (nr_indent+2)) props;
       printfn "%send (* %s *)" indent modul
     | `Null, `Null -> Exn.fail "neither type nor properties found for %S" name
     | _, `Null -> Exn.fail "strange type for %S" name
     | `Null, _ -> Exn.fail "strange properties for %S" name
     | _, _ -> Exn.fail "both type and properties found for %S" name
   in
-  iter false 0 (name,mapping)
+  iter 0 (name,mapping)
 
 let convert_wire_type = function
 | `Int -> sprintf "string_of_int %s"

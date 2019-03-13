@@ -139,29 +139,44 @@ type resolve_type = [
   | simple_type
   ]
 
-let simple_of_es_type name t =
+let simple_of_es_type t =
   match t with
-  | "long" when List.exists (fun s -> String.exists s "hash") (ES_name.get_path name) -> `Int64 (* hack *)
   | "long" -> `Int
   | "keyword" | "text" -> `String
   | "ip" -> `String
   | "date" -> `String
   | "double" | "float" -> `Double
   | "boolean" -> `Bool
-  | "murmur3" -> `Int64
+  | "int64" | "murmur3" -> `Int64
   | _ -> Exn.fail "simple_of_es_type: cannot handle %S" t
+
+let get_meta json =
+  match U.member "_meta" json with
+  | `Null -> `Assoc []
+  | j -> j
+
+let get_repr_opt meta =
+  match U.member "repr" meta with
+  | `String typ -> Some typ
+  | `Null -> None
+  | _ -> Exn.fail "get_repr_opt: strange esgg repr"
 
 let typeof mapping t : simple_type =
   let rec find path schema =
     match path with
-    | [] -> U.get "type" U.to_string schema
+    | [] ->
+      let meta = get_meta schema in
+      begin match get_repr_opt meta with
+      | Some repr -> repr
+      | None -> U.get "type" U.to_string schema
+      end
     | hd::tl ->
       let a = try U.assoc "properties" schema with _ -> U.assoc "fields" schema in
       find tl (U.member hd a)
   in
   match find (ES_name.get_path t) mapping.mapping with
   | exception _ -> Exn.fail "no such field"
-  | a -> simple_of_es_type t a
+  | a -> simple_of_es_type a
 
 let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
 let typeof_ mapping value =

@@ -141,7 +141,7 @@ let infer_single mapping ~nested { name; agg; } sub =
         | `Sum ->
           match value_type with
           | `Bool -> `Int
-          | `Int | `Int64 -> `Dict ["override int as float hack", `Int]
+          | `Int | `Int64 as t -> `Dict ["override int as float hack", t]
           | _ -> value_type
       in
       [], sub [ "value", typ ]
