@@ -57,8 +57,8 @@
     "serps": {
       "type": "nested",
       "properties": {
-        "user_id": { "type": "long" },
-        "dashboard_id": { "type": "long" },
+        "user_id": { "type": "long", "_meta": { "repr": "int64" } },
+        "dashboard_id": { "type": "long" , "_meta": { "repr": "int64" }},
         "keyword_id": { "type": "long" },
         "provider": { "type": "keyword" },
         "language": { "type": "keyword" },
@@ -140,35 +140,91 @@
               "properties": {
                 "exact": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "exact_only": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "prefix": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "domain": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "domain_only": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "subdomains": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "rootdomain": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 },
                 "site": {
                   "type": "long",
-                  "fields": { "stored": { "type": "long", "store": true } }
+                  "_meta": { "repr": "int64" },
+                  "fields": {
+                    "stored": {
+                      "type": "long",
+                      "_meta": { "repr": "int64" },
+                      "store": true
+                    }
+                  }
                 }
               }
             },
@@ -269,35 +325,91 @@
           "properties": {
             "exact": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "exact_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "prefix": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "subdomains": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "rootdomain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "site": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             }
           }
         },
@@ -305,35 +417,91 @@
           "properties": {
             "exact": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "exact_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "prefix": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "subdomains": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "rootdomain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "site": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             }
           }
         },
@@ -341,35 +509,91 @@
           "properties": {
             "exact": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "exact_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "prefix": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "domain_only": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "subdomains": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "rootdomain": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             },
             "site": {
               "type": "long",
-              "fields": { "stored": { "type": "long", "store": true } }
+              "_meta": { "repr": "int64" },
+              "fields": {
+                "stored": {
+                  "type": "long",
+                  "_meta": { "repr": "int64" },
+                  "store": true
+                }
+              }
             }
           }
         },
@@ -438,21 +662,53 @@
     },
     "urls_hashes_top100": {
       "properties": {
-        "exact": { "type": "long", "store": true },
-        "exact_only": { "type": "long", "store": true },
-        "prefix": { "type": "long", "store": true },
-        "domain": { "type": "long", "store": true },
-        "domain_only": { "type": "long", "store": true },
-        "subdomains": { "type": "long", "store": true },
-        "rootdomain": { "type": "long", "store": true },
-        "site": { "type": "long", "store": true }
+        "exact": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "exact_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "prefix": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "domain": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "domain_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "subdomains": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "rootdomain": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "site": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        }
       }
     },
     "domains_names_organic": { "type": "keyword", "_meta": { "multi": true, "ignore": true } },
     "domains_names_paid": { "type": "keyword", "_meta": { "multi": true, "ignore": true } },
     "cpc": { "type": "long" },
     "nice_cpc": { "type": "long" },
-    "user_id": { "type": "long" },
-    "dashboard_id": { "type": "long" }
+    "user_id": { "type": "long", "_meta": { "repr": "int64" } },
+    "dashboard_id": { "type": "long", "_meta": { "repr": "int64" } }
   }
 }

@@ -25,8 +25,8 @@ module Keywords = struct
   module Clicks_per_search_organic = Id_(Double_)
   module Clicks_per_search_paid = Id_(Double_)
   module Serps = struct
-    module User_id = Id_(Long_)
-    module Dashboard_id = Id_(Long_)
+    module User_id = Id_(Int64_)
+    module Dashboard_id = Id_(Int64_)
     module Keyword_id = Id_(Long_)
     module Provider = Id_(Keyword_)
     module Language = Id_(Keyword_)
@@ -184,8 +184,8 @@ module Keywords = struct
   module Domains_names_paid = Id_(Keyword_)
   module Cpc = Id_(Long_)
   module Nice_cpc = Id_(Long_)
-  module User_id = Id_(Long_)
-  module Dashboard_id = Id_(Long_)
+  module User_id = Id_(Int64_)
+  module Dashboard_id = Id_(Int64_)
 end (* Keywords *)
 
 module News = struct
@@ -358,8 +358,8 @@ module News = struct
 end (* News *)
 
 module Positions = struct
-  module User_id = Id_(Long_)
-  module Dashboard_id = Id_(Long_)
+  module User_id = Id_(Int64_)
+  module Dashboard_id = Id_(Int64_)
   module Keyword_id = Id_(Long_)
   module Provider = Id_(Keyword_)
   module Language = Id_(Keyword_)
@@ -452,8 +452,8 @@ module Positions = struct
 end (* Positions *)
 
 module Serps = struct
-  module User_id = Id_(Long_)
-  module Dashboard_id = Id_(Long_)
+  module User_id = Id_(Int64_)
+  module Dashboard_id = Id_(Int64_)
   module Keyword_id = Id_(Long_)
   module Provider = Id_(Keyword_)
   module Language = Id_(Keyword_)

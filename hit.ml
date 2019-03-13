@@ -3,10 +3,6 @@ open ExtLib
 
 open Common
 
-let get_meta json default k =
-  let meta = `Assoc (Option.default [] @@ U.(opt "_meta" to_assoc json)) in
-  Option.default default U.(opt k to_bool meta)
-
 module ES_names = Set.Make(ES_name)
 let es_names mapping l = l |> List.map (ES_name.make mapping) |> ES_names.of_list
 
@@ -23,17 +19,20 @@ let of_mapping ?(filter=empty_filter) x : result_type =
   let excludes = option_map2 ES_names.union (smake "excludes") (Option.map (es_names x) filter.excludes) in
   let includes = option_map2 ES_names.inter (smake "includes") (Option.map (es_names x) filter.includes) in
   let includes = match includes with None -> None | Some set -> Some (set, include_parents set) in
+  let get_bool meta default k = Option.default default U.(opt k to_bool meta) in
   let rec make ~optional path json =
     let meta = get_meta json in
+    let flag = get_bool meta in
+    let repr = get_repr_opt meta in
     let wrap multi t =
-      let t = if meta multi "multi" then `List t else t in
-      if meta optional "optional" then `Maybe t else t
+      let t = if flag multi "multi" then `List t else t in
+      if flag optional "optional" then `Maybe t else t
     in
-    let default_optional = meta false "fields_default_optional" in
-    match U.assoc "type" json with
+    let default_optional = flag false "fields_default_optional" in
+    match repr, U.assoc "type" json with
     | exception _ -> wrap false @@ make_properties ~default_optional path json
-    | `String "nested" -> wrap true @@ make_properties ~default_optional path json
-    | `String t -> wrap false @@ `Ref (path, simple_of_es_type path t)
+    | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
+    | Some t, `String _ | _, `String t -> wrap false @@ `Ref (path, simple_of_es_type t)
     | _ -> Exn.fail "strange type : %s" (U.to_string json)
   and make_properties ~default_optional path json =
     match U.(get "properties" to_assoc json) with
@@ -44,7 +43,7 @@ let of_mapping ?(filter=empty_filter) x : result_type =
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
         (match includes with None -> true | Some (set,parents) -> parent_included path set || ES_names.mem path parents) &&
-        not @@ get_meta x false "ignore"
+        not @@ get_bool (get_meta x) false "ignore"
       in
       match included with
       | false -> (* printfn "(* excluded %s *)" (ES_name.show path); *) None

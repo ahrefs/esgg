@@ -5,14 +5,39 @@
     "url": { "type": "keyword" },
     "url_hash": {
       "properties": {
-        "exact": { "type": "long" },
-        "exact_only": { "type": "long" },
-        "prefix": { "type": "long" },
-        "domain": { "type": "long" },
-        "domain_only": { "type": "long" },
-        "subdomains": { "type": "long" },
-        "rootdomain": { "type": "long" },
-        "site": { "type": "long" }
+        "exact": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "exact_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "prefix": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "domain": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "domain_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "subdomains": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "rootdomain": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "site": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        }
       }
     },
     "title": {

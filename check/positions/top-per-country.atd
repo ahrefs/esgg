@@ -48,8 +48,9 @@ type serp_structure = {
     string wrap <ocaml module="Positions.Serp_structure.Type">
 }
 type _source = {
-  user_id: int wrap <ocaml module="Positions.User_id">;
-  dashboard_id: int wrap <ocaml module="Positions.Dashboard_id">;
+  user_id: int <ocaml repr="int64"> wrap <ocaml module="Positions.User_id">;
+  dashboard_id:
+    int <ocaml repr="int64"> wrap <ocaml module="Positions.Dashboard_id">;
   keyword_id: int wrap <ocaml module="Positions.Keyword_id">;
   provider: string wrap <ocaml module="Positions.Provider">;
   language: string wrap <ocaml module="Positions.Language">;

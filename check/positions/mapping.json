@@ -2,8 +2,8 @@
   "_routing": { "required": true },
   "_source": { "excludes": [ "url_hash" ] },
   "properties": {
-    "user_id": { "type": "long" },
-    "dashboard_id": { "type": "long" },
+    "user_id": { "type": "long", "_meta": { "repr": "int64" } },
+    "dashboard_id": { "type": "long", "_meta": { "repr": "int64" } },
     "keyword_id": { "type": "long" },
     "provider": { "type": "keyword" },
     "language": { "type": "keyword" },
@@ -71,14 +71,39 @@
     "url": { "type": "keyword", "fields": { "hash": { "type": "murmur3" } } },
     "url_hash": {
       "properties": {
-        "exact": { "type": "long" },
-        "exact_only": { "type": "long" },
-        "prefix": { "type": "long" },
-        "domain": { "type": "long" },
-        "domain_only": { "type": "long" },
-        "subdomains": { "type": "long" },
-        "rootdomain": { "type": "long" },
-        "site": { "type": "long" }
+        "exact": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "exact_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "prefix": {
+          "type": "long",
+          "_meta": { "repr": "int64" },
+          "store": true
+        },
+        "domain": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "domain_only": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "subdomains": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "rootdomain": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        },
+        "site": {
+          "type": "long",
+          "_meta": { "repr": "int64" }
+        }
       }
     },
     "url_visual": { "type": "keyword" },
@@ -162,7 +187,7 @@
         "nice_top_volume": { "type": "long" }
       }
     },
-    "ad_hash": { "type": "long" },
+    "ad_hash": { "type": "long", "_meta": { "repr": "int64" } },
     "serp_features": { "type": "keyword", "_meta": { "multi": true } },
     "serp_structure": {
       "properties": {

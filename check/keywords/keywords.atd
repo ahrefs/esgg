@@ -59,8 +59,10 @@ type _source = {
   ?sources: sources nullable;
   ?cpc: int wrap <ocaml module="Keywords.Cpc"> nullable;
   ?nice_cpc: int wrap <ocaml module="Keywords.Nice_cpc"> nullable;
-  ?user_id: int wrap <ocaml module="Keywords.User_id"> nullable;
-  ?dashboard_id: int wrap <ocaml module="Keywords.Dashboard_id"> nullable
+  ?user_id:
+    int <ocaml repr="int64"> wrap <ocaml module="Keywords.User_id"> nullable;
+  ?dashboard_id:
+    int <ocaml repr="int64"> wrap <ocaml module="Keywords.Dashboard_id"> nullable
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
