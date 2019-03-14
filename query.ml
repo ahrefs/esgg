@@ -94,17 +94,30 @@ and extract_query json =
   | _ ->
     let field, values =
       (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
-      match qt, qv with
-      | "exists", `Assoc ["field", `String f] -> f, []
-      | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
-      | "term", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
-      | "term", `Assoc [f, x] -> f, [x]
-      | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
-      | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
-      | "match", `Assoc [f, x] -> f, [x]
-      | "match_phrase", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
-      | "match_phrase", `Assoc [f, x] -> f, [x]
-      | k, _ -> Exn.fail "unsupported query %S" k
+      try
+        match qt with
+        | "term"
+        | "prefix"
+        | "wildcard"
+        | "regexp"
+        | "fuzzy"
+        | "type"
+        | "match_phrase" ->
+          begin match qv with
+          | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
+          | `Assoc [f, x] -> f, [x]
+          | _ -> Exn.fail "expected dictionary with single key (field name)"
+          end
+        | _ ->
+        match qt, qv with
+        | "exists", `Assoc ["field", `String f] -> f, []
+        | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
+        | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
+        | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
+        | "match", `Assoc [f, x] -> f, [x]
+        | _ -> Exn.fail "unrecognized"
+      with exn ->
+        Exn.fail ~exn "dsl query %S" qt
     in
     json, Field { field; multi = multi_of_qt qt; values }
   in
