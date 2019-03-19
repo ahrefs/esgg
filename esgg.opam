@@ -1,10 +1,10 @@
 opam-version: "2.0"
 authors: "Ahrefs"
-homepage: "https://git.ahrefs.com/ahrefs/esgg"
+homepage: "https://github.com/ahrefs/esgg"
 synopsis: "Elasticsearch guided (code) generator"
-maintainer: "igor@ahrefs.com"
-dev-repo: "git+ssh://git@git.ahrefs.com/ahrefs/esgg.git"
-bug-reports: "https://git.ahrefs.com/ahrefs/esgg/issues"
+maintainer: "github@ahrefs.com"
+dev-repo: "git+https://github.com/ahrefs/esgg.git"
+bug-reports: "https://github.com/ahrefs/esgg/issues"
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]

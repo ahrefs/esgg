@@ -2,5 +2,4 @@ _build
 .merlin
 esgg.install
 
-/check/check*
 /test/*/query.ml

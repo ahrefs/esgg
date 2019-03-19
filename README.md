@@ -1,18 +1,34 @@
 ElasticSearch Guided (code) Generator
 =====================================
 
+Development
+-----------
+
+Install dependencies with `opam install --deps-only .`
+
+Buld with `make`
+
 Tests
 -----
-
-`make check` runs tests in [check/](check/) verifying
-that atd description of output (generated from query) can indeed unserialize ES output from that actual query.
-Tests take somewhat long time because multiple separate invocations of dune for each test, this could be improved.
-Also adding new tests is currently a bit too manual.
 
 `make test` runs regression tests in [test/](test/) verifying
 that input and output atd generated from query stays unchanged.
 Once there is an expected change in generated query - it should be committed.
 Tests are easy to add and fast to run.
 
-One thing that is currently not covered by tests is that code generated for query application of input variables
-does actually compile and produce correct query when run.
+TODO tests to verify that:
+
+	* code generated for query application of input variables does actually compile and produce correct query when run
+	* atd description of output (generated from query) can indeed unserialize ES output from that actual query
+
+Conditions
+----------
+
+Copyright (c) 2018 Ahrefs <github@ahrefs.com>
+
+This project is distributed under the terms of GPL Version 2. See LICENSE file for full license text.
+
+NB the output of esgg, i.e. the generated code, is all yours of course :)
+
+----
+2019-03-19

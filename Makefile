@@ -1,14 +1,11 @@
 .SUFFIXES:
-.PHONY: build clean test check release
+.PHONY: build clean test release
 
 build:
 	dune build esgg.exe
 
 test: build
 	./test/run.sh
-
-check: build
-	./check/run.sh
 
 clean:
 	dune clean
