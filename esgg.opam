@@ -1,10 +1,12 @@
 opam-version: "2.0"
-authors: "Ahrefs"
 homepage: "https://github.com/ahrefs/esgg"
 synopsis: "Elasticsearch guided (code) generator"
-maintainer: "github@ahrefs.com"
+authors: "Ahrefs Pte Ltd <github@ahrefs.com>"
+maintainer: "Ahrefs Pte Ltd <github@ahrefs.com>"
 dev-repo: "git+https://github.com/ahrefs/esgg.git"
 bug-reports: "https://github.com/ahrefs/esgg/issues"
+license: "GPL-2"
+tags: ["org:ahrefs"]
 build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
