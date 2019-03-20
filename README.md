@@ -10,6 +10,14 @@ Install dependencies with `opam install --deps-only .`
 
 Buld with `make`
 
+Variables
+---------
+
+Syntax for variables in template json files is as follows:
+- `$var` for regular required variable
+- `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
+- full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
+
 Tests
 -----
 

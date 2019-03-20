@@ -6,7 +6,7 @@ open Devkit
 
 let debug_dump = false
 
-type var = { optional : bool; name : string } [@@deriving show]
+type var = { optional : bool; list : bool; name : string } [@@deriving show]
 type group = { label : string; vars : string list } [@@deriving show]
 
 type t = [
@@ -46,13 +46,25 @@ let sub_decoded d s =
   String.slice ~first ~last s
 
 let var_name s =
-  match Scanf.sscanf s "$%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
+  match Scanf.sscanf s "%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
   | exception _ -> Exn.fail "bad var name %S" s
-  | () -> String.slice ~first:1 s
+  | () -> s
+
+let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
 
 let make_var s =
-  let (s, optional) = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false in
-  { optional; name = var_name s }
+  try
+    let s = try Scanf.sscanf s "$(%s@)%!" id with _ -> Scanf.sscanf s "$%s%!" id in
+    let (s,optional) = test_optional s in
+    let (name,list) =
+      match String.split s ":" with
+      | (n,"list") -> n, true
+      | (_,hint) -> Exn.fail "unrecognized part %S after colon, only 'list' hint is allowed" hint
+      | exception _ -> s, false
+    in
+    { optional; name = var_name name; list; }
+  with
+    exn -> Exn.fail ~exn "unrecognized variable %S" s
 
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
@@ -155,7 +167,7 @@ let lift_to_string map (v:t) =
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
   | `Optional (g,_) -> Exn.fail "Error: optional group %S not as list element" g.label
-  | `Var { optional=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
+  | `Var { optional=_; list=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l ->
     list [
       quote "[";
@@ -194,6 +206,7 @@ let var_equal v1 v2 =
   match String.equal v1.name v2.name with
   | false -> false
   | true ->
+    if (v1.list:bool) <> v2.list then Exn.fail "var %S list or not, huh?" v1.name;
     if (v1.optional:bool) <> v2.optional then Exn.fail "var %S optional or not, huh?" v1.name;
     true
 
@@ -251,7 +264,7 @@ let print_parse_json s =
   show @@ Jsonm.decoder @@ `String s
 
 let rec to_yojson_exn : t -> Yojson.t = function
-| `Var {optional; name} -> Exn.fail "to_yojson_exn `Var %S%s" name (if optional then "?" else "")
+| `Var v -> Exn.fail "to_yojson_exn `Var %s" (show_var v)
 | `Optional (g, _) -> Exn.fail "to_yojson_exn `Optional %S" g.label
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)

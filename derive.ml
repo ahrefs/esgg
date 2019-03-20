@@ -127,10 +127,17 @@ let derive mapping json =
     | List typ -> Some { multi = Many; ref = None; typ; }
     | Type typ -> Some { multi = One; ref = None; typ; }
   in
+  let check_multi v t =
+    match t with
+    | Some t when t.multi = One && v.Tjson.list -> Exn.fail "var %S marked as list, but derived otherwise" v.name
+    | _ -> ()
+  in
   let map name = convertor (var_type name) (var_unwrap name) name in
   let (bindings,groups) = Tjson.vars json in
   let bindings = bindings |> List.map begin fun (var:Tjson.var) ->
-    var.name, ((if var.optional then `Optional else `Required), `Simple (var_type var.name))
+    let t = var_type var.name in
+    check_multi var t;
+    var.name, ((if var.optional then `Optional else `Required), `Simple t)
   end in
   let groups = groups |> List.map begin fun {Tjson.label;vars} ->
     let v =
