@@ -12,7 +12,7 @@ type agg_type =
 | Date_histogram of value
 | Filter of Query.query or_var
 | Filters of (string * Query.query or_var) list
-| Filters_dynamic of [`Named|`List]
+| Filters_dynamic of Tjson.var
 | Top_hits of { source : source_filter option; highlight : string list option; }
 | Range of value
 | Range_keyed of value * string list
@@ -57,7 +57,7 @@ let analyze_single name agg_type json =
         let (jsons,filters) = split2 @@ List.map (fun (k,v) -> k, analyze_filter v) a in
         let json = Tjson.replace json "filters" (`Assoc jsons) in
         json, Filters filters
-      | `Var { list; _ } -> json, Filters_dynamic (if list then `List else `Named)
+      | `Var v -> json, Filters_dynamic v
       | _ -> Exn.fail "filters: expecting either dict or variable"
       end
     | _ ->
@@ -154,8 +154,8 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filters l ->  (* TODO other_bucket *)
       let constraints = l |> List.map snd |> List.map (dynamic_default [] Query.infer) |> List.flatten in
       constraints, keyed_buckets (List.map fst l)
-    | Filters_dynamic `Named -> [], `Dict [ "buckets", `Object (doc_count ()) ]
-    | Filters_dynamic `List -> [], `Dict [ "buckets", `List (doc_count ()) ]
+    | Filters_dynamic ({ list = false; _ } as v) -> [On_var (v,Eq_object)], `Dict [ "buckets", `Object (doc_count ()) ]
+    | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list `Json)], `Dict [ "buckets", `List (doc_count ()) ]
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
       [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source) :> (string * resolve_type) list) ]

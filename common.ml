@@ -114,7 +114,7 @@ let pp_var_type ppf x = pp_simple_type ppf x.typ
 type required = [ `Required | `Optional ] [@@deriving show]
 
 type input_vars = (string * (required * [ `Group of input_vars | `Simple of var_type option])) list
-type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_field of multi * string
+type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_object | Eq_field of multi * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of value | Field_date of value
 
 type source_filter = { excludes : string list option; includes : string list option }

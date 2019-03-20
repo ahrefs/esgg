@@ -243,6 +243,7 @@ let resolve_constraints mapping l =
     let t = match t with
     | Eq_type typ -> Variable.Type typ
     | Eq_list typ -> List typ
+    | Eq_object -> Any (* TODO object of json *)
     | Eq_any -> Any
     | Eq_field (multi,field) ->
       let (name,typ) = typeof field in
