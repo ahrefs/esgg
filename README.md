@@ -1,6 +1,8 @@
 ElasticSearch Guided (code) Generator
 =====================================
 
+[![Build Status](https://travis-ci.org/ahrefs/esgg.svg?branch=master)](https://travis-ci.org/ahrefs/esgg)
+
 Development
 -----------
 
