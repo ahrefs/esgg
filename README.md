@@ -18,6 +18,8 @@ Syntax for variables in template json files is as follows:
 - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
 - full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
+`list` hint is useful to chose between named (default) and unnamed dynamic filters
+
 Tests
 -----
 

@@ -43,6 +43,11 @@
                 "filters": {
                   "filters": $filters
                 }
+              },
+              "dynamic2": {
+                "filters": {
+                  "filters": $(unnamed:list)
+                }
               }
           }
       }

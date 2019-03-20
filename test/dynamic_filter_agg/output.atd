@@ -21,7 +21,8 @@ type dynamic = { buckets: (string * doc_count1) list <json repr="object"> }
 type words10 = {
   doc_count: int;
   latest_date: string nullable value_agg;
-  dynamic: dynamic
+  dynamic: dynamic;
+  dynamic2: doc_count1 buckets
 }
 type buckets1 = { words10: words10; wordsn: words10 }
 type target = { buckets: buckets1 }
