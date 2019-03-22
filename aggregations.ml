@@ -11,7 +11,7 @@ type agg_type =
 | Histogram of value
 | Date_histogram of value
 | Filter of Query.query or_var
-| Filters of (string * Query.query or_var) list
+| Filters of { filters : (string * Query.query or_var) list; other_bucket : string option; }
 | Filters_dynamic of Tjson.var
 | Top_hits of { source : source_filter option; highlight : string list option; }
 | Range of value
@@ -52,11 +52,18 @@ let analyze_single name agg_type json =
     match agg_type with
     | "filter" -> let (json,f) = analyze_filter json in json, Filter f
     | "filters" ->
+      let other_bucket =
+        match json |> U.member "other_bucket", json |> U.member "other_bucket_key" with
+        | `Bool true, `Null -> Some "_other_"
+        | (`Null|`Bool true), `String k -> Some k
+        | (`Null|`Bool false), _ -> None
+        | _ -> Exn.fail "weird other_bucket"
+      in
       begin match json |> U.member "filters" with
       | `Assoc a ->
         let (jsons,filters) = split2 @@ List.map (fun (k,v) -> k, analyze_filter v) a in
         let json = Tjson.replace json "filters" (`Assoc jsons) in
-        json, Filters filters
+        json, Filters { filters; other_bucket; }
       | `Var v -> json, Filters_dynamic v
       | _ -> Exn.fail "filters: expecting either dict or variable"
       end
@@ -151,9 +158,9 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Date_histogram value -> [Field_date value], buckets `Int ~extra:["key_as_string", `String]
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> dynamic_default [] Query.infer q, doc_count ()
-    | Filters l ->  (* TODO other_bucket *)
-      let constraints = l |> List.map snd |> List.map (dynamic_default [] Query.infer) |> List.flatten in
-      constraints, keyed_buckets (List.map fst l)
+    | Filters { filters; other_bucket } ->
+      let constraints = filters |> List.map snd |> List.map (dynamic_default [] Query.infer) |> List.flatten in
+      constraints, keyed_buckets (option_to_list other_bucket @ List.map fst filters)
     | Filters_dynamic ({ list = false; _ } as v) -> [On_var (v,Eq_object)], `Dict [ "buckets", `Object (doc_count ()) ]
     | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list `Json)], `Dict [ "buckets", `List (doc_count ()) ]
     | Top_hits { source; highlight; } ->

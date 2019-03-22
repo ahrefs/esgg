@@ -186,3 +186,5 @@ let typeof_ mapping value =
   | Field f -> typeof mapping (ES_name.make mapping f)
 
 let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
+
+let option_to_list = function None -> [] | Some x -> [x]
