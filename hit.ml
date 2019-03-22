@@ -1,4 +1,3 @@
-open Devkit
 open ExtLib
 
 open Common
@@ -33,12 +32,12 @@ let of_mapping ?(filter=empty_filter) x : result_type =
     | exception _ -> wrap false @@ make_properties ~default_optional path json
     | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
     | Some t, `String _ | _, `String t -> wrap false @@ `Ref (path, simple_of_es_type t)
-    | _ -> Exn.fail "strange type : %s" (U.to_string json)
+    | _ -> fail "strange type : %s" (U.to_string json)
   and make_properties ~default_optional path json =
     match U.(get "properties" to_assoc json) with
-    | exception _ -> Exn.fail "strange mapping : %s" (U.to_string json)
+    | exception _ -> fail "strange mapping : %s" (U.to_string json)
     | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
-      begin match x with `Assoc _ -> () | _ -> Exn.fail "property %S not a dict" name end;
+      begin match x with `Assoc _ -> () | _ -> fail "property %S not a dict" name end;
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
@@ -57,8 +56,8 @@ let get_nested path x =
     match path, x with
     | p, (`Maybe x | `List x) -> loop p x (* HACK unwrap *)
     | [], _ -> x
-    | k::p, `Dict l -> loop p (try List.assoc k l with exn -> Exn.fail ~exn "cannot find nested %S" k)
-    | k::_, _ -> Exn.fail "nested %S is not a dict" k
+    | k::p, `Dict l -> loop p (try List.assoc k l with exn -> fail ~exn "cannot find nested %S" k)
+    | k::_, _ -> fail "nested %S is not a dict" k
   in
   loop (ES_name.get_path path) x
 

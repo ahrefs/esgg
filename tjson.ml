@@ -2,7 +2,7 @@
 
 open Printf
 open ExtLib
-open Devkit
+open Prelude
 
 let debug_dump = false
 
@@ -47,7 +47,7 @@ let sub_decoded d s =
 
 let var_name s =
   match Scanf.sscanf s "%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
-  | exception _ -> Exn.fail "bad var name %S" s
+  | exception _ -> fail "bad var name %S" s
   | () -> s
 
 let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
@@ -59,12 +59,12 @@ let make_var s =
     let (name,list) =
       match String.split s ":" with
       | (n,"list") -> n, true
-      | (_,hint) -> Exn.fail "unrecognized part %S after colon, only 'list' hint is allowed" hint
+      | (_,hint) -> fail "unrecognized part %S after colon, only 'list' hint is allowed" hint
       | exception _ -> s, false
     in
     { optional; name = var_name name; list; }
   with
-    exn -> Exn.fail ~exn "unrecognized variable %S" s
+    exn -> fail ~exn "unrecognized variable %S" s
 
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
@@ -84,7 +84,7 @@ let parse s : t =
     | `End -> ()
     | `Comment _ | `White _ -> finish d
     | `Await -> assert false
-    | _  -> Exn.fail "expected End"
+    | _  -> fail "expected End"
   in
   let rec value v k d =
     match v with
@@ -109,7 +109,7 @@ let parse s : t =
     finish d;
     v
   with
-    Escape (range,e) -> Exn.fail "E: %s %s" (show_decoded_range range) (show_error e)
+    Escape (range,e) -> fail "E: %s %s" (show_decoded_range range) (show_error e)
 
 let intersperse sep l = match l with [] -> [] | x::xs -> x :: List.concat (List.map (fun x -> [sep; x]) xs)
 
@@ -166,7 +166,7 @@ let lift_to_string map (v:t) =
   | `String s -> quote_val J.write_string s
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
-  | `Optional (g,_) -> Exn.fail "Error: optional group %S not as list element" g.label
+  | `Optional (g,_) -> fail "Error: optional group %S not as list element" g.label
   | `Var { optional=_; list=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l ->
     list [
@@ -206,8 +206,8 @@ let var_equal v1 v2 =
   match String.equal v1.name v2.name with
   | false -> false
   | true ->
-    if (v1.list:bool) <> v2.list then Exn.fail "var %S list or not, huh?" v1.name;
-    if (v1.optional:bool) <> v2.optional then Exn.fail "var %S optional or not, huh?" v1.name;
+    if (v1.list:bool) <> v2.list then fail "var %S list or not, huh?" v1.name;
+    if (v1.optional:bool) <> v2.optional then fail "var %S optional or not, huh?" v1.name;
     true
 
 module SS = Set.Make(String)
@@ -216,7 +216,7 @@ let group_equal g1 g2 =
   match String.equal g1.label g2.label with
   | false -> false
   | true ->
-    if not @@ SS.equal (SS.of_list g1.vars) (SS.of_list g2.vars) then Exn.fail "group %S inconsistent" g1.label;
+    if not @@ SS.equal (SS.of_list g1.vars) (SS.of_list g2.vars) then fail "group %S inconsistent" g1.label;
     true
 
 let get_vars ~optional (v:t) =
@@ -235,7 +235,7 @@ let vars (v:t) =
     printfn "all_vars:";
     List.iter (fun v -> printfn "  %s" (show_var v)) all_vars;
   end;
-  all_vars |> List.iter (fun v -> if SS.mem v.name optional_vars <> v.optional then Exn.fail "%S optional or not?" v.name);
+  all_vars |> List.iter (fun v -> if SS.mem v.name optional_vars <> v.optional then fail "%S optional or not?" v.name);
   let not_optional_vars = List.filter (fun v -> not @@ SS.mem v.name optional_vars) all_vars in
   not_optional_vars, groups
 
@@ -264,8 +264,8 @@ let print_parse_json s =
   show @@ Jsonm.decoder @@ `String s
 
 let rec to_yojson_exn : t -> Yojson.t = function
-| `Var v -> Exn.fail "to_yojson_exn `Var %s" (show_var v)
-| `Optional (g, _) -> Exn.fail "to_yojson_exn `Optional %S" g.label
+| `Var v -> fail "to_yojson_exn `Var %s" (show_var v)
+| `Optional (g, _) -> fail "to_yojson_exn `Optional %S" g.label
 | `Assoc l -> `Assoc (List.map (fun (k,v) -> k, to_yojson_exn v) l)
 | `List l -> `List (List.map to_yojson_exn l)
 | `String _ | `Float _ | `Int _ | `Bool _ | `Null as x -> x

@@ -1,4 +1,3 @@
-open Devkit
 open ExtLib
 
 open Common
@@ -28,7 +27,7 @@ let analyze_filter json =
   match json with
   | `Var v -> json, Dynamic v
   | `Assoc _ -> let q = Query.extract_query json in q.json, Static q
-  | _ -> Exn.fail "filter: expecting either dict or variable"
+  | _ -> fail "filter: expecting either dict or variable"
 
 let analyze_single name agg_type json =
   let value () =
@@ -37,16 +36,16 @@ let analyze_single name agg_type json =
 (*     | `Var v -> Variable v *)
     | `Null ->
       begin match U.assoc "script" json with
-      | exception exn -> Exn.fail ~exn "failed to get aggregation field"
+      | exception exn -> fail ~exn "failed to get aggregation field"
       | script ->
         try
           match U.member "inline" script, U.member "id" script with
           | x, `Null -> Script (`Painless, var_or U.to_string x)
           | `Null, x -> Script (`Id, var_or U.to_string x)
-          | _ -> Exn.fail "inline and id cannot be used together"
-        with exn -> Exn.fail ~exn "script"
+          | _ -> fail "inline and id cannot be used together"
+        with exn -> fail ~exn "script"
       end
-    | _ -> Exn.fail "bad aggregation field"
+    | _ -> fail "bad aggregation field"
   in
   let (json, agg) =
     match agg_type with
@@ -57,7 +56,7 @@ let analyze_single name agg_type json =
         | `Bool true, `Null -> Some "_other_"
         | (`Null|`Bool true), `String k -> Some k
         | (`Null|`Bool false), _ -> None
-        | _ -> Exn.fail "weird other_bucket"
+        | _ -> fail "weird other_bucket"
       in
       begin match json |> U.member "filters" with
       | `Assoc a ->
@@ -65,7 +64,7 @@ let analyze_single name agg_type json =
         let json = Tjson.replace json "filters" (`Assoc jsons) in
         json, Filters { filters; other_bucket; }
       | `Var v -> json, Filters_dynamic v
-      | _ -> Exn.fail "filters: expecting either dict or variable"
+      | _ -> fail "filters: expecting either dict or variable"
       end
     | _ ->
     json,
@@ -85,7 +84,7 @@ let analyze_single name agg_type json =
     | "range" -> Range (value ())
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
-    | _ -> Exn.fail "unknown aggregation type %S" agg_type
+    | _ -> fail "unknown aggregation type %S" agg_type
   in
   json, { name; agg; }
 
@@ -96,7 +95,7 @@ let extract x =
     match aggs with
     | [] -> []
     | (_,a) :: [] -> to_assoc a
-    | _::_::_ -> Exn.fail "only one aggregation expected"
+    | _::_::_ -> fail "only one aggregation expected"
   in
   aggs,rest
 
@@ -110,9 +109,9 @@ let rec make (name,x) =
       let sub_json = match sub with [] -> [] | _ -> ["aggregations", `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)] in
       let json = `Assoc ((agg_type, json) :: sub_json) in
       json, { this; sub = List.map snd sub }
-    | _ -> Exn.fail "no aggregation?"
+    | _ -> fail "no aggregation?"
   with
-    exn -> Exn.fail ~exn "aggregation %S" name
+    exn -> fail ~exn "aggregation %S" name
 
 let get x =
   let sub = extract x |> fst |> List.map make in
@@ -122,12 +121,12 @@ let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
   | `Dict l ->
     let l = l |> List.map begin function
-    | (k, (`List _ | `Dict _ | `Object _)) -> Exn.fail "derive_highlight: expected simple type for %S" k
+    | (k, (`List _ | `Dict _ | `Object _)) -> fail "derive_highlight: expected simple type for %S" k
     | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
     | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
     end in
     `Dict l
-  | _ -> Exn.fail "derive_highlight: expected Dict after projecting fields over mapping"
+  | _ -> fail "derive_highlight: expected Dict after projecting fields over mapping"
 
 let infer_single mapping ~nested { name; agg; } sub =
   let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in

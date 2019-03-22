@@ -1,5 +1,6 @@
 open ExtLib
-open Devkit
+
+include Prelude
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
@@ -14,7 +15,7 @@ let var_or conv x =
   match x with
   | `Var v -> Dynamic v
   | _ ->
-    try Static (conv x) with Failure s -> Exn.fail "expected var or %s" s
+    try Static (conv x) with Failure s -> fail "expected var or %s" s
 
 type value = Field of string | Script of [`Painless|`Id] * string or_var
 
@@ -24,24 +25,24 @@ module U = struct
     @raise Failure if [json] is not a dict *)
 let member name = function
 | `Assoc l -> (try List.assoc name l with _ -> `Null)
-| _ -> Exn.fail "member %S : not a dict" name
+| _ -> fail "member %S : not a dict" name
 
 (** @return specified [name] from [json] dict
     @raise Failure if [json] is not a dict or [name] is absent *)
-let assoc name json = match member name json with `Null -> Exn.fail "assoc %S : not found" name | x -> x
+let assoc name json = match member name json with `Null -> fail "assoc %S : not found" name | x -> x
 
 (** @return specified [name] from [json] dict with [conv] applied to it.
     @raise Failure if [json] is not dict, when [name] is absent, when [conv] fails *)
-let get name conv json = try member name json |> conv with exn -> Exn.fail ~exn "get %S" name
+let get name conv json = try member name json |> conv with exn -> fail ~exn "get %S" name
 
 (** @return specified [name] from [json] dict with [conv] applied to it.
     @raise Failure if [json] is not dict or when [conv] fails *)
-let opt name conv json = try match member name json with `Null -> None | x -> Some (conv x) with exn -> Exn.fail ~exn "opt %S" name
+let opt name conv json = try match member name json with `Null -> None | x -> Some (conv x) with exn -> fail ~exn "opt %S" name
 
-let to_string = function `String (s:string) -> s | _ -> Exn.fail "expected string"
-let to_assoc = function `Assoc a -> a | _ -> Exn.fail "expected dict"
-let to_bool = function `Bool b -> b | _ -> Exn.fail "expected bool"
-let to_list f = function `List l -> List.map f l | _ -> Exn.fail "expected list"
+let to_string = function `String (s:string) -> s | _ -> fail "expected string"
+let to_assoc = function `Assoc a -> a | _ -> fail "expected dict"
+let to_bool = function `Bool b -> b | _ -> fail "expected bool"
+let to_list f = function `List l -> List.map f l | _ -> fail "expected list"
 
 end
 
@@ -77,8 +78,8 @@ type t = (string option * string list)
 
 let to_ocaml (modname,l) = (List.filter_map id [modname] @ l) |> List.map to_valid_modname |> String.concat "."
 let get_path = snd
-let make mapping s = mapping.name, Stre.nsplitc s '.'
-let append (m,l) s = m, l @ Stre.nsplitc s '.'
+let make mapping s = mapping.name, String.nsplit s "."
+let append (m,l) s = m, l @ String.nsplit s "."
 let show (_,l) = String.concat "." l
 let pp ppf t = Format.pp_print_text ppf (show t)
 let fold_up f (m,l) acc =
@@ -148,7 +149,7 @@ let simple_of_es_type t =
   | "double" | "float" -> `Double
   | "boolean" -> `Bool
   | "int64" | "murmur3" -> `Int64
-  | _ -> Exn.fail "simple_of_es_type: cannot handle %S" t
+  | _ -> fail "simple_of_es_type: cannot handle %S" t
 
 let get_meta json =
   match U.member "_meta" json with
@@ -159,7 +160,7 @@ let get_repr_opt meta =
   match U.member "repr" meta with
   | `String typ -> Some typ
   | `Null -> None
-  | _ -> Exn.fail "get_repr_opt: strange esgg repr"
+  | _ -> fail "get_repr_opt: strange esgg repr"
 
 let typeof mapping t : simple_type =
   let rec find path schema =
@@ -175,10 +176,10 @@ let typeof mapping t : simple_type =
       find tl (U.member hd a)
   in
   match find (ES_name.get_path t) mapping.mapping with
-  | exception _ -> Exn.fail "no such field"
+  | exception _ -> fail "no such field"
   | a -> simple_of_es_type a
 
-let typeof mapping x = try typeof mapping x with exn -> Exn.fail ~exn "typeof field %S" (ES_name.show x)
+let typeof mapping x = try typeof mapping x with exn -> fail ~exn "typeof field %S" (ES_name.show x)
 let typeof_ mapping value =
   match value with
   | Script (`Painless, Static "_score") -> `Double

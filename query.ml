@@ -1,6 +1,5 @@
 open Printf
 open ExtLib
-open Devkit
 
 open Common
 
@@ -9,7 +8,7 @@ type var_list = [ `List of Tjson.var list | `Var of Tjson.var ]
 let var_list_of_json ~desc = function
 | `List l -> `List (List.filter_map (function `Var v -> Some v | _ -> None) l)
 | `Var _ as x -> x
-| _ -> Exn.fail "bad %s : expecting list or variable" desc
+| _ -> fail "bad %s : expecting list or variable" desc
 
 type query_t =
 | Bool of (string * query list) list
@@ -61,22 +60,22 @@ let rec extract_clause (clause,json) =
       let l = List.map extract_query l in
       let json = `List (List.map (fun q -> q.json) l) in
       (json, (clause, l))
-    | _ -> Exn.fail "bad %S clause : expected list or dict" clause
+    | _ -> fail "bad %S clause : expected list or dict" clause
     end
   | "minimum_should_match" ->
     begin match json with
     | `Int _ | `String _ -> json, (clause, [])
-    | _ -> Exn.fail "bad %S clause : expected int or string" clause
+    | _ -> fail "bad %S clause : expected int or string" clause
     end
-  | _ -> Exn.fail "unsupported clause"
+  | _ -> fail "unsupported clause"
   with
-    exn -> Exn.fail ~exn "clause %S" clause
+    exn -> fail ~exn "clause %S" clause
 and extract_query json =
-  let (qt,qv) = match json with `Assoc [q] -> q | _ -> Exn.fail "bad query" in
+  let (qt,qv) = match json with `Assoc [q] -> q | _ -> fail "bad query" in
   let (json,query) = match qt, qv with
   | ("function_score"|"nested"), `Assoc l ->
     begin match List.assoc "query" l with
-    | exception _ when qt = "nested" -> Exn.fail "nested query requires query, duh"
+    | exception _ when qt = "nested" -> fail "nested query requires query, duh"
     | exception _ when qt = "function_score" -> json, Nothing
     | q ->
       let { json; query } = extract_query q in
@@ -106,7 +105,7 @@ and extract_query json =
           begin match qv with
           | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
           | `Assoc [f, x] -> f, [x]
-          | _ -> Exn.fail "expected dictionary with single key (field name)"
+          | _ -> fail "expected dictionary with single key (field name)"
           end
         | _ ->
         match qt, qv with
@@ -115,9 +114,9 @@ and extract_query json =
         | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
         | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
         | "match", `Assoc [f, x] -> f, [x]
-        | _ -> Exn.fail "unrecognized"
+        | _ -> fail "unrecognized"
       with exn ->
-        Exn.fail ~exn "dsl query %S" qt
+        fail ~exn "dsl query %S" qt
     in
     json, Field { field; multi = multi_of_qt qt; values }
   in
@@ -143,7 +142,7 @@ let record vars var ti =
   match Hashtbl.find vars var with
   | exception _ -> Hashtbl.add vars var ti
   | x when Variable.equal x ti -> ()
-  | x -> Exn.fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
+  | x -> fail "type mismatch for variable %S : %s <> %s" var (Variable.show ti) (Variable.show x)
 
 let infer' c0 query =
   let constraints = ref c0 in
@@ -170,7 +169,7 @@ let record_single_var typ (v:Tjson.var) =
 let resolve_mget_types ids =
   match ids with
   | `Var (v:Tjson.var) -> record_single_var (List `String) v
-  | _ -> Exn.fail "mget: only variable ids supported"
+  | _ -> fail "mget: only variable ids supported"
 
 let resolve_get_types = record_single_var (Type `String)
 
@@ -216,18 +215,18 @@ let extract json =
   | exception _ ->
     match U.assoc "id" json with
     | `Var v -> Get (v, extract_source json)
-    | _ -> Exn.fail "only variable id supported for get request"
+    | _ -> fail "only variable id supported for get request"
     | exception _ ->
       let conf = extract_conf json in
       let json = filter_out_conf json in
       let ids =
         match U.assoc "docs" json with
         | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
-        | _ -> Exn.fail "unexpected docs"
+        | _ -> fail "unexpected docs"
         | exception _ ->
           match U.(assoc "ids" json) with
           | ids -> var_list_of_json ~desc:"mget ids" ids
-          | exception _ -> Exn.fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
+          | exception _ -> fail "unrecognized ES toplevel query type, expected one of : id, ids, docs, query"
       in
       Mget { ids; json; conf }
 

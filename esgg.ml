@@ -1,5 +1,5 @@
 open Printf
-open Devkit
+open Common
 
 module Json = Yojson.Basic
 
@@ -57,7 +57,7 @@ let help () = [
 
 let () =
   let json fname = Json.from_file ~fname fname in
-  let template file = try Tjson.parse @@ Std.input_file file with exn -> Exn.fail ~exn "load %S" file in
+  let template file = try Tjson.parse @@ Std.input_file file with exn -> fail ~exn "load %S" file in
   let map_query mode f l =
     let init = ref None in
     let name = ref None in
@@ -71,11 +71,11 @@ let () =
     | "-name"::s::tl -> name := Some s; loop tl
     | [m;q] -> f m q
     | [s;m;q] -> name := Some s; f m q
-    | _ -> Exn.fail "expected: [-shared <shared.atd>] [-name <mapping>] <mapping.json> <query.template.json>"
+    | _ -> fail "expected: [-shared <shared.atd>] [-name <mapping>] <mapping.json> <query.template.json>"
     in
     loop l
   in
-  match Action.args with
+  match Sys.argv |> Array.to_list |> List.tl with
   | "output" as hd::tl -> map_query hd output tl
 (*   | "input_direct"::tl -> map_query input_direct tl *)
   | "input_j" as hd::tl -> map_query hd input_j tl

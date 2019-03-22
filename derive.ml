@@ -1,5 +1,4 @@
 open ExtLib
-open Devkit
 open Printf
 
 open Common
@@ -50,10 +49,10 @@ let print_reflect name mapping =
       printfn "%smodule %s = struct" indent modul;
       List.iter (iter (nr_indent+2)) props;
       printfn "%send (* %s *)" indent modul
-    | `Null, `Null -> Exn.fail "neither type nor properties found for %S" name
-    | _, `Null -> Exn.fail "strange type for %S" name
-    | `Null, _ -> Exn.fail "strange properties for %S" name
-    | _, _ -> Exn.fail "both type and properties found for %S" name
+    | `Null, `Null -> fail "neither type nor properties found for %S" name
+    | _, `Null -> fail "strange type for %S" name
+    | `Null, _ -> fail "strange properties for %S" name
+    | _, _ -> fail "both type and properties found for %S" name
   in
   iter 0 (name,mapping)
 
@@ -91,7 +90,7 @@ let source_args source =
     |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
 
 let source_args_to_string args =
-  Stre.list (uncurry @@ sprintf "%S,%S") args
+  sprintf "[%s]" @@ String.concat ";" @@ List.map (fun (a,b) -> sprintf "%S,%S" a b) args
 
 let derive mapping json =
   let query = Query.extract json in
@@ -129,7 +128,7 @@ let derive mapping json =
   in
   let check_multi v t =
     match t with
-    | Some t when t.multi = One && v.Tjson.list -> Exn.fail "var %S marked as list, but derived otherwise" v.name
+    | Some t when t.multi = One && v.Tjson.list -> fail "var %S marked as list, but derived otherwise" v.name
     | _ -> ()
   in
   let map name = convertor (var_type name) (var_unwrap name) name in

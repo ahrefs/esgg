@@ -17,7 +17,6 @@ depends: [
   "ocaml" { >= "4.03.0" }
   "yojson" {>= "1.7.0"}
   "extlib"
-  "devkit" {> "0.7"}
   "atd" {>= "2.0.0"}
   "easy-format"
   "jsonm"

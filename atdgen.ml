@@ -1,6 +1,5 @@
 open Printf
 open ExtLib
-open Devkit
 open Common
 
 let loc = Atd.Ast.dummy_loc
@@ -216,7 +215,7 @@ end = struct
     let rec map name t =
       match t with
       | Atd.Ast.Record (loc, fields, annot) -> ref_ ?name (map_record (loc, fields, annot))
-      | Sum (_loc, _variants, _annot) -> Exn.fail "variants are not supported"
+      | Sum (_loc, _variants, _annot) -> fail "variants are not supported"
       | Tuple (loc, cells, annot) -> Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
       | List (loc, t, annot) ->
         let name =
@@ -236,7 +235,7 @@ end = struct
       | Tvar _ -> t
     and map_record (loc,fields,annot) =
       let fields = fields |> List.map begin function
-      | `Inherit _ -> Exn.fail "inherit not supported"
+      | `Inherit _ -> fail "inherit not supported"
       | `Field (loc,(name,_,_ as f),t) -> `Field (loc, f, map (Some name) t)
       end
       in
@@ -325,7 +324,6 @@ let of_vars ~init (l:input_vars) =
 
 let parse_file filename =
   let open Atd in
-  Control.with_open_in_txt filename begin fun ch ->
-    let lexbuf = Lexing.from_channel ch in
-    Parser.full_module Lexer.token lexbuf
-  end
+  let ch = open_in filename in 
+  let lexbuf = Lexing.from_channel ch in
+  Parser.full_module Lexer.token lexbuf
