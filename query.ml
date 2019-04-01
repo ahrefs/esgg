@@ -71,54 +71,59 @@ let rec extract_clause (clause,json) =
   with
     exn -> fail ~exn "clause %S" clause
 and extract_query json =
-  let (qt,qv) = match json with `Assoc [q] -> q | _ -> fail "bad query" in
-  let (json,query) = match qt, qv with
-  | ("function_score"|"nested"), `Assoc l ->
-    begin match List.assoc "query" l with
-    | exception _ when qt = "nested" -> fail "nested query requires query, duh"
-    | exception _ when qt = "function_score" -> json, Nothing
-    | q ->
-      let { json; query } = extract_query q in
-      `Assoc [qt, Tjson.replace qv "query" json], query
-    end
-  | "bool", `Assoc l ->
-    let bool = List.map extract_clause l in
-    let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
-    json, Bool (List.map snd bool)
-  | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
-  | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
-  | ("match_all"|"match_none"), _ -> json, Nothing
-  | _qt, `Var x -> json, Var x
-  | "range", `Assoc [_f, `Var x] -> json, Var x
-  | _ ->
-    let field, values =
-      (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
-      try
-        match qt with
-        | "term"
-        | "prefix"
-        | "wildcard"
-        | "regexp"
-        | "fuzzy"
-        | "type"
-        | "match_phrase" ->
-          begin match qv with
-          | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
-          | `Assoc [f, x] -> f, [x]
-          | _ -> fail "expected dictionary with single key (field name)"
-          end
-        | _ ->
-        match qt, qv with
-        | "exists", `Assoc ["field", `String f] -> f, []
-        | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
-        | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
-        | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
-        | "match", `Assoc [f, x] -> f, [x]
-        | _ -> fail "unrecognized"
-      with exn ->
-        fail ~exn "dsl query %S" qt
-    in
-    json, Field { field; multi = multi_of_qt qt; values }
+  let (json,query) =
+    match json with
+    | `Var v -> json, Var v
+    | `Assoc [qt,qv] ->
+      begin match qt, qv with
+      | ("function_score"|"nested"), `Assoc l ->
+        begin match List.assoc "query" l with
+        | exception _ when qt = "nested" -> fail "nested query requires query, duh"
+        | exception _ when qt = "function_score" -> json, Nothing
+        | q ->
+          let { json; query } = extract_query q in
+          `Assoc [qt, Tjson.replace qv "query" json], query
+        end
+      | "bool", `Assoc l ->
+        let bool = List.map extract_clause l in
+        let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
+        json, Bool (List.map snd bool)
+      | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
+      | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
+      | ("match_all"|"match_none"), _ -> json, Nothing
+      | _qt, `Var x -> json, Var x
+      | "range", `Assoc [_f, `Var x] -> json, Var x
+      | _ ->
+        let field, values =
+          (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
+          try
+            match qt with
+            | "term"
+            | "prefix"
+            | "wildcard"
+            | "regexp"
+            | "fuzzy"
+            | "type"
+            | "match_phrase" ->
+              begin match qv with
+              | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
+              | `Assoc [f, x] -> f, [x]
+              | _ -> fail "expected dictionary with single key (field name)"
+              end
+            | _ ->
+            match qt, qv with
+            | "exists", `Assoc ["field", `String f] -> f, []
+            | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
+            | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
+            | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
+            | "match", `Assoc [f, x] -> f, [x]
+            | _ -> fail "unrecognized"
+          with exn ->
+            fail ~exn "dsl query %S" qt
+        in
+        json, Field { field; multi = multi_of_qt qt; values }
+      end
+    | _ -> fail "bad query"
   in
   let json =
     match List.filter_map (fun {Tjson.optional;list=_;name} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
