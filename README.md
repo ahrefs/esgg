@@ -1,27 +1,40 @@
-ElasticSearch Guided (code) Generator
-=====================================
+# ElasticSearch Guided (code) Generator
 
 [![Build Status](https://travis-ci.org/ahrefs/esgg.svg?branch=master)](https://travis-ci.org/ahrefs/esgg)
 
-Development
------------
+## Development
 
 Install dependencies with `opam install --deps-only .`
 
 Buld with `make`
 
-Variables
----------
+## Variables
 
 Syntax for variables in template json files is as follows:
-- `$var` for regular required variable
-- `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
-- full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
-`list` hint is useful to chose between named (default) and unnamed dynamic filters
+  - `$var` for regular required variable
+  - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
+  - full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
-Tests
------
+## Elasticsearch features
+
+TODO document what is supported
+
+Some notes follow:
+
+### [filters aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
+
+Dynamic (defined at runtime) filters are supported, as follows `{ "filters": { "filters": $x } }`.
+In this case corresponding part of output will be quite untyped. `$x` is assumed to be a dictionary and result will be represented with
+dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.
+
+### date_histogram aggregation
+
+`key_as_string` is returned in output only when `format` is
+[explicitly specified](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/search-aggregations-bucket-datehistogram-aggregation.html#_keys),
+to discourage fragile code.
+
+## Tests
 
 `make test` runs regression tests in [test/](test/) verifying
 that input and output atd generated from query stays unchanged.
@@ -30,11 +43,10 @@ Tests are easy to add and fast to run.
 
 TODO tests to verify that:
 
-	* code generated for query application of input variables does actually compile and produce correct query when run
-	* atd description of output (generated from query) can indeed unserialize ES output from that actual query
+  * code generated for query application of input variables does actually compile and produce correct query when run
+  * atd description of output (generated from query) can indeed unserialize ES output from that actual query
 
-Conditions
-----------
+## Conditions
 
 Copyright (c) 2018 Ahrefs <github@ahrefs.com>
 
@@ -43,4 +55,4 @@ This project is distributed under the terms of GPL Version 2. See LICENSE file f
 NB the output of esgg, i.e. the generated code, is all yours of course :)
 
 ----
-2019-03-19
+2019-04-01
