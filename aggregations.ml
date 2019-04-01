@@ -8,7 +8,7 @@ type agg_type =
 | Cardinality of value
 | Terms of { term : value; size : Tjson.t }
 | Histogram of value
-| Date_histogram of value
+| Date_histogram of { on : value; format : bool }
 | Filter of Query.query or_var
 | Filters of { filters : (string * Query.query or_var) list; other_bucket : string option; }
 | Filters_dynamic of Tjson.var
@@ -76,7 +76,7 @@ let analyze_single name agg_type json =
     | "cardinality" -> Cardinality (value ())
     | "terms" | "significant_terms" -> Terms { term = value (); size = U.member "size" json }
     | "histogram" -> Histogram (value ())
-    | "date_histogram" -> Date_histogram (value ())
+    | "date_histogram" -> Date_histogram { on = value (); format = `Null <> U.member "format" json }
     | "top_hits" -> Top_hits { source = Query.extract_source json; highlight = Query.extract_highlight json; }
     | "range" when U.(opt "keyed" to_bool json) = Some true ->
       let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
@@ -154,7 +154,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Cardinality _value | Value_count _value -> [], sub ["value", `Int ]
     | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof term)
     | Histogram value -> [Field_num value], buckets `Double
-    | Date_histogram value -> [Field_date value], buckets `Int ~extra:["key_as_string", `String]
+    | Date_histogram { on; format } -> [Field_date on], buckets `Int ~extra:(if format then ["key_as_string", `String] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> dynamic_default [] Query.infer q, doc_count ()
     | Filters { filters; other_bucket } ->

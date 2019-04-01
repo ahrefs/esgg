@@ -13,7 +13,8 @@
       "w_over_time": {
         "date_histogram": {
           "field": "publish_time",
-          "interval": "1M"
+          "interval": "1M",
+          "format": "yyyy-MM-dd HH:mm"
         },
         "aggs": {
           "w": {
