@@ -1,0 +1,24 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {}
+  },
+  "aggs" : {
+    "messages" : {
+      "filters" : {
+        "filters" : {
+          "errors" :   { "match" : { "content" : "error"   }},
+          "warnings" : { "match" : { "content" : "warning" }}
+        }
+      }
+    },
+    "messages_list" : {
+      "filters" : {
+        "filters" : [
+          { "match" : { "body" : "error"   }},
+          { "match" : { "body" : "warning" }}
+        ]
+      }
+    }
+  }
+}

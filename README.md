@@ -24,6 +24,13 @@ Some notes follow:
 
 ### [filters aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
 
+  - [x] named
+  - [x] anonymous
+  - [x] dynamic (i.e. a variable)
+  - [x] partial dynamic (i.e. containing variables)
+  - [x] other_bucket and other_bucket_key
+  - [ ] other_bucket with anonymous filters (ignored, user is responsible to treat last element of result specially)
+
 Dynamic (defined at runtime) filters are supported, as follows `{ "filters": { "filters": $x } }`.
 In this case corresponding part of output will be quite untyped. `$x` is assumed to be a dictionary and result will be represented with
 dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.

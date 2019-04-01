@@ -10,7 +10,7 @@ type agg_type =
 | Histogram of value
 | Date_histogram of { on : value; format : bool }
 | Filter of Query.query or_var
-| Filters of { filters : (string * Query.query or_var) list; other_bucket : string option; }
+| Filters of { filters : [ `Assoc of (string * Query.query or_var) list | `List of Query.query or_var list]; other_bucket : string option; }
 | Filters_dynamic of Tjson.var
 | Top_hits of { source : source_filter option; highlight : string list option; }
 | Range of value
@@ -62,9 +62,13 @@ let analyze_single name agg_type json =
       | `Assoc a ->
         let (jsons,filters) = split2 @@ List.map (fun (k,v) -> k, analyze_filter v) a in
         let json = Tjson.replace json "filters" (`Assoc jsons) in
-        json, Filters { filters; other_bucket; }
+        json, Filters { filters = `Assoc filters; other_bucket; }
+      | `List l->
+        let (jsons,filters) = List.split @@ List.map analyze_filter l in
+        let json = Tjson.replace json "filters" (`List jsons) in
+        json, Filters { filters = `List filters; other_bucket; }
       | `Var v -> json, Filters_dynamic v
-      | _ -> fail "filters: expecting either dict or variable"
+      | _ -> fail "filters: expecting either dict or list or variable"
       end
     | _ ->
     json,
@@ -157,9 +161,12 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Date_histogram { on; format } -> [Field_date on], buckets `Int ~extra:(if format then ["key_as_string", `String] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> dynamic_default [] Query.infer q, doc_count ()
-    | Filters { filters; other_bucket } ->
+    | Filters { filters = `Assoc filters; other_bucket } ->
       let constraints = filters |> List.map snd |> List.map (dynamic_default [] Query.infer) |> List.flatten in
       constraints, keyed_buckets (option_to_list other_bucket @ List.map fst filters)
+    | Filters { filters = `List filters; other_bucket=_ } -> (* FIXME other_bucket as last element? *)
+      let constraints = filters |> List.map (dynamic_default [] Query.infer) |> List.flatten in
+      constraints, `Dict [ "buckets", `List (doc_count ()) ]
     | Filters_dynamic ({ list = false; _ } as v) -> [On_var (v,Eq_object)], `Dict [ "buckets", `Object (doc_count ()) ]
     | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list `Json)], `Dict [ "buckets", `List (doc_count ()) ]
     | Top_hits { source; highlight; } ->
