@@ -39,7 +39,11 @@ let analyze_single name agg_type json =
       | exception exn -> fail ~exn "failed to get aggregation field"
       | script ->
         try
-          match U.member "inline" script, U.member "id" script with
+          match var_or U.to_string script with
+          | script -> Script (`Painless, script)
+          | exception _ ->
+          match U.member "source" script, U.member "id" script with
+          | `Null, `Null -> fail "specify script either with \"source\" or \"id\""
           | x, `Null -> Script (`Painless, var_or U.to_string x)
           | `Null, x -> Script (`Id, var_or U.to_string x)
           | _ -> fail "inline and id cannot be used together"

@@ -41,6 +41,10 @@ dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.
 [explicitly specified](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/search-aggregations-bucket-datehistogram-aggregation.html#_keys),
 to discourage fragile code.
 
+### [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html)
+
+Scripts are opaque, ie no type information is extracted and result is json.
+
 ## Tests
 
 `make test` runs regression tests in [test/](test/) verifying
