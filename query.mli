@@ -12,7 +12,7 @@ type t =
 
 module Variable : sig
 
-type t = Property of multi * ES_name.t * simple_type | Any | Type of simple_type | List of simple_type
+type t = Property of cardinality * ES_name.t * simple_type | Any | Type of simple_type | List of simple_type
 
 end
 

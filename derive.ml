@@ -76,8 +76,8 @@ let map_wire_type typ =
 let convertor (t:var_type option) unwrap name =
   match t with
   | None -> sprintf "Json.to_string %s" (unwrap name)
-  | Some {multi;typ;ref=_} ->
-  match multi with
+  | Some {cardinality;typ;ref=_} ->
+  match cardinality with
   | One -> convert_wire_type typ (unwrap name)
   | Many -> sprintf "Json.to_string (`List (List.map (fun x -> %s) %s))" (map_wire_type typ (unwrap "x")) name
 
@@ -120,22 +120,22 @@ let derive mapping json =
   in
   let var_type name : var_type option =
     match Hashtbl.find vars name with
-    | Property (multi,name,typ) -> Some { multi; ref = Some name; typ; }
+    | Property (cardinality,name,typ) -> Some { cardinality; ref = Some name; typ; }
     | exception _ -> None
     | Any -> None
-    | List typ -> Some { multi = Many; ref = None; typ; }
-    | Type typ -> Some { multi = One; ref = None; typ; }
+    | List typ -> Some { cardinality = Many; ref = None; typ; }
+    | Type typ -> Some { cardinality = One; ref = None; typ; }
   in
-  let check_multi v t =
+  let check_cardinality v t =
     match t with
-    | Some t when t.multi = One && v.Tjson.list -> fail "var %S marked as list, but derived otherwise" v.name
+    | Some t when t.cardinality = One && v.Tjson.list -> fail "var %S marked as list, but derived otherwise" v.name
     | _ -> ()
   in
   let map name = convertor (var_type name) (var_unwrap name) name in
   let (bindings,groups) = Tjson.vars json in
   let bindings = bindings |> List.map begin fun (var:Tjson.var) ->
     let t = var_type var.name in
-    check_multi var t;
+    check_cardinality var t;
     var.name, ((if var.optional then `Optional else `Required), `Simple t)
   end in
   let groups = groups |> List.map begin fun {Tjson.label;vars} ->

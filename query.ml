@@ -12,7 +12,7 @@ let var_list_of_json ~desc = function
 
 type query_t =
 | Bool of (string * query list) list
-| Field of { field : string; multi : multi; values : Tjson.t list }
+| Field of { field : string; cardinality : cardinality; values : Tjson.t list }
 | Var of Tjson.var
 | Strings of var_list
 | Nothing
@@ -25,15 +25,15 @@ type t =
 
 module Variable = struct
 
- type t = Property of multi * ES_name.t * simple_type | Any | Type of simple_type | List of simple_type
+ type t = Property of cardinality * ES_name.t * simple_type | Any | Type of simple_type | List of simple_type
 
  let show = function
  | Any -> "any"
  | Type typ -> show_simple_type typ
  | List typ -> sprintf "[%s]" (show_simple_type typ)
- | Property (multi,name,typ) ->
+ | Property (cardinality,name,typ) ->
   let s = sprintf "%s:%s" (ES_name.show name) (show_simple_type typ) in
-  match multi with
+  match cardinality with
   | One -> s
   | Many -> sprintf "[%s]" s
 
@@ -48,7 +48,7 @@ end
 
 let lookup json x = try Some (U.assoc x json) with _ -> None
 
-let multi_of_qt = function "terms" -> Many | _ -> One
+let cardinality_of_qt = function "terms" -> Many | _ -> One
 
 let rec extract_clause (clause,json) =
   try match clause with
@@ -121,7 +121,7 @@ and extract_query json =
           with exn ->
             fail ~exn "dsl query %S" qt
         in
-        json, Field { field; multi = multi_of_qt qt; values }
+        json, Field { field; cardinality = cardinality_of_qt qt; values }
       end
     | _ -> fail "bad query"
   in
@@ -154,8 +154,8 @@ let infer' c0 query =
   let rec iter { query; json=_ } =
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
-    | Field { field; multi; values } ->
-      List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (multi,field))) | _ -> ()) values
+    | Field { field; cardinality; values } ->
+      List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (cardinality,field))) | _ -> ()) values
     | Var var -> tuck constraints (On_var (var, Eq_any))
     | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list `String))
     | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type `String)))
@@ -249,9 +249,9 @@ let resolve_constraints mapping l =
     | Eq_list typ -> List typ
     | Eq_object -> Any (* TODO object of json *)
     | Eq_any -> Any
-    | Eq_field (multi,field) ->
+    | Eq_field (cardinality,field) ->
       let (name,typ) = typeof field in
-      Property (multi,name,typ)
+      Property (cardinality,name,typ)
     in
     record vars var.name t
   | Field_num (Field f) ->

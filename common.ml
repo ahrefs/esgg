@@ -106,16 +106,16 @@ let show_simple_type = function
 
 let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
-type multi = One | Many
+type cardinality = One | Many
 
-type var_type = { multi : multi; ref : ES_name.t option; typ : simple_type; }
+type var_type = { cardinality : cardinality; ref : ES_name.t option; typ : simple_type; }
 let show_var_type x = show_simple_type x.typ
 let pp_var_type ppf x = pp_simple_type ppf x.typ
 
 type required = [ `Required | `Optional ] [@@deriving show]
 
 type input_vars = (string * (required * [ `Group of input_vars | `Simple of var_type option])) list
-type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_object | Eq_field of multi * string
+type var_eq = Eq_any | Eq_type of simple_type | Eq_list of simple_type | Eq_object | Eq_field of cardinality * string
 type constraint_t = On_var of Tjson.var * var_eq | Field_num of value | Field_date of value
 
 type source_filter = { excludes : string list option; includes : string list option }

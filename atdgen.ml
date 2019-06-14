@@ -28,10 +28,10 @@ let of_simple_type =
 
 let wrap_ref ref t : Atd.Ast.type_expr = wrap t ["module",ES_name.to_ocaml ref]
 
-let of_var_type {multi;ref;typ} : Atd.Ast.type_expr =
+let of_var_type {cardinality;ref;typ} : Atd.Ast.type_expr =
   let t = of_simple_type typ in
   let t = match ref with Some es_name -> wrap_ref es_name t | None -> t in
-  match multi with
+  match cardinality with
   | One -> t
   | Many -> list t
 
