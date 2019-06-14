@@ -18,16 +18,21 @@ let of_mapping ?(filter=empty_filter) x : result_type =
   let excludes = option_map2 ES_names.union (smake "excludes") (Option.map (es_names x) filter.excludes) in
   let includes = option_map2 ES_names.inter (smake "includes") (Option.map (es_names x) filter.includes) in
   let includes = match includes with None -> None | Some set -> Some (set, include_parents set) in
-  let get_bool meta default k = Option.default default U.(opt k to_bool meta) in
+  let get_bool meta k = U.(opt k to_bool meta) in
   let rec make ~optional path json =
     let meta = get_meta json in
     let flag = get_bool meta in
     let repr = get_repr_opt meta in
-    let wrap multi t =
-      let t = if flag multi "multi" then `List t else t in
-      if flag optional "optional" then `Maybe t else t
+    let wrap default_list t =
+      let list =
+        match flag "list", flag "multi" with
+        | None, None -> default_list
+        | Some x, _ | None, Some x -> x
+      in
+      let t = if list then `List t else t in
+      if Option.default optional @@ flag "optional" then `Maybe t else t
     in
-    let default_optional = flag false "fields_default_optional" in
+    let default_optional = Option.default false @@ flag "fields_default_optional" in
     match repr, U.assoc "type" json with
     | exception _ -> wrap false @@ make_properties ~default_optional path json
     | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
@@ -42,7 +47,7 @@ let of_mapping ?(filter=empty_filter) x : result_type =
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
         (match includes with None -> true | Some (set,parents) -> parent_included path set || ES_names.mem path parents) &&
-        not @@ get_bool (get_meta x) false "ignore"
+        not @@ Option.default false @@ get_bool (get_meta x) "ignore"
       in
       match included with
       | false -> (* printfn "(* excluded %s *)" (ES_name.show path); *) None

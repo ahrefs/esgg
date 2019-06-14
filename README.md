@@ -34,7 +34,7 @@ impossible to store extended mapping back into ES which is a pity), as follows:
 
 Supported `_meta` attributes:
 
-* `{"array":true}` or `{"list":true}` - property is an array (mapped to `list`)
+* `{"list":true}` - property is an array (mapped to `list`)
 * `{"optional":<true|false>}` - property may be missing (mapped to `option`)
 * `{"ignore":true}` - skip property altogether
 * `{"fields_default_optional":true}` - any subfield may be missing (can be overriden by per-field `optional:false`)
