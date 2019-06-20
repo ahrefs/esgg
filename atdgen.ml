@@ -199,7 +199,7 @@ end = struct
     let reloc = reloc_type_expr (fun _loc -> Atd.Ast.dummy_loc) in
     let t = reloc t in
     match t with
-    | Atd.Ast.Record _ ->
+    | Atd.Ast.Record _ | Atd.Ast.Sum _ ->
       begin match List.find (fun (Atd.Ast.Type (_,_,v)) -> t = reloc v) !types with
       | Atd.Ast.Type (_,(name,[],_),_) -> tname name
       | _ -> assert false (* parametric type cannot match *)
@@ -215,7 +215,7 @@ end = struct
     let rec map name t =
       match t with
       | Atd.Ast.Record (loc, fields, annot) -> ref_ ?name (map_record (loc, fields, annot))
-      | Sum (_loc, _variants, _annot) -> fail "variants are not supported"
+      | Sum (loc, variants, annot) -> ref_ ?name (Sum (loc, map_variants variants, annot))
       | Tuple (loc, cells, annot) -> Tuple (loc, List.map (fun (loc,t,annot) -> loc, map None t, annot) cells, annot)
       | List (loc, t, annot) ->
         let name =
@@ -236,10 +236,21 @@ end = struct
     and map_record (loc,fields,annot) =
       let fields = fields |> List.map begin function
       | `Inherit _ -> fail "inherit not supported"
-      | `Field (loc,(name,_,_ as f),t) -> `Field (loc, f, map (Some name) t)
+      | `Field (loc,(name,_,_ as f),t) -> name, `Field (loc, f, map (Some name) t)
       end
+      |> List.sort ~cmp:(fun (a,_) (b, _) -> String.compare a b)
+      |> List.map snd
       in
       Record (loc,fields,annot)
+    and map_variants variants =
+      let open Atd.Ast in
+      variants |> List.map begin function
+      | (Variant (_, (name, _), None)) as t -> name, t
+      | Variant (loc, ((name, _) as n), Some t) -> name, (Variant (loc, n, Some (map (Some name) t)))
+      | Inherit _ -> fail "inherit not supported"
+      end
+      |> List.sort ~cmp:(fun (a,_) (b, _) -> String.compare a b)
+      |> List.map snd
     in
     match t with
     | Atd.Ast.Record (loc, fields, annot) -> map_record (loc, fields, annot) (* record type at top-level, no need to unnest *)
@@ -324,6 +335,6 @@ let of_vars ~init (l:input_vars) =
 
 let parse_file filename =
   let open Atd in
-  let ch = open_in filename in 
+  let ch = open_in filename in
   let lexbuf = Lexing.from_channel ch in
   Parser.full_module Lexer.token lexbuf
