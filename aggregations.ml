@@ -12,7 +12,7 @@ type agg_type =
 | Filter of Query.query or_var
 | Filters of { filters : [ `Assoc of (string * Query.query or_var) list | `List of Query.query or_var list]; other_bucket : string option; }
 | Filters_dynamic of Tjson.var
-| Top_hits of { source : source_filter option; highlight : string list option; }
+| Top_hits of { source : source_filter or_var option; highlight : string list option; }
 | Range of value
 | Range_keyed of value * string list
 | Nested of string

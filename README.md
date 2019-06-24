@@ -99,6 +99,12 @@ to discourage fragile code.
 
 Scripts are opaque, ie no type information is extracted and result is json.
 
+### [source filtering](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-source-filtering.html)
+
+- [x] exclude and include
+- [ ] wildcards
+- [x] dynamic (i.e. a variable) NB not implemented for get and mget
+
 ## Tests
 
 `make test` runs regression tests in [test/](test/) verifying

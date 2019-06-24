@@ -93,7 +93,8 @@ let hits_ mapping ?nested ~highlight source : (string * result_type) list =
   in
   List.concat [
       ["total", `Int];
-      (match source with None -> [] | Some filter -> ["hits", `List (hit @@ of_mapping ~filter mapping)]);
+      (match source with None -> [] | Some source ->
+        ["hits", `List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ -> `Json)]);
     ]
 
 let hits mapping ?nested ~highlight source : result_type = `Dict (hits_ mapping ?nested ~highlight source)

@@ -6,7 +6,7 @@ type query_t
 type var_list
 type query = { json : Tjson.t; query : query_t }
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; highlight : string list option; }
 | Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
 | Get of (Tjson.var * source_filter option)
 
@@ -17,7 +17,8 @@ type t = Property of cardinality * ES_name.t * simple_type | Any | Type of simpl
 end
 
 val extract_query : Tjson.t -> query
-val extract_source : Tjson.t -> source_filter option
+val extract_source : Tjson.t -> source_filter or_var option
+val extract_source_static : Tjson.t -> source_filter option
 val extract_highlight : Tjson.t -> string list option
 
 val infer' : constraint_t list -> query -> constraint_t list

@@ -19,7 +19,7 @@ type query_t =
 and query = { json : Tjson.t; query : query_t }
 
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter option; highlight : string list option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; highlight : string list option; }
 | Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
 | Get of (Tjson.var * source_filter option)
 
@@ -193,13 +193,25 @@ let extract_source json =
   match U.member "size" json = `Int 0 || source = `Bool false with
   | true -> None
   | false ->
-  let (excludes,includes) =
-    match source with
-    | `List l -> None, Some (List.map U.to_string l)
-    | `String s -> None, Some [s]
-    | _ -> source_fields "excludes" json, source_fields "includes" json
-  in
-  Some { excludes; includes; }
+    let filter =
+      match source with
+      | `Var v -> Dynamic v
+      | _ ->
+        let (excludes,includes) =
+          match source with
+          | `List l -> None, Some (List.map U.to_string l)
+          | `String s -> None, Some [s]
+          | _ -> source_fields "excludes" json, source_fields "includes" json
+        in
+        Static { excludes; includes; }
+    in
+    Some filter
+
+let extract_source_static json =
+  match extract_source json with
+  | None -> None
+  | Some (Static f) -> Some f
+  | Some (Dynamic _) -> fail "dynamic source not supported here" (* because source_args *)
 
 let extract_highlight json =
   match U.opt "highlight" id json with
@@ -219,7 +231,7 @@ let extract json =
     Search { q = extract_query q; extra; source = extract_source json; highlight = extract_highlight json; }
   | exception _ ->
     match U.assoc "id" json with
-    | `Var v -> Get (v, extract_source json)
+    | `Var v -> Get (v, extract_source_static json)
     | _ -> fail "only variable id supported for get request"
     | exception _ ->
       let conf = extract_conf json in
