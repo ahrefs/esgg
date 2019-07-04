@@ -2,6 +2,8 @@ open ExtLib
 
 open Common
 
+type range = { from : bool; to_ : bool }
+
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
 | Value_count of value
@@ -15,6 +17,7 @@ type agg_type =
 | Top_hits of { source : source_filter or_var option; highlight : string list option; }
 | Range of value
 | Range_keyed of value * string list
+| Date_range of { on : value; format : bool; keys : string list option; ranges : range list; }
 | Nested of string
 | Reverse_nested of string option
 
@@ -90,6 +93,16 @@ let analyze_single name agg_type json =
       let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
       Range_keyed (value (), keys)
     | "range" -> Range (value ())
+    | "date_range" ->
+      let ranges k = U.(get "ranges" (to_list k)) json in
+      let keys =
+        match U.(opt "keyed" to_bool json) with
+        | Some true -> Some (ranges U.(get "key" to_string))
+        | _ -> None
+      in
+      let ranges = ranges (fun x -> { from = U.mem "from" x; to_ = U.mem "to" x; }) in
+      let format = U.mem "format" json in
+      Date_range { on = value (); keys; format; ranges }
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | _ -> fail "unknown aggregation type %S" agg_type
@@ -178,6 +191,8 @@ let infer_single mapping ~nested { name; agg; } sub =
       [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source) :> (string * resolve_type) list) ]
     | Range value -> [Field_num value], buckets `String
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
+    | Date_range { on; format=_; keys; ranges=_ } ->
+      [Field_date on], (match keys with None -> buckets `String | Some keys -> keyed_buckets keys)
   in
   cstr, (name, shape)
 

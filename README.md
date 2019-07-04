@@ -95,6 +95,14 @@ dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.
 [explicitly specified](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/search-aggregations-bucket-datehistogram-aggregation.html#_keys),
 to discourage fragile code.
 
+### [range aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-range-aggregation.html)
+
+  Keyed aggregation expects explicit `key` for each range. `from`/`to` fields in response are not extracted.
+
+### [date_range aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-daterange-aggregation.html)
+
+  same as for range aggregation
+
 ### [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html)
 
 Scripts are opaque, ie no type information is extracted and result is json.

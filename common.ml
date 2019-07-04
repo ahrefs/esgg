@@ -27,6 +27,10 @@ let member name = function
 | `Assoc l -> (try List.assoc name l with _ -> `Null)
 | _ -> fail "member %S : not a dict" name
 
+(** @return whether key exists in dict
+    @raise Failure if [json] is not a dict *)
+let mem name json = `Null <> member name json
+
 (** @return specified [name] from [json] dict
     @raise Failure if [json] is not a dict or [name] is absent *)
 let assoc name json = match member name json with `Null -> fail "assoc %S : not found" name | x -> x
