@@ -98,26 +98,35 @@ and extract_query json =
           (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
           try
             match qt with
+            (* term level queries *)
             | "term"
             | "prefix"
             | "wildcard"
             | "regexp"
             | "fuzzy"
-            | "type"
-            | "match_phrase" ->
+            | "type" ->
               begin match qv with
               | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "value" x]
               | `Assoc [f, x] -> f, [x]
-              | _ -> fail "expected dictionary with single key (field name)"
+              | _ -> fail "unrecognized term level query payload"
+              end
+            (* full text queries *)
+            | "common"
+            | "match"
+            | "match_phrase"
+            | "match_bool_prefix"
+            | "match_phrase_prefix" ->
+              begin match qv with
+              | `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
+              | `Assoc [f, x] -> f, [x]
+              | _ -> fail "unrecognized full text query payload"
               end
             | _ ->
             match qt, qv with
             | "exists", `Assoc ["field", `String f] -> f, []
             | "terms", `Assoc [f, x] -> f, [x] (* TODO distinguish terms lookup *)
             | "range", `Assoc [f, (`Assoc _ as x)] -> f, List.filter_map (lookup x) ["gte";"gt";"lte";"lt"]
-            | "match", `Assoc [f, (`Assoc _ as x)] -> f, [U.assoc "query" x]
-            | "match", `Assoc [f, x] -> f, [x]
-            | _ -> fail "unrecognized"
+            | _ -> fail "unrecognized query"
           with exn ->
             fail ~exn "dsl query %S" qt
         in
