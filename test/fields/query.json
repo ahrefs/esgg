@@ -1,4 +1,13 @@
 {
+  "highlight": {
+    "order": "score",
+    "fields": {
+      "keyword.search": {
+        "fragment_size": 50,
+        "number_of_fragments": 1
+      }
+    }
+  },
   "query":{
     "bool":{
       "should":
