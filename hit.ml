@@ -13,13 +13,18 @@ let option_map2 op a b =
 let include_parents x = ES_names.fold (ES_name.fold_up ES_names.add) x x
 let parent_included path set = ES_name.fold_up (fun x acc -> acc || ES_names.mem x set) path false
 
+let debug = false
+
 let of_mapping ?(filter=empty_filter) x : result_type =
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in
   let excludes = option_map2 ES_names.union (smake "excludes") (Option.map (es_names x) filter.excludes) in
   let includes = option_map2 ES_names.inter (smake "includes") (Option.map (es_names x) filter.includes) in
+  if debug then Option.may (ES_names.iter (fun s -> printfn "esname %s" (ES_name.to_ocaml s))) includes;
   let includes = match includes with None -> None | Some set -> Some (set, include_parents set) in
+  if debug then Option.may (fun (_,x) -> x |> ES_names.iter (fun s -> printfn "parent esname %s" (ES_name.to_ocaml s))) includes;
   let get_bool meta k = U.(opt k to_bool meta) in
-  let rec make ~optional path json =
+  let rec make ~optional ~name path json =
+    if debug then printfn "make %s %S" name (ES_name.show path);
     let meta = get_meta json in
     let flag = get_bool meta in
     let repr = get_repr_opt meta in
@@ -33,28 +38,44 @@ let of_mapping ?(filter=empty_filter) x : result_type =
       if Option.default optional @@ flag "optional" then `Maybe t else t
     in
     let default_optional = Option.default false @@ flag "fields_default_optional" in
-    match repr, U.assoc "type" json with
-    | exception _ -> wrap false @@ make_properties ~default_optional path json
-    | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
-    | Some t, `String _ | _, `String t -> wrap false @@ `Ref (path, simple_of_es_type t)
-    | _ -> fail "strange type : %s" (U.to_string json)
-  and make_properties ~default_optional path json =
-    match U.(get "properties" to_assoc json) with
+    let t =
+      match repr, U.assoc "type" json with
+      | exception _ -> wrap false @@ make_properties ~default_optional path json
+      | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
+      | Some t, `String _ | _, `String t -> wrap false @@ `Ref (path, simple_of_es_type t)
+      | _ -> fail "strange type : %s" (U.to_string json)
+    in
+    match U.assoc "fields" json with
+    | exception _ -> name, t
+    | _ ->
+      match make_fields ~default_optional path json with
+      | [] -> name, t
+      | [k,v] ->
+        assert (name <> "");
+        (* when field is extracted - substitude it for the current key *)
+        Printf.sprintf "%s.%s" name k, v
+      | l -> fail "got %d fields for %s, but can only handle one (sort of bug)" (List.length l) (ES_name.show path)
+  and make_fields ~default_optional path json = make_props "fields" ~default_optional path json
+  and make_properties ~default_optional path json = `Dict (make_props "properties" ~default_optional path json)
+  and make_props k ~default_optional path json =
+    if debug then printfn "make_%s %S" k (ES_name.show path);
+    match U.(get k to_assoc json) with
     | exception _ -> fail "strange mapping : %s" (U.to_string json)
-    | f -> `Dict (f |> List.filter_map begin fun (name,x) ->
-      begin match x with `Assoc _ -> () | _ -> fail "property %S not a dict" name end;
+    | f -> f |> List.filter_map begin fun (name,x) ->
+      begin match x with `Assoc _ -> () | _ -> fail "make_%s : %S not a dict" k name end;
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
         (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
-        (match includes with None -> true | Some (set,parents) -> parent_included path set || ES_names.mem path parents) &&
+        (* fields are not extracted by default, but only when explicitly requested by includes *)
+        (match includes with None -> k = "properties" | Some (set,parents) -> (k = "properties" && parent_included path set) || ES_names.mem path parents) &&
         not @@ Option.default false @@ get_bool (get_meta x) "ignore"
       in
       match included with
       | false -> (* printfn "(* excluded %s *)" (ES_name.show path); *) None
-      | true -> Some (name, make ~optional:default_optional path x)
-      end)
+      | true -> Some (make ~optional:default_optional ~name path x)
+      end
   in
-  make ~optional:false (ES_name.make x "") x.mapping
+  snd @@ make ~optional:false ~name:"" (ES_name.make x "") x.mapping
 
 let get_nested path x =
   let rec loop path x =
