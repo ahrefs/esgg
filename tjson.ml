@@ -75,7 +75,7 @@ let parse s : t =
     match Jsonm.Uncut.decode d with
     | `Lexeme l -> (l :> [Jsonm.lexeme|`Var of var])
     | `Comment _ | `White _ -> lexeme d (* skip *)
-    | `Error (`Expected `Value) -> `Var (make_var @@ String.strip @@ sub_decoded d s)
+    | `Error (`Expected (`Value | `Aval _)) -> `Var (make_var @@ String.strip @@ sub_decoded d s)
     | `Error e -> raise (Escape (Jsonm.decoded_range d, e))
     | `End | `Await -> assert false
   in
