@@ -66,6 +66,9 @@ let make_var s =
   with
     exn -> fail ~exn "unrecognized variable %S" s
 
+let show_var { optional; list; name } =
+  (if list then sprintf "$(%s:list)" else sprintf "$%s") (name ^ if optional then "?" else "")
+
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
 exception Escape of ((int * int) * (int * int)) * Jsonm.error
@@ -110,6 +113,27 @@ let parse s : t =
     v
   with
     Escape (range,e) -> fail "E: %s %s" (show_decoded_range range) (show_error e)
+
+let encode x =
+  let buf = Buffer.create 10 in
+  let e = Jsonm.encoder ~minify:true (`Buffer buf) in
+  ignore (Jsonm.encode e (`Lexeme x));
+  ignore (Jsonm.encode e `End);
+  Buffer.contents buf
+
+let show json =
+  let buf = Buffer.create 10 in
+  let put fmt = ksprintf (Buffer.add_string buf) fmt in
+  let rec put_value v = match (v:t) with
+  | `List vs -> put "["; List.iteri (fun i x -> if i <> 0 then put ","; put_value x) vs; put "]"
+  | `Assoc ms -> put "{"; List.iteri (fun i (k,v) -> if i <> 0 then put ","; put "%s: " (encode (`String k)); put_value v) ms; put "}"
+  | `Var v -> put "%s" (show_var v)
+  | `Optional ({label;vars},v) -> put "<?%s(%s)>" label (String.concat "," vars); put_value v; put "</%s>" label
+  | `Int n -> put "%s" (encode (`Float (float n)))
+  | `Null | `Bool _ | `Float _ | `String _ as v -> put "%s" (encode v)
+  in
+  put_value json;
+  Buffer.contents buf
 
 let intersperse sep l = match l with [] -> [] | x::xs -> x :: List.concat (List.map (fun x -> [sep; x]) xs)
 
