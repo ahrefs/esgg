@@ -35,6 +35,7 @@ impossible to store extended mapping back into ES which is a pity), as follows:
 Supported `_meta` attributes:
 
 * `{"list":true}` - property is an array (mapped to `list`)
+* `{"list":"sometimes"}` - property is either an array or single element (mapped to json with custom ocaml module wrap that will need to be provided in scope)
 * `{"optional":<true|false>}` - property may be missing (mapped to `option`)
 * `{"ignore":true}` - skip property altogether
 * `{"fields_default_optional":true}` - any subfield may be missing (can be overriden by per-field `optional:false`)
@@ -45,7 +46,7 @@ Supported `_meta` attributes:
 Generated code allows to use application types for any fields. This is achieved by referencing specific type for each field in generated
 code, instead of the primitive type from the mapping, allowing consumer of the code to map it onto custom type etc. For example the field
 `hash` in example above will have type `Counts.Hash.t` in generated code. In order to compile the generated code this type must be present
-in environment and mapped to something useful. Default mapping (which just maps everything to corresponding primitive types) can be generated
+in scope and mapped to something useful. Default mapping (which just maps everything to corresponding primitive types) can be generated
 with `esgg reflect <mapping name> <mapping.json>`, e.g.:
 
 ```bash

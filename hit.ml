@@ -30,11 +30,18 @@ let of_mapping ?(filter=empty_filter) x : result_type =
     let repr = get_repr_opt meta in
     let wrap default_list t =
       let list =
-        match flag "list", flag "multi" with
-        | None, None -> default_list
-        | Some x, _ | None, Some x -> x
+        match U.member "list" meta, U.member "multi" meta with
+        | `Null, `Null -> `Bool default_list
+        | `Null, x -> x
+        | x, _ -> x
       in
-      let t = if list then `List t else t in
+      let t =
+        match list with
+        | `Bool true -> `List t
+        | `Bool false -> t
+        | `String "sometimes" -> `List_or_single t
+        | _ -> fail "attribute \"list\" can only be one of : true, false, \"sometimes\""
+      in
       if Option.default optional @@ flag "optional" then `Maybe t else t
     in
     let default_optional = Option.default false @@ flag "fields_default_optional" in

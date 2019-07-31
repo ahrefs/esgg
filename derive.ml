@@ -6,6 +6,7 @@ open Common
 let resolve_types mapping shape =
   let rec map : resolve_type -> result_type = function
   | `List t -> `List (map t)
+  | `List_or_single t -> `List_or_single (map t)
   | `Object t -> `Object (map t)
   | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
   | `Typeof (Field x) -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)

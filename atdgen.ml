@@ -284,6 +284,8 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Maybe t -> nullable @@ map t
     | `Ref (ref,t) -> wrap_ref ref (of_simple_type t)
     | `List t -> list (map t)
+    | `List_or_single (`Ref (ref,_)) -> wrap_ref (ES_name.append ref "list_or_single") (tname "basic_json");
+    | `List_or_single t -> fail "cannot handle mixed_multi of %s" (show_result_type t)
     | `Object t -> list ~a:["json",["repr","object"]] (tuple [map `String; map t])
     | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
     | `Dict ["buckets", `List t] -> pname "buckets" [map t]
@@ -324,6 +326,6 @@ let of_vars ~init (l:input_vars) =
 
 let parse_file filename =
   let open Atd in
-  let ch = open_in filename in 
+  let ch = open_in filename in
   let lexbuf = Lexing.from_channel ch in
   Parser.full_module Lexer.token lexbuf

@@ -142,7 +142,7 @@ let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
   | `Dict l ->
     let l = l |> List.map begin function
-    | (k, (`List _ | `Dict _ | `Object _)) -> fail "derive_highlight: expected simple type for %S" k
+    | (k, (`List _ | `List_or_single _ | `Dict _ | `Object _)) -> fail "derive_highlight: expected simple type for %S" k
     | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
     | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
     end in
