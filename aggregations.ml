@@ -9,6 +9,7 @@ type agg_type =
 | Value_count of value
 | Cardinality of value
 | Terms of { term : value; size : Tjson.t }
+| Significant_terms of { term : value; size : Tjson.t }
 | Histogram of value
 | Date_histogram of { on : value; format : bool }
 | Filter of Query.query or_var
@@ -85,7 +86,8 @@ let analyze_single name agg_type json =
     | "avg" -> Simple_metric (`Avg, value ())
     | "value_count" -> Value_count (value ())
     | "cardinality" -> Cardinality (value ())
-    | "terms" | "significant_terms" -> Terms { term = value (); size = U.member "size" json }
+    | "terms" -> Terms { term = value (); size = U.member "size" json }
+    | "significant_terms" -> Significant_terms { term = value (); size = U.member "size" json }
     | "histogram" -> Histogram (value ())
     | "date_histogram" -> Date_histogram { on = value (); format = `Null <> U.member "format" json }
     | "top_hits" -> Top_hits { source = Query.extract_source json; highlight = Query.extract_highlight json; }
@@ -174,6 +176,10 @@ let infer_single mapping ~nested { name; agg; } sub =
       [], sub [ "value", typ ]
     | Cardinality _value | Value_count _value -> [], sub ["value", `Int ]
     | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof term)
+    | Significant_terms { term; size } ->
+      (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []),
+(*       buckets ~extra:["score", `Double; "bg_count", `Int] (`Typeof term) *)
+      `Dict [ "doc_count", `Int; "bg_count", `Int; "buckets", `List (sub @@ ("key", `Typeof term) :: ("doc_count", `Int) :: ("bg_count", `Int) :: ("score", `Double) ::[]) ]
     | Histogram value -> [Field_num value], buckets `Double
     | Date_histogram { on; format } -> [Field_date on], buckets `Int ~extra:(if format then ["key_as_string", `String] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
