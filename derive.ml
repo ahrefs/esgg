@@ -87,7 +87,7 @@ let source_args source =
   match source with
   | None -> []
   | Some {excludes;includes} ->
-    ["_source_include",includes; "_source_exclude",excludes]
+    ["_source_includes",includes; "_source_excludes",excludes]
     |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
 
 let source_args_to_string args =
