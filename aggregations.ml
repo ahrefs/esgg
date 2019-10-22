@@ -22,7 +22,7 @@ type agg_type =
 | Nested of string
 | Reverse_nested of string option
 
-type single = { name : string; agg : agg_type; }
+type single = { name : string; agg : agg_type or_var; }
 type t = { this : single; sub : t list; }
 
 let split2 l = List.map (fun (k,x) -> k, fst x) l, List.map (fun (k,x) -> k, snd x) l
@@ -109,7 +109,7 @@ let analyze_single name agg_type json =
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | _ -> fail "unknown aggregation type %S" agg_type
   in
-  json, { name; agg; }
+  json, { name; agg = Static agg; }
 
 let extract x =
   let open U in
@@ -122,14 +122,21 @@ let extract x =
   in
   aggs,rest
 
+let reinsert_json sub =
+  `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)
+
 let rec make (name,x) =
   try
+    match x with
+    | `Var v ->
+      x, { this = { name; agg = Dynamic v }; sub = [] }
+    | _ ->
     let (sub,rest) = extract x in
     match rest with
     | [agg_type,x] ->
       let json, this = analyze_single name agg_type x in
       let sub = List.map make sub in
-      let sub_json = match sub with [] -> [] | _ -> ["aggregations", `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub)] in
+      let sub_json = match sub with [] -> [] | _ -> ["aggregations", reinsert_json sub] in
       let json = `Assoc ((agg_type, json) :: sub_json) in
       json, { this; sub = List.map snd sub }
     | _ -> fail "no aggregation?"
@@ -138,7 +145,7 @@ let rec make (name,x) =
 
 let get x =
   let sub = extract x |> fst |> List.map make in
-  `Assoc (List.map (fun (j, agg) -> agg.this.name, j) sub), List.map snd sub
+  reinsert_json sub, List.map snd sub
 
 let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
@@ -159,6 +166,9 @@ let infer_single mapping ~nested { name; agg; } sub =
     `Dict [ "buckets", `Dict (List.map (fun k -> k, d) keys)]
   in
   let (cstr,shape) =
+    match agg with
+    | Dynamic _ -> [], `Json
+    | Static agg ->
     match agg with
     | Simple_metric (metric, value) ->
       let value_type = (typeof_ mapping value :> resolve_type) in
@@ -205,8 +215,8 @@ let infer_single mapping ~nested { name; agg; } sub =
 let rec infer mapping ~nested { this; sub } =
   let nested =
     match this.agg with
-    | Nested path -> Some (ES_name.make mapping path)
-    | Reverse_nested path -> (match path with Some path -> Some (ES_name.make mapping path) | None -> None)
+    | Static (Nested path) -> Some (ES_name.make mapping path)
+    | Static (Reverse_nested path) -> (match path with Some path -> Some (ES_name.make mapping path) | None -> None)
     | _ -> nested
   in
   let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
