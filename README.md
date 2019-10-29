@@ -77,7 +77,11 @@ TODO document what is supported
 
 Some notes follow:
 
-### [filters aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
+### [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html)
+
+The following aggregation types are supported:
+
+#### [filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
 
   - [x] named
   - [x] anonymous
@@ -90,19 +94,39 @@ Dynamic (defined at runtime) filters are supported, as follows `{ "filters": { "
 In this case corresponding part of output will be quite untyped. `$x` is assumed to be a dictionary and result will be represented with
 dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.
 
-### date_histogram aggregation
+#### date_histogram
 
 `key_as_string` is returned in output only when `format` is
 [explicitly specified](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/search-aggregations-bucket-datehistogram-aggregation.html#_keys),
 to discourage fragile code.
 
-### [range aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-range-aggregation.html)
+#### [range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-range-aggregation.html)
 
   Keyed aggregation expects explicit `key` for each range. `from`/`to` fields in response are not extracted.
 
-### [date_range aggregation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-daterange-aggregation.html)
+#### [date_range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-daterange-aggregation.html)
 
   same as for range aggregation
+
+#### others
+
+  - min
+  - max
+  - avg
+  - sum
+  - value_count
+  - cardinality
+  - terms
+  - significant_terms
+  - histogram
+  - top_hits
+  - nested
+  - reverse_nested
+
+#### * dynamic aggregation
+
+  Specifying aggregation as variable (`$var`) will lead to an untyped json in place of aggregation output, this can be used as temporary
+  workaround for unsupported aggregation types or for truly dynamic usecase (aggregation built at run-time).
 
 ### [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html)
 
