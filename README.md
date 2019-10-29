@@ -6,7 +6,7 @@
 
 Install dependencies with `opam install --deps-only .`
 
-Buld with `make`
+Build with `make`
 
 ## Mapping
 
@@ -123,7 +123,7 @@ to discourage fragile code.
   - nested
   - reverse_nested
 
-#### * dynamic aggregation
+#### dynamic
 
   Specifying aggregation as variable (`$var`) will lead to an untyped json in place of aggregation output, this can be used as temporary
   workaround for unsupported aggregation types or for truly dynamic usecase (aggregation built at run-time).
@@ -159,4 +159,4 @@ This project is distributed under the terms of GPL Version 2. See LICENSE file f
 NB the output of esgg, i.e. the generated code, is all yours of course :)
 
 ----
-2019-04-01
+2019-10-29
