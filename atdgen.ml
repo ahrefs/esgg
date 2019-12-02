@@ -287,9 +287,7 @@ let safe_record map fields =
 
 let basic_json = typ "basic_json" ~a:["ocaml",["module","Json";"t","t"]] (tname "abstract")
 
-let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
-  let t = Types.empty () in
-  List.iter (Types.add t) (snd init);
+let add_shape t name (shape:result_type) =
   Types.add t @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.add t @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
   Types.add t @@ typ "int_as_float" (wrap (tname "float") ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"]);
@@ -312,12 +310,9 @@ let of_shape ~init name (shape:result_type) : Atd.Ast.full_module =
     | `Dict ["value", t] -> pname "value_agg" [map t]
     | `Dict fields -> safe_record map fields
   in
-  Types.add t @@ typ name (map shape);
-  (loc,[]), (make_abstract init (Types.get t))
+  Types.add t @@ typ name (map shape)
 
-let of_vars ~init (l:input_vars) =
-  let t = Types.empty () in
-  List.iter (Types.add t) (snd (init:Atd.Ast.full_module));
+let add_vars t (l:input_vars) =
   Types.add t basic_json;
   let rec map_field (req,t) : (_ * Atd.Ast.type_expr) =
     let t =
@@ -340,8 +335,17 @@ let of_vars ~init (l:input_vars) =
       field ~a ~kind name t
      end |> record
   in
-  Types.add t @@ typ "input" (map l);
+  Types.add t @@ typ "input" (map l)
+
+let make_module ~init f : Atd.Ast.full_module =
+  let t = Types.empty () in
+  List.iter (Types.add t) (snd init);
+  f t;
   (loc,[]), (make_abstract init (Types.get t))
+
+let of_shape ~init name (shape:result_type) = make_module ~init (fun t -> add_shape t name shape)
+let of_vars ~init (l:input_vars) = make_module ~init (fun t -> add_vars t l)
+let make ~init l name shape = make_module ~init (fun t -> add_vars t l; add_shape t name shape)
 
 let parse_file filename =
   let open Atd in

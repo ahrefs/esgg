@@ -16,24 +16,21 @@ let resolve_types mapping shape =
   in
   map shape
 
-let output ~init mapping query =
-  let shape =
-    match Query.extract query with
-    | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
-    | Get (_,None) -> Hit.doc_no_source
-    | Mget { conf; _ } ->
-      begin match Query.extract_source_static conf with
-        | None -> `Dict ["docs",`List Hit.doc_no_source]
-        | Some filter -> `Dict ["docs",`List (Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping))]
-      end
-    | Search { source; highlight; _ } ->
-      let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
-      let hits = Hit.hits mapping ~highlight source in
-      let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
-      let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
-      resolve_types mapping result
-  in
-  Atdgen.of_shape ~init "result" shape
+let output mapping query =
+  match Query.extract query with
+  | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
+  | Get (_,None) -> Hit.doc_no_source
+  | Mget { conf; _ } ->
+    begin match Query.extract_source_static conf with
+      | None -> `Dict ["docs",`List Hit.doc_no_source]
+      | Some filter -> `Dict ["docs",`List (Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping))]
+    end
+  | Search { source; highlight; _ } ->
+    let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
+    let hits = Hit.hits mapping ~highlight source in
+    let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
+    let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
+    resolve_types mapping result
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in

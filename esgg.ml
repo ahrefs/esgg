@@ -42,7 +42,15 @@ let vars ~header init mapping query =
   print_atd atd
 
 let output ~header init mapping query =
-  let atd = Derive.output ~init mapping query in
+  let shape = Derive.output mapping query in
+  let atd = Atdgen.of_shape ~init "result" shape in
+  print_endline header;
+  print_atd atd
+
+let atd ~header init mapping query =
+  let (_,vars,_,_) = Derive.derive mapping query in
+  let shape = Derive.output mapping query in
+  let atd = Atdgen.make ~init vars "result" shape in
   print_endline header;
   print_atd atd
 
@@ -53,6 +61,7 @@ let help () = [
   "  input_j [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # generate OCaml function to invoke query with substitutions";
   "  vars [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive atd input type for the ES query";
   "  output [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive output atd of ES query";
+  "  atd [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive input and output atd for the ES query";
   "  reflect <name> <mapping.json> # reflect mapping into OCaml module";
   "  tjson lift <file.json> # lift json template to code";
   "  tjson decode <file.json> # debug json template parsing";
@@ -85,6 +94,7 @@ let () =
   | "input_j" as hd::tl -> map_query hd (input_j ~debug:false) tl
   | "input_j_debug" as hd::tl -> map_query hd (input_j ~debug:true) tl
   | "vars" as hd::tl -> map_query hd vars tl
+  | "atd" as hd::tl -> map_query hd atd tl
   | ["reflect";name;mapping] -> Derive.print_reflect name (json mapping)
   | ["tjson";"lift";file] -> tjson (template file)
   | ["tjson";"decode";file] -> Tjson.print_parse_json (Std.input_file file)
