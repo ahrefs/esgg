@@ -7,7 +7,8 @@
 (executable
  (name gen_version)
  (libraries mybuild)
- (modules gen_version))
+ (modules gen_version)
+ (preprocess (pps ppx_deriving.std)))
 
 (rule
  (targets version.ml)
@@ -18,7 +19,8 @@
  (name version)
  (wrapped false)
  (flags (:standard -opaque))
- (modules version))
+ (modules version)
+ (preprocess (pps ppx_deriving.std)))
 
 ; Use a library with all the code except the entry point to be able to
 ; use `dune utop`.
@@ -33,4 +35,5 @@
  (name esgg)
  (public_name esgg)
  (modules esgg)
- (libraries esgglib))
+ (libraries esgglib)
+ (preprocess (pps ppx_deriving.std)))
