@@ -5,8 +5,8 @@ type publish_time = {
   min_stamp: string wrap <ocaml module="Publish_time">
 }
 type input = {
-  query: string;
   source: basic_json;
+  query: string;
   ?max_words: int wrap <ocaml module="Words"> nullable;
   ?publish_time: publish_time nullable
 }
