@@ -161,7 +161,7 @@ let derive_highlight mapping hl =
     | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
     | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
     end in
-    `Dict l
+    `Maybe (`Dict l)
   | _ -> fail "derive_highlight: expected Dict after projecting fields over mapping"
 
 let infer_single mapping ~nested { name; agg; } sub =
