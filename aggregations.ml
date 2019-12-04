@@ -147,10 +147,16 @@ let get x =
   let sub = extract x |> fst |> List.map make in
   reinsert_json sub, List.map snd sub
 
+let linearize_dict a =
+  let rec apply prefix a =
+    List.map (function (k, `Dict l) -> apply (prefix^k^".") l | (k,v) -> [prefix^k, v]) a |> List.flatten
+  in
+  apply "" a
+
 let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
   | `Dict l ->
-    let l = l |> List.map begin function
+    let l = l |> linearize_dict |> List.map begin function
     | (k, (`List _ | `List_or_single _ | `Dict _ | `Object _)) -> fail "derive_highlight: expected simple type for %S" k
     | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
     | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
