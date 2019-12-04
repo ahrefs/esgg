@@ -9,10 +9,22 @@ type 'a value_agg =
     <ocaml
        t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
 type basic_json <ocaml module="Json" t="t"> = abstract
-type _source = { keyword: string wrap <ocaml module="Keyword"> }
+type text = {
+  ?en: string wrap <ocaml module="Content.Text.En"> nullable;
+  ?fr: string wrap <ocaml module="Content.Text.Fr"> nullable
+}
+type content = { text: text }
+type _source = {
+  keyword: string wrap <ocaml module="Keyword">;
+  content: content
+}
 type highlight = {
   ~keyword_search <json name="keyword.search">:
-    string wrap <ocaml module="Keyword.Search"> list
+    string wrap <ocaml module="Keyword.Search"> list;
+  ~content_text_en <json name="content.text.en">:
+    string wrap <ocaml module="Content.Text.En"> list;
+  ~content_text_fr <json name="content.text.fr">:
+    string wrap <ocaml module="Content.Text.Fr"> list
 }
 type hit = { _id: string; _source: _source; highlight: highlight }
 type hits = { total: int; ~hits: hit list }

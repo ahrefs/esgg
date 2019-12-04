@@ -5,6 +5,16 @@
       "keyword.search": {
         "fragment_size": 50,
         "number_of_fragments": 1
+      },
+      "content.text.fr": {
+        "fragment_size": 130,
+        "number_of_fragments": 1,
+        "no_match_size": 130
+      },
+      "content.text.en": {
+        "fragment_size": 130,
+        "number_of_fragments": 1,
+        "no_match_size": 130
       }
     }
   },
