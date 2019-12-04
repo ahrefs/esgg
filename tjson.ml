@@ -218,6 +218,11 @@ let rec fold_ (f:'a->t->'a) acc = function
 | `List l -> List.fold_left (fold_ f) acc l
 | `Assoc a -> List.fold_left (fun acc (_,v) -> fold_ f acc v) acc a
 
+let rec map (f:'a->'a) = function
+| `Null | `Bool _ | `String _ | `Float _ | `Int _ | `Var _ | `Optional _ as x -> f x
+| `List l -> `List (List.map (map f) l)
+| `Assoc a -> `Assoc (List.map (fun (k,v) -> k, map f v) a)
+
 let rec fold ~optional (f:'a->t->'a) acc json =
   let f acc = function
   | `Optional (_,x) when optional -> fold ~optional f acc x
@@ -297,4 +302,14 @@ let rec to_yojson_exn : t -> Yojson.t = function
 let replace json k v =
   match json with
   | `Assoc l -> `Assoc (List.map (function (k',_) when String.equal k k' -> k, v | x -> x) l)
+  | _ -> assert false
+
+let remove k json =
+  match json with
+  | `Assoc l -> `Assoc (List.filter (function (k',_) -> not (String.equal k' k)) l)
+  | _ -> assert false
+
+let add json l =
+  match json with
+  | `Assoc a -> `Assoc (List.fold_left (fun acc (k,v) -> (k,v) :: List.remove_assoc k acc) a l)
   | _ -> assert false
