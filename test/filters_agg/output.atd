@@ -14,4 +14,7 @@ type errors = { doc_count: int }
 type buckets1 = { errors: errors; warnings: errors }
 type messages = { buckets: buckets1 }
 type aggregations = { messages: messages; messages_list: errors buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result <doc text="some doc"> = {
+  hits: hits;
+  aggregations: aggregations
+}

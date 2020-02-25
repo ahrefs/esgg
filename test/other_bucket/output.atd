@@ -19,4 +19,7 @@ type by_event = {
   by_result: by_result
 }
 type aggregations = { by_event: by_event buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result <doc text="some doc"> = {
+  hits: hits;
+  aggregations: aggregations
+}

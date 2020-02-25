@@ -133,7 +133,7 @@ type result_type = [
   | `Ref of (ES_name.t * simple_type)
   | `Maybe of result_type
   | simple_type
-  ] [@@deriving show]
+  ] * string option [@@deriving show]
 
 type resolve_type = [
   | `Typeof of value

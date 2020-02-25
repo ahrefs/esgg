@@ -11,4 +11,4 @@ type 'a value_agg =
 type basic_json <ocaml module="Json" t="t"> = abstract
 type hit = { _id: string; _source: basic_json }
 type hits = { total: int; ~hits: hit list }
-type result = { hits: hits }
+type result <doc text="some doc"> = { hits: hits }

@@ -3,6 +3,8 @@ open ExtLib
 open Common
 
 let loc = Atd.Ast.dummy_loc
+let doc_annot doc = ["doc", ["text", doc]]
+let doc_annot_opt doc = match doc with None -> None | Some doc -> Some ["doc", ["text", doc]]
 let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
 let annots a = Atd.Annot.merge @@ List.map (fun (s,l) -> annot s l) a
 let list ?(a=[]) t = Atd.Ast.List (loc,t,annots a)
@@ -17,19 +19,20 @@ let tvar t = Atd.Ast.Tvar (loc,t)
 let ptyp ?(a=[]) name params t = Atd.Ast.Type (loc, (name,params,annots a), t)
 let typ ?a name t = ptyp ?a name [] t
 
-let of_simple_type =
+let of_simple_type doc =
+  let a = match doc with None -> [] | Some doc -> doc_annot doc in
   function
-  | `Int -> tname "int"
-  | `Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
-  | `String -> tname "string"
-  | `Double -> tname "float"
-  | `Bool -> tname "bool"
-  | `Json -> tname "basic_json"
+  | `Int -> tname ~a "int"
+  | `Int64 -> tname ~a:(("ocaml",["repr","int64"]) :: a) "int"
+  | `String -> tname ~a "string"
+  | `Double -> tname ~a "float"
+  | `Bool -> tname ~a "bool"
+  | `Json -> tname ~a "basic_json"
 
 let wrap_ref ref t : Atd.Ast.type_expr = wrap t ["module",ES_name.to_ocaml ref]
 
 let of_var_type {cardinality;ref;typ} : Atd.Ast.type_expr =
-  let t = of_simple_type typ in
+  let t = of_simple_type None typ in
   let t = match ref with Some es_name -> wrap_ref es_name t | None -> t in
   match cardinality with
   | One -> t
@@ -287,7 +290,7 @@ let safe_record map fields =
 
 let basic_json = typ "basic_json" ~a:["ocaml",["module","Json";"t","t"]] (tname "abstract")
 
-let add_shape t name (shape:result_type) =
+let add_shape ?doc t name (shape:result_type) =
   Types.add t @@ ptyp "doc_count" ["key"] (record [field "key" (tvar "key"); field "doc_count" (tname "int")]);
   Types.add t @@ ptyp "buckets" ["a"] (record [field "buckets" (list (tvar "a"))]);
   Types.add t @@ typ "int_as_float" (wrap (tname "float") ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"]);
@@ -297,20 +300,21 @@ let add_shape t name (shape:result_type) =
   Types.add t @@ basic_json;
   let rec map shape =
     match shape with
-    | #simple_type as t -> of_simple_type t
-    | `Maybe t -> nullable @@ map t
-    | `Ref (ref,t) -> wrap_ref ref (of_simple_type t)
-    | `List t -> list (map t)
-    | `List_or_single (`Ref (ref,_)) -> wrap_ref (ES_name.append ref "list_or_single") (tname "basic_json");
-    | `List_or_single t -> fail "cannot handle mixed_multi of %s" (show_result_type t)
-    | `Object t -> list ~a:["json",["repr","object"]] (tuple [map `String; map t])
-    | `Dict ["key",k; "doc_count", `Int] -> pname "doc_count" [map k]
-    | `Dict ["buckets", `List t] -> pname "buckets" [map t]
-    | `Dict ["value", `Dict ["override int as float hack", `Int]] -> pname "value_agg" [tname "int_as_float"]
-    | `Dict ["value", t] -> pname "value_agg" [map t]
-    | `Dict fields -> safe_record map fields
+    | (#simple_type as t, doc) -> of_simple_type doc t
+    | `Maybe t, doc-> nullable ?a:(doc_annot_opt doc) @@ map t
+    | `Ref (ref, t), doc -> wrap_ref ref (of_simple_type doc t)
+    | `List t, doc -> list ?a:(doc_annot_opt doc) (map t)
+    | `List_or_single (`Ref (ref,_)), _doc -> wrap_ref (ES_name.append ref "list_or_single") (tname "basic_json");
+    | `List_or_single t, _doc -> fail "cannot handle mixed_multi of %s" (show_result_type (t, _doc))
+    | `Object t, doc -> list ~a:(("json",["repr","object"]) :: (match doc with None -> [] | Some doc -> doc_annot doc)) (tuple [map (`String, None); map t])
+    | `Dict ["key",k; "doc_count", `Int], _ -> pname "doc_count" [map (k, None)]
+    | `Dict ["buckets", `List t],_ -> pname "buckets" [map t]
+    | `Dict ["value", `Dict ["override int as float hack", `Int]],_ -> pname "value_agg" [tname "int_as_float"]
+    | `Dict ["value", t],_ -> pname "value_agg" [map (t, None)]
+    | `Dict fields, _ -> safe_record map (fields, None)
   in
-  Types.add t @@ typ name (map shape)
+  let a = match doc with None -> None | Some doc -> Some ["doc", ["text", doc]] in
+  Types.add t @@ typ ?a name (map shape)
 
 let add_vars t (l:input_vars) =
   Types.add t basic_json;
@@ -343,7 +347,7 @@ let make_module ~init f : Atd.Ast.full_module =
   f t;
   (loc,[]), (make_abstract init (Types.get t))
 
-let of_shape ~init name (shape:result_type) = make_module ~init (fun t -> add_shape t name shape)
+let of_shape ~init name (shape:result_type) = make_module ~init (fun t -> add_shape ~doc:"some doc" t name shape)
 let of_vars ~init (l:input_vars) = make_module ~init (fun t -> add_vars t l)
 let make ~init l name shape = make_module ~init (fun t -> add_vars t l; add_shape t name shape)
 

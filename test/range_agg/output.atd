@@ -27,4 +27,7 @@ type buckets1 = {
 type w = { buckets: buckets1 }
 type w_over_time = { key: int; doc_count: int; key_as_string: string; w: w }
 type aggregations = { w_over_time: w_over_time buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result <doc text="some doc"> = {
+  hits: hits;
+  aggregations: aggregations
+}

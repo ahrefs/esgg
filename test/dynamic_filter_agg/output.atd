@@ -27,4 +27,7 @@ type words10 = {
 type buckets1 = { words10: words10; wordsn: words10 }
 type target = { buckets: buckets1 }
 type aggregations = { target: target }
-type result = { hits: hits; aggregations: aggregations }
+type result <doc text="some doc"> = {
+  hits: hits;
+  aggregations: aggregations
+}

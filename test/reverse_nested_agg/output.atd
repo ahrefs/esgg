@@ -52,4 +52,7 @@ type into_obj = {
   into_roles: into_roles
 }
 type aggregations = { into_obj: into_obj }
-type result = { hits: hits; aggregations: aggregations }
+type result <doc text="some doc"> = {
+  hits: hits;
+  aggregations: aggregations
+}

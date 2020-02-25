@@ -28,4 +28,4 @@ type highlight = {
 }
 type hit = { _id: string; _source: _source; ?highlight: highlight nullable }
 type hits = { total: int; ~hits: hit list }
-type result = { hits: hits }
+type result <doc text="some doc"> = { hits: hits }
