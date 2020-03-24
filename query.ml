@@ -166,8 +166,8 @@ let infer' c0 query =
     | Field { field; cardinality; values } ->
       List.iter (function `Var var -> tuck constraints (On_var (var, Eq_field (cardinality,field))) | _ -> ()) values
     | Var var -> tuck constraints (On_var (var, Eq_any))
-    | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list `String))
-    | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type `String)))
+    | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list String))
+    | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type String)))
     | Nothing -> ()
   in
   iter query;
@@ -182,10 +182,10 @@ let record_single_var typ (v:Tjson.var) =
 
 let resolve_mget_types ids =
   match ids with
-  | `Var (v:Tjson.var) -> record_single_var (List `String) v
+  | `Var (v:Tjson.var) -> record_single_var (List String) v
   | _ -> fail "mget: only variable ids supported"
 
-let resolve_get_types = record_single_var (Type `String)
+let resolve_get_types = record_single_var (Type String)
 
 let get_var json name =
   match U.member name json with
@@ -236,7 +236,7 @@ let filter_out_conf json =
 let extract json =
   match U.assoc "query" json with
   | q ->
-    let extra = List.map (fun v -> On_var (v, Eq_type `Int)) @@ List.filter_map (get_var json) ["size";"from"] in
+    let extra = List.map (fun v -> On_var (v, Eq_type Int)) @@ List.filter_map (get_var json) ["size";"from"] in
     Search { q = extract_query q; extra; source = extract_source json; highlight = extract_highlight json; }
   | exception _ ->
     match U.assoc "id" json with
@@ -277,8 +277,8 @@ let resolve_constraints mapping l =
     record vars var.name t
   | Field_num (Field f) ->
     begin match snd @@ typeof f with
-    | `Int | `Int64 | `Double -> ()
-    | `String | `Bool | `Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
+    | Int | Int64 | Double -> ()
+    | String | Bool | Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
   | Field_num (Script _) -> ()
   | Field_date _ -> ()

@@ -149,31 +149,34 @@ let get x =
 
 let linearize_dict a =
   let rec apply prefix a =
-    List.map (function (k, `Dict l) -> apply (prefix^k^".") l | (k,v) -> [prefix^k, v]) a |> List.flatten
+    List.map (function (k, Dict l) -> apply (prefix^k^".") l | (k,v) -> [prefix^k, v]) a |> List.flatten
   in
   apply "" a
 
 let derive_highlight mapping hl =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
-  | `Dict l ->
+  | Dict l ->
     let l = l |> linearize_dict |> List.map begin function
-    | (k, (`List _ | `List_or_single _ | `Dict _ | `Object _)) -> fail "derive_highlight: expected simple type for %S" k
-    | (k, `Maybe t) -> k, `List t (* what will ES do? but seems safe either way *)
-    | (k, ((`Ref _ | #simple_type) as t)) -> k, `List t
+    | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "derive_highlight: expected simple type for %S" k
+    | (k, Maybe t) -> k, List t (* what will ES do? but seems safe either way *)
+    | (k, ((Ref _ | Simple _) as t)) -> k, List t
     end in
-    `Maybe (`Dict l)
+    Maybe (Dict l)
   | _ -> fail "derive_highlight: expected Dict after projecting fields over mapping"
 
 let infer_single mapping ~nested { name; agg; } sub =
-  let buckets ?(extra=[]) t = `Dict [ "buckets", `List (sub @@ ("key", t) :: ("doc_count", `Int) :: extra) ] in
-  let doc_count () = sub ["doc_count", `Int] in
+  let int = Simple Int in
+  let double = Simple Double in
+  let string = Simple String in
+  let buckets ?(extra=[]) t = Dict [ "buckets", List (sub @@ ("key", t) :: ("doc_count", int) :: extra) ] in
+  let doc_count () = sub ["doc_count", int] in
   let keyed_buckets keys =
     let d = doc_count () in
-    `Dict [ "buckets", `Dict (List.map (fun k -> k, d) keys)]
+    Dict [ "buckets", Dict (List.map (fun k -> k, d) keys)]
   in
   let (cstr,shape) =
     match agg with
-    | Dynamic _ -> [], `Json
+    | Dynamic _ -> [], Simple Json
     | Static agg ->
     match agg with
     | Simple_metric (metric, value) ->
@@ -181,23 +184,25 @@ let infer_single mapping ~nested { name; agg; } sub =
       let typ =
         match metric with
 (*         | `MinMax -> `Maybe (`Typeof value) *)
-        | `MinMax -> `Maybe value_type (* TODO use Typeof, but need meta annotation to fallback to value_type *)
-        | `Avg -> `Maybe `Double
+        | `MinMax -> Maybe value_type (* TODO use Typeof, but need meta annotation to fallback to value_type *)
+        | `Avg -> Maybe double
         | `Sum ->
           match value_type with
-          | `Bool | `Ref (_, `Bool) -> `Int
-          | `Int | `Int64 as t | `Ref (_, (`Int | `Int64 as t)) -> `Dict ["override int as float hack", t]
+          | Simple Bool | Ref (_, Bool) -> int
+          | Simple (Int | Int64 as t) | Ref (_, (Int | Int64 as t)) -> Dict ["override int as float hack", Simple t]
           | _ -> value_type
       in
       [], sub [ "value", typ ]
-    | Cardinality _value | Value_count _value -> [], sub ["value", `Int ]
-    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (typeof_value mapping term)
+    | Cardinality _value | Value_count _value -> [], sub ["value", int ]
+    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []), buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->
-      (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []),
-(*       buckets ~extra:["score", `Double; "bg_count", `Int] (`Typeof term) *)
-      `Dict [ "doc_count", `Int; "bg_count", `Int; "buckets", `List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", `Int) :: ("bg_count", `Int) :: ("score", `Double) ::[]) ]
-    | Histogram value -> [Field_num value], buckets `Double
-    | Date_histogram { on; format } -> [Field_date on], buckets `Int ~extra:(if format then ["key_as_string", `String] else [])
+      (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []),
+      Dict [
+        "doc_count", int;
+        "bg_count", int;
+        "buckets", List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", int) :: ("bg_count", int) :: ("score", double) ::[]) ]
+    | Histogram value -> [Field_num value], buckets double
+    | Date_histogram { on; format } -> [Field_date on], buckets int ~extra:(if format then ["key_as_string", string] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> dynamic_default [] Query.infer q, doc_count ()
     | Filters { filters = `Assoc filters; other_bucket } ->
@@ -205,16 +210,16 @@ let infer_single mapping ~nested { name; agg; } sub =
       constraints, keyed_buckets (option_to_list other_bucket @ List.map fst filters)
     | Filters { filters = `List filters; other_bucket=_ } -> (* FIXME other_bucket as last element? *)
       let constraints = filters |> List.map (dynamic_default [] Query.infer) |> List.flatten in
-      constraints, `Dict [ "buckets", `List (doc_count ()) ]
-    | Filters_dynamic ({ list = false; _ } as v) -> [On_var (v,Eq_object)], `Dict [ "buckets", `Object (doc_count ()) ]
-    | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list `Json)], `Dict [ "buckets", `List (doc_count ()) ]
+      constraints, Dict [ "buckets", List (doc_count ()) ]
+    | Filters_dynamic ({ list = false; _ } as v) -> [On_var (v,Eq_object)], Dict [ "buckets", Object (doc_count ()) ]
+    | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list Json)], Dict [ "buckets", List (doc_count ()) ]
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
-      [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source)) ]
-    | Range value -> [Field_num value], buckets `String
+      [], Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source)) ]
+    | Range value -> [Field_num value], buckets string
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->
-      [Field_date on], (match keys with None -> buckets `String | Some keys -> keyed_buckets keys)
+      [Field_date on], (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
   in
   cstr, (name, shape)
 
@@ -226,7 +231,7 @@ let rec infer mapping ~nested { this; sub } =
     | _ -> nested
   in
   let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
-  let sub l = `Dict (l @ subs) in
+  let sub l = Dict (l @ subs) in
   let (cstr,desc) = infer_single mapping ~nested this sub in
   List.flatten (cstr::constraints), desc
 

@@ -98,15 +98,15 @@ let compare = compare
 
 end
 
-type simple_type = [ `Int | `Int64 | `String | `Double | `Bool | `Json ]
+type simple_type = Int | Int64 | String | Double | Bool | Json
 
 let show_simple_type = function
-| `Int -> "int"
-| `Int64 -> "int64"
-| `String -> "string"
-| `Double -> "float"
-| `Bool -> "bool"
-| `Json -> "json"
+| Int -> "int"
+| Int64 -> "int64"
+| String -> "string"
+| Double -> "float"
+| Bool -> "bool"
+| Json -> "json"
 
 let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
@@ -125,25 +125,25 @@ type constraint_t = On_var of Tjson.var * var_eq | Field_num of value | Field_da
 type source_filter = { excludes : string list option; includes : string list option }
 let empty_filter = { excludes = None; includes = None }
 
-type result_type = [
-  | `List of result_type
-  | `List_or_single of result_type
-  | `Object of result_type
-  | `Dict of (string * result_type) list
-  | `Ref of (ES_name.t * simple_type)
-  | `Maybe of result_type
-  | simple_type
-  ] [@@deriving show]
+type result_type =
+  | List of result_type
+  | List_or_single of result_type
+  | Object of result_type
+  | Dict of (string * result_type) list
+  | Ref of (ES_name.t * simple_type)
+  | Maybe of result_type
+  | Simple of simple_type
+  [@@deriving show]
 
 let simple_of_es_type t =
   match t with
-  | "long" -> `Int
-  | "keyword" | "text" -> `String
-  | "ip" -> `String
-  | "date" -> `String
-  | "double" | "float" -> `Double
-  | "boolean" -> `Bool
-  | "int64" | "murmur3" -> `Int64
+  | "long" -> Int
+  | "keyword" | "text" -> String
+  | "ip" -> String
+  | "date" -> String
+  | "double" | "float" -> Double
+  | "boolean" -> Bool
+  | "int64" | "murmur3" -> Int64
   | _ -> fail "simple_of_es_type: cannot handle %S" t
 
 let get_meta json =
@@ -177,9 +177,12 @@ let typeof mapping t : simple_type =
 let typeof mapping x = try typeof mapping x with exn -> fail ~exn "typeof field %S" (ES_name.show x)
 let typeof_value mapping value =
   match value with
-  | Script (`Painless, Static "_score") -> `Double
-  | Script _ -> `Json
-  | Field f -> let name = ES_name.make mapping f in `Ref (name, typeof mapping name)
+  | Script (`Painless, Static "_score") -> Simple Double
+  | Script _ -> Simple Json
+  | Field f ->
+    let name = ES_name.make mapping f in
+    let t = typeof mapping name in
+    Ref (name, t)
 
 let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
 

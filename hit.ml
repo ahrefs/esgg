@@ -15,7 +15,7 @@ let parent_included path set = ES_name.fold_up (fun x acc -> acc || ES_names.mem
 
 let debug = false
 
-let of_mapping ?(filter=empty_filter) x : result_type =
+let of_mapping ?(filter=empty_filter) x =
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in
   let excludes = option_map2 ES_names.union (smake "excludes") (Option.map (es_names x) filter.excludes) in
   let includes = option_map2 ES_names.inter (smake "includes") (Option.map (es_names x) filter.includes) in
@@ -37,19 +37,19 @@ let of_mapping ?(filter=empty_filter) x : result_type =
       in
       let t =
         match list with
-        | `Bool true -> `List t
+        | `Bool true -> List t
         | `Bool false -> t
-        | `String "sometimes" -> `List_or_single t
+        | `String "sometimes" -> List_or_single t
         | _ -> fail "attribute \"list\" can only be one of : true, false, \"sometimes\""
       in
-      if Option.default optional @@ flag "optional" then `Maybe t else t
+      if Option.default optional @@ flag "optional" then Maybe t else t
     in
     let default_optional = Option.default false @@ flag "fields_default_optional" in
     let t =
       match repr, U.assoc "type" json with
       | exception _ -> wrap false @@ make_properties ~default_optional path json
       | _, `String "nested" -> wrap true @@ make_properties ~default_optional path json
-      | Some t, `String _ | _, `String t -> wrap false @@ `Ref (path, simple_of_es_type t)
+      | Some t, `String _ | _, `String t -> wrap false @@ Ref (path, simple_of_es_type t)
       | _ -> fail "strange type : %s" (U.to_string json)
     in
     match U.assoc "fields" json with
@@ -63,7 +63,7 @@ let of_mapping ?(filter=empty_filter) x : result_type =
         Printf.sprintf "%s.%s" name k, v
       | l -> fail "got %d fields for %s, but can only handle one (sort of bug)" (List.length l) (ES_name.show path)
   and make_fields ~default_optional path json = make_props "fields" ~default_optional path json
-  and make_properties ~default_optional path json = `Dict (make_props "properties" ~default_optional path json)
+  and make_properties ~default_optional path json = Dict (make_props "properties" ~default_optional path json)
   and make_props k ~default_optional path json =
     if debug then printfn "make_%s %S" k (ES_name.show path);
     match U.(get k to_assoc json) with
@@ -87,16 +87,16 @@ let of_mapping ?(filter=empty_filter) x : result_type =
 let get_nested path x =
   let rec loop path x =
     match path, x with
-    | p, (`Maybe x | `List x) -> loop p x (* HACK unwrap *)
+    | p, (Maybe x | List x) -> loop p x (* HACK unwrap *)
     | [], _ -> x
-    | k::p, `Dict l -> loop p (try List.assoc k l with exn -> fail ~exn "cannot find nested %S" k)
+    | k::p, Dict l -> loop p (try List.assoc k l with exn -> fail ~exn "cannot find nested %S" k)
     | k::_, _ -> fail "nested %S is not a dict" k
   in
   loop (ES_name.get_path path) x
 
 let doc_ ?(id=true) ?found ?highlight source =
   let a = [
-    "_id", if id then Some `String else None;
+    "_id", if id then Some (Simple String) else None;
   (*
     "_index", `String;
     "_type", `String;
@@ -107,22 +107,22 @@ let doc_ ?(id=true) ?found ?highlight source =
     "highlight", highlight;
   ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
   in
-  `Dict a
+  Dict a
 
-let doc_no_source = doc_ ~found:`Bool None
-let doc source = doc_ ~found:`Bool (Some source)
+let doc_no_source = doc_ ~found:(Simple Bool) None
+let doc source = doc_ ~found:(Simple Bool) (Some source)
 let hit ?highlight ?id source = doc_ ?highlight ?id (Some source)
 
-let hits_ mapping ?nested ~highlight source : (string * result_type) list =
+let hits_ mapping ?nested ~highlight source =
   let hit x =
     match nested with
     | None -> hit ?highlight x
     | Some nested -> hit ~id:false ?highlight (get_nested nested x)
   in
   List.concat [
-      ["total", `Int];
+      ["total", Simple Int];
       (match source with None -> [] | Some source ->
-        ["hits", `List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ -> `Json)]);
+        ["hits", List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ ->  Simple Json)]);
     ]
 
-let hits mapping ?nested ~highlight source : result_type = `Dict (hits_ mapping ?nested ~highlight source)
+let hits mapping ?nested ~highlight source = Dict (hits_ mapping ?nested ~highlight source)

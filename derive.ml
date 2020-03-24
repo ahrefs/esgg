@@ -5,18 +5,18 @@ open Common
 
 let output mapping query =
   match Query.extract query with
-  | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
+  | Get (_,Some filter) -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
   | Get (_,None) -> Hit.doc_no_source
   | Mget { conf; _ } ->
     begin match Query.extract_source_static conf with
-      | None -> `Dict ["docs",`List Hit.doc_no_source]
-      | Some filter -> `Dict ["docs",`List (Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping))]
+      | None -> Dict ["docs",List Hit.doc_no_source]
+      | Some filter -> Dict ["docs",List (Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping))]
     end
   | Search { source; highlight; _ } ->
     let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
     let hits = Hit.hits mapping ~highlight source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
-    `Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs]))
+    Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in
@@ -41,21 +41,21 @@ let print_reflect name mapping =
   iter 0 (name,mapping)
 
 let convert_wire_type = function
-| `Int -> sprintf "string_of_int %s"
-| `Int64 -> sprintf "Int64.to_string %s"
-| `String -> sprintf "Json.to_string (`String %s)"
-| `Double -> sprintf "Json.to_string (`Float %s)"
-| `Bool -> sprintf "string_of_bool %s"
-| `Json -> sprintf "Json.to_string %s"
+| Int -> sprintf "string_of_int %s"
+| Int64 -> sprintf "Int64.to_string %s"
+| String -> sprintf "Json.to_string (`String %s)"
+| Double -> sprintf "Json.to_string (`Float %s)"
+| Bool -> sprintf "string_of_bool %s"
+| Json -> sprintf "Json.to_string %s"
 
 let map_wire_type typ =
   sprintf @@ match typ with
-  | `Int -> "`Int %s"
-  | `Int64 -> "`String (Int64.to_string %s)"
-  | `String -> "`String %s"
-  | `Double -> "`Float %s"
-  | `Bool -> "`Bool %s"
-  | `Json -> "%s"
+  | Int -> "`Int %s"
+  | Int64 -> "`String (Int64.to_string %s)"
+  | String -> "`String %s"
+  | Double -> "`Float %s"
+  | Bool -> "`Bool %s"
+  | Json -> "%s"
 
 let convertor (t:var_type option) unwrap name =
   match t with
