@@ -177,7 +177,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Static agg ->
     match agg with
     | Simple_metric (metric, value) ->
-      let value_type = (typeof_ mapping value :> resolve_type) in
+      let value_type = typeof_value mapping value in
       let typ =
         match metric with
 (*         | `MinMax -> `Maybe (`Typeof value) *)
@@ -185,17 +185,17 @@ let infer_single mapping ~nested { name; agg; } sub =
         | `Avg -> `Maybe `Double
         | `Sum ->
           match value_type with
-          | `Bool -> `Int
-          | `Int | `Int64 as t -> `Dict ["override int as float hack", t]
+          | `Bool | `Ref (_, `Bool) -> `Int
+          | `Int | `Int64 as t | `Ref (_, (`Int | `Int64 as t)) -> `Dict ["override int as float hack", t]
           | _ -> value_type
       in
       [], sub [ "value", typ ]
     | Cardinality _value | Value_count _value -> [], sub ["value", `Int ]
-    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (`Typeof term)
+    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []), buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->
       (match size with `Var var -> [On_var (var, Eq_type `Int)] | _ -> []),
 (*       buckets ~extra:["score", `Double; "bg_count", `Int] (`Typeof term) *)
-      `Dict [ "doc_count", `Int; "bg_count", `Int; "buckets", `List (sub @@ ("key", `Typeof term) :: ("doc_count", `Int) :: ("bg_count", `Int) :: ("score", `Double) ::[]) ]
+      `Dict [ "doc_count", `Int; "bg_count", `Int; "buckets", `List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", `Int) :: ("bg_count", `Int) :: ("score", `Double) ::[]) ]
     | Histogram value -> [Field_num value], buckets `Double
     | Date_histogram { on; format } -> [Field_date on], buckets `Int ~extra:(if format then ["key_as_string", `String] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
@@ -210,7 +210,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Filters_dynamic ({ list = true; _ } as v) -> [On_var (v,Eq_list `Json)], `Dict [ "buckets", `List (doc_count ()) ]
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
-      [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source) :> (string * resolve_type) list) ]
+      [], `Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source)) ]
     | Range value -> [Field_num value], buckets `String
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->

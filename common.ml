@@ -4,7 +4,7 @@ include Prelude
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
-type 'a or_var = Static of 'a | Dynamic of Tjson.var
+type 'a or_var = Static of 'a | Dynamic of Tjson.var [@@deriving show]
 
 let dynamic_default default f x =
   match x with
@@ -17,7 +17,7 @@ let var_or conv x =
   | _ ->
     try Static (conv x) with Failure s -> fail "expected var or %s" s
 
-type value = Field of string | Script of [`Painless|`Id] * string or_var
+type value = Field of string | Script of [`Painless|`Id] * string or_var [@@deriving show]
 
 module U = struct
 
@@ -135,17 +135,6 @@ type result_type = [
   | simple_type
   ] [@@deriving show]
 
-type resolve_type = [
-  | `Typeof of value
-  | `List of resolve_type
-  | `List_or_single of resolve_type
-  | `Object of resolve_type
-  | `Dict of (string * resolve_type) list
-  | `Ref of (ES_name.t * simple_type)
-  | `Maybe of resolve_type
-  | simple_type
-  ]
-
 let simple_of_es_type t =
   match t with
   | "long" -> `Int
@@ -186,11 +175,11 @@ let typeof mapping t : simple_type =
   | a -> simple_of_es_type a
 
 let typeof mapping x = try typeof mapping x with exn -> fail ~exn "typeof field %S" (ES_name.show x)
-let typeof_ mapping value =
+let typeof_value mapping value =
   match value with
   | Script (`Painless, Static "_score") -> `Double
   | Script _ -> `Json
-  | Field f -> typeof mapping (ES_name.make mapping f)
+  | Field f -> let name = ES_name.make mapping f in `Ref (name, typeof mapping name)
 
 let source_fields k j = U.(match member "_source" j with `Null -> None | a -> opt k (to_list to_string) a)
 

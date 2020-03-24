@@ -3,19 +3,6 @@ open Printf
 
 open Common
 
-let resolve_types mapping shape =
-  let rec map : resolve_type -> result_type = function
-  | `List t -> `List (map t)
-  | `List_or_single t -> `List_or_single (map t)
-  | `Object t -> `Object (map t)
-  | `Dict fields -> `Dict (List.map (fun (n,t) -> n, map t) fields)
-  | `Typeof (Field x) -> let name = ES_name.make mapping x in `Ref (name, typeof mapping name)
-  | `Typeof (Script _) -> `Json
-  | `Maybe t -> `Maybe (map t)
-  | `Json | `Int64 | `Int | `String | `Double | `Bool | `Ref _ as t -> t
-  in
-  map shape
-
 let output mapping query =
   match Query.extract query with
   | Get (_,Some filter) -> Hit.doc @@ `Maybe (Hit.of_mapping ~filter mapping)
@@ -29,8 +16,7 @@ let output mapping query =
     let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
     let hits = Hit.hits mapping ~highlight source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
-    let result = `Dict (("hits", (hits:>resolve_type)) :: (if aggs = [] then [] else ["aggregations", `Dict aggs])) in
-    resolve_types mapping result
+    `Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", `Dict aggs]))
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in
