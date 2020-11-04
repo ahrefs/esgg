@@ -60,6 +60,7 @@ let of_mapping ?(filter=empty_filter) x =
       | [k,v] ->
         assert (name <> "");
         (* when field is extracted - substitude it for the current key *)
+        if debug then printfn "substitute %s.%s for %s" name k name;
         Printf.sprintf "%s.%s" name k, v
       | l -> fail "got %d fields for %s, but can only handle one (sort of bug)" (List.length l) (ES_name.show path)
   and make_fields ~default_optional path json = make_props "fields" ~default_optional path json

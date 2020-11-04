@@ -26,6 +26,7 @@ make_properties ""
 make keyword "keyword"
 make_fields "keyword"
 make search "keyword.search"
+substitute keyword.search for keyword
 make content "content"
 make_properties "content"
 make text "content.text"
@@ -33,9 +34,11 @@ make_properties "content.text"
 make en "content.text.en"
 make_fields "content.text.en"
 make exact "content.text.en.exact"
+substitute en.exact for en
 make fr "content.text.fr"
 make_fields "content.text.fr"
 make exact "content.text.fr.exact"
+substitute fr.exact for fr
 derive_highlight keyword.search
 derive_highlight content.text.en.exact
 derive_highlight content.text.fr.exact
