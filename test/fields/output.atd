@@ -21,10 +21,10 @@ type _source = {
 type highlight = {
   ~keyword_search <json name="keyword.search">:
     string wrap <ocaml module="Keyword.Search"> list;
-  ~content_text_en <json name="content.text.en">:
-    string wrap <ocaml module="Content.Text.En"> list;
-  ~content_text_fr <json name="content.text.fr">:
-    string wrap <ocaml module="Content.Text.Fr"> list
+  ~content_text_en_exact <json name="content.text.en.exact">:
+    string wrap <ocaml module="Content.Text.En.Exact"> list;
+  ~content_text_fr_exact <json name="content.text.fr.exact">:
+    string wrap <ocaml module="Content.Text.Fr.Exact"> list
 }
 type hit = { _id: string; _source: _source; ?highlight: highlight nullable }
 type hits = { total: int; ~hits: hit list }

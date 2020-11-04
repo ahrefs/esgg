@@ -15,6 +15,16 @@
         "fragment_size": 130,
         "number_of_fragments": 1,
         "no_match_size": 130
+      },
+      "content.text.fr.exact": {
+        "fragment_size": 130,
+        "number_of_fragments": 1,
+        "no_match_size": 130
+      },
+      "content.text.en.exact": {
+        "fragment_size": 130,
+        "number_of_fragments": 1,
+        "no_match_size": 130
       }
     }
   },
