@@ -13,7 +13,7 @@ let option_map2 op a b =
 let include_parents x = ES_names.fold (ES_name.fold_up ES_names.add) x x
 let parent_included path set = ES_name.fold_up (fun x acc -> acc || ES_names.mem x set) path false
 
-let debug = false
+let debug = true
 
 let of_mapping ?(filter=empty_filter) x =
   let smake k = source_fields k x.mapping |> Option.map (es_names x) in

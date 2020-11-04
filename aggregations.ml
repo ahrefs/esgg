@@ -154,8 +154,10 @@ let linearize_dict a =
   apply "" a
 
 let derive_highlight mapping hl =
+  let () = hl |> List.iter (fun x -> Printf.printf "derive_highlight input %s\n%!" x) in
   match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
   | Dict l ->
+    let () = l |> linearize_dict |> List.iter (fun x -> Printf.printf "derive_highlight %s\n%!" (fst x)) in
     let l = l |> linearize_dict |> List.map begin function
     | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "derive_highlight: expected simple type for %S" k
     | (k, Maybe t) -> k, List t (* what will ES do? but seems safe either way *)

@@ -225,7 +225,7 @@ let extract_source_static json =
 let extract_highlight json =
   match U.opt "highlight" id json with
   | None -> None
-  | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
+  | Some json -> Some (U.get "fields" U.to_assoc json |> List.map (fun x -> let y = fst x in printf "extract_highlight %s\n%!" y; y))
 
 (** Filter out the [_esgg] field from the json if it exist. *)
 let filter_out_conf json =
