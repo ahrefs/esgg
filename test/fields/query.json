@@ -36,5 +36,6 @@
                         ]
                     }
                 }
-            ]
+            ],
+      "minimum_should_match": $min_match
 }}}

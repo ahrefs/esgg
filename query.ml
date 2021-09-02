@@ -16,7 +16,7 @@ type query_t =
 | Var of Tjson.var
 | Strings of var_list
 | Nothing
-and query = { json : Tjson.t; query : query_t }
+and query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 
 type t =
 | Search of { q : query; extra : constraint_t list; source : source_filter or_var option; highlight : string list option; }
@@ -54,45 +54,46 @@ let rec extract_clause (clause,json) =
   try match clause with
   | "must" | "must_not" | "should" | "filter" ->
     begin match json with
-    | `Var v -> (json, (clause, [ {json; query=Var v} ]))
-    | `Assoc _ as x -> let q = extract_query x in (q.json, (clause, [q]))
+    | `Var v -> (json, [], (clause, [ {json; query=Var v; cstrs = []} ]))
+    | `Assoc _ as x -> let q = extract_query x in (q.json, [], (clause, [q]))
     | `List l ->
       let l = List.map extract_query l in
       let json = `List (List.map (fun q -> q.json) l) in
-      (json, (clause, l))
+      (json, [], (clause, l))
     | _ -> fail "bad %S clause : expected list or dict" clause
     end
   | "minimum_should_match" ->
     begin match json with
-    | `Int _ | `String _ -> json, (clause, [])
+    | `Int _ | `String _ -> json, [], (clause, [])
+    | `Var v -> json, [On_var (v,(Eq_type Int))], (clause, [])
     | _ -> fail "bad %S clause : expected int or string" clause
     end
   | _ -> fail "unsupported clause"
   with
     exn -> fail ~exn "clause %S" clause
 and extract_query json =
-  let (json,query) =
+  let (json,cstrs,query) =
     match json with
-    | `Var v -> json, Var v
+    | `Var v -> json, [], Var v
     | `Assoc [qt,qv] ->
       begin match qt, qv with
       | ("function_score"|"nested"), `Assoc l ->
         begin match List.assoc "query" l with
         | exception _ when qt = "nested" -> fail "nested query requires query, duh"
-        | exception _ when qt = "function_score" -> json, Nothing
+        | exception _ when qt = "function_score" -> json, [], Nothing
         | q ->
-          let { json; query } = extract_query q in
-          `Assoc [qt, Tjson.replace qv "query" json], query
+          let { json; query; cstrs } = extract_query q in
+          `Assoc [qt, Tjson.replace qv "query" json], cstrs, query
         end
       | "bool", `Assoc l ->
         let bool = List.map extract_clause l in
-        let json = `Assoc ["bool", `Assoc (List.map (fun (json,(clause,_)) -> clause, json) bool)] in
-        json, Bool (List.map snd bool)
-      | "ids", x -> json, Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
-      | "query_string", x -> json, (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
-      | ("match_all"|"match_none"), _ -> json, Nothing
-      | _qt, `Var x -> json, Var x
-      | "range", `Assoc [_f, `Var x] -> json, Var x
+        let json = `Assoc ["bool", `Assoc (List.map (fun (json,_cstr,(clause,_)) -> clause, json) bool)] in
+        json, List.concat @@ List.map (fun (_,c,_) -> c) bool, Bool (List.map (fun (_json,_cstr,x) -> x) bool)
+      | "ids", x -> json, [], Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
+      | "query_string", x -> json, [], (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
+      | ("match_all"|"match_none"), _ -> json, [], Nothing
+      | _qt, `Var x -> json, [], Var x
+      | "range", `Assoc [_f, `Var x] -> json, [], Var x
       | _ ->
         let field, values =
           (* For simple single-field queries, store relation of one field to one or more values (with or without variables) *)
@@ -130,7 +131,7 @@ and extract_query json =
           with exn ->
             fail ~exn "dsl query %S" qt
         in
-        json, Field { field; cardinality = cardinality_of_qt qt; values }
+        json, [], Field { field; cardinality = cardinality_of_qt qt; values }
       end
     | _ -> fail "bad query"
   in
@@ -150,7 +151,7 @@ and extract_query json =
       let label = to_valid_ident ~prefix:"f_" label in (* XXX *)
       `Optional ({ label; vars }, json)
   in
-  { query; json }
+  { query; json; cstrs }
 
 let record vars var ti =
   match Hashtbl.find vars var with
@@ -160,7 +161,8 @@ let record vars var ti =
 
 let infer' c0 query =
   let constraints = ref c0 in
-  let rec iter { query; json=_ } =
+  let rec iter { query; json=_; cstrs } =
+    cstrs |> List.iter (tuck constraints);
     match query with
     | Bool l -> List.iter (fun (_typ,l) -> List.iter iter l) l
     | Field { field; cardinality; values } ->
