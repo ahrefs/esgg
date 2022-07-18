@@ -2,7 +2,7 @@ open ExtLib
 
 open Common
 
-type range = { from : bool; to_ : bool }
+type range = { _from : bool; _to_ : bool }
 
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
@@ -104,7 +104,7 @@ let analyze_single name agg_type json =
         | Some true -> Some (ranges U.(get "key" to_string))
         | _ -> None
       in
-      let ranges = ranges (fun x -> { from = U.mem "from" x; to_ = U.mem "to" x; }) in
+      let ranges = ranges (fun x -> { _from = U.mem "from" x; _to_ = U.mem "to" x; }) in
       let format = U.mem "format" json in
       Date_range { on = value (); keys; format; ranges }
     | "nested" -> Nested U.(get "path" to_string json)
