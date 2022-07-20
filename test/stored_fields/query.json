@@ -1,0 +1,32 @@
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "ids": {
+            "values": [
+              $id
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "from": 0,
+  "size": 1,
+  "sort": [
+    {
+      "volume": {
+        "order": "desc"
+      }
+    }
+  ],
+  "_source": {
+    "includes": [
+      "keyword"
+    ]
+  },
+  "stored_fields": [
+    "content.text.en"
+  ]
+}

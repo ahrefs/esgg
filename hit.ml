@@ -72,9 +72,15 @@ let of_mapping ?(filter=empty_filter) x =
       begin match x with `Assoc _ -> () | _ -> fail "make_%s : %S not a dict" k name end;
       let path = ES_name.append path name in
       let included = (* TODO wildcards *)
-        (match excludes with None -> true | Some set -> not @@ ES_names.mem path set) &&
+        (match excludes with
+        | None -> true
+        | Some set -> not @@ ES_names.mem path set)
+        &&
         (* fields are not extracted by default, but only when explicitly requested by includes *)
-        (match includes with None -> k = "properties" | Some (set,parents) -> (k = "properties" && parent_included path set) || ES_names.mem path parents) &&
+        (match includes with
+        | None -> k = "properties"
+        | Some (set,parents) -> k = "properties" && parent_included path set || ES_names.mem path parents)
+        &&
         not @@ Option.default false @@ get_bool (get_meta x) "ignore"
       in
       match included with
@@ -94,7 +100,7 @@ let get_nested path x =
   in
   loop (ES_name.get_path path) x
 
-let doc_ ?(id=true) ?found ?highlight source =
+let doc_ ?(id=true) ?found ?highlight ?fields source =
   let a = [
     "_id", if id then Some (Simple String) else None;
   (*
@@ -105,19 +111,20 @@ let doc_ ?(id=true) ?found ?highlight source =
     "found", found;
     "_source", source;
     "highlight", highlight;
+    "fields", fields;
   ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
   in
   Dict a
 
 let doc_no_source = doc_ ~found:(Simple Bool) None
 let doc source = doc_ ~found:(Simple Bool) (Some source)
-let hit ?highlight ?id source = doc_ ?highlight ?id (Some source)
+let hit ?highlight ?id ?fields source = doc_ ?highlight ?id ?fields (Some source)
 
-let hits_ mapping ?nested ~highlight source =
+let hits_ mapping ?nested ~highlight ?fields source =
   let hit x =
     match nested with
-    | None -> hit ?highlight x
-    | Some nested -> hit ~id:false ?highlight (get_nested nested x)
+    | None -> hit ?highlight ?fields x
+    | Some nested -> hit ~id:false ?highlight ?fields (get_nested nested x)
   in
   List.concat [
       ["total", Simple Int];
@@ -125,4 +132,4 @@ let hits_ mapping ?nested ~highlight source =
         ["hits", List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ ->  Simple Json)]);
     ]
 
-let hits mapping ?nested ~highlight source = Dict (hits_ mapping ?nested ~highlight source)
+let hits mapping ?nested ~highlight ?fields source = Dict (hits_ mapping ?nested ~highlight ?fields source)

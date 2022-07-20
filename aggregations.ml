@@ -155,16 +155,18 @@ let linearize_dict a =
   in
   apply "" a
 
-let derive_highlight mapping hl =
-  match Hit.of_mapping ~filter:{excludes=None;includes=Some hl} mapping with
+let derive_fields mapping fields =
+  match Hit.of_mapping ~filter:{excludes=None;includes=Some fields} mapping with
   | Dict l ->
-    let l = l |> linearize_dict |> List.map begin function
-    | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "derive_highlight: expected simple type for %S" k
+    l |> linearize_dict |> List.map begin function
+    | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "expected simple type for %S" k
     | (k, Maybe t) -> k, List t (* what will ES do? but seems safe either way *)
     | (k, ((Ref _ | Simple _) as t)) -> k, List t
-    end in
-    Maybe (Dict l)
-  | _ -> fail "derive_highlight: expected Dict after projecting fields over mapping"
+    end
+  | _ -> fail "expected Dict after projecting fields over mapping"
+
+let derive_highlight mapping hl =
+  try Maybe (Dict (derive_fields mapping hl)) with Failure s -> fail "derive_highlight: %s" s
 
 let infer_single mapping ~nested { name; agg; } sub =
   let int = Simple Int in

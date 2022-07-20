@@ -19,7 +19,7 @@ type query_t =
 and query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; highlight : string list option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; }
 | Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
 | Get of (Tjson.var * source_filter option)
 
@@ -229,6 +229,12 @@ let extract_highlight json =
   | None -> None
   | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
 
+let extract_stored_fields json =
+  match U.opt "stored_fields" id json with
+  | None -> None
+  | Some (`List l) -> Some (List.map U.to_string l)
+  | _ -> fail "stored_fields expected to be a list of strings"
+
 (** Filter out the [_esgg] field from the json if it exist. *)
 let filter_out_conf json =
   match json with
@@ -239,7 +245,7 @@ let extract json =
   match U.assoc "query" json with
   | q ->
     let extra = List.map (fun v -> On_var (v, Eq_type Int)) @@ List.filter_map (get_var json) ["size";"from"] in
-    Search { q = extract_query q; extra; source = extract_source json; highlight = extract_highlight json; }
+    Search { q = extract_query q; extra; source = extract_source json; fields = extract_stored_fields json; highlight = extract_highlight json; }
   | exception _ ->
     match U.assoc "id" json with
     | `Var v -> Get (v, extract_source_static json)

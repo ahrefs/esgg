@@ -3,6 +3,9 @@ open Printf
 
 open Common
 
+let derive_stored_fields mapping fields =
+  try Dict (Aggregations.derive_fields mapping fields) with Failure s -> fail "derive_stored_fields: %s" s
+
 let output mapping query =
   match Query.extract query with
   | Get (_,Some filter) -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
@@ -12,9 +15,10 @@ let output mapping query =
       | None -> Dict ["docs",List Hit.doc_no_source]
       | Some filter -> Dict ["docs",List (Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping))]
     end
-  | Search { source; highlight; _ } ->
+  | Search { source; highlight; fields; _ } ->
     let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
-    let hits = Hit.hits mapping ~highlight source in
+    let fields = Option.map (derive_stored_fields mapping) fields in
+    let hits = Hit.hits mapping ~highlight ?fields source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
     Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 
@@ -80,7 +84,7 @@ let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
     match query with
-    | Search { q; extra; source=_; highlight=_; } ->
+    | Search { q; extra; source=_; highlight=_; fields=_; } ->
       let (agg_json, aggs) = Aggregations.analyze mapping json in
       let c1 = List.concat @@ fst @@ List.split aggs in
       let c2 = Query.infer' extra q in
