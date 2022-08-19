@@ -20,8 +20,8 @@ and query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 
 type t =
 | Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; }
-| Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
-| Get of (Tjson.var * source_filter option)
+| Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t } (* get and mget probably can/should share most of the type? *)
+| Get of { id : Tjson.var; return : [ `Source of source_filter | `Fields of string list | `Nothing ] }
 
 module Variable = struct
 
@@ -248,7 +248,15 @@ let extract json =
     Search { q = extract_query q; extra; source = extract_source json; fields = extract_stored_fields json; highlight = extract_highlight json; }
   | exception _ ->
     match U.assoc "id" json with
-    | `Var v -> Get (v, extract_source_static json)
+    | `Var id ->
+      let return =
+        match extract_source_static json, extract_stored_fields json with
+        | Some _, Some _ -> fail "get request allows either source or stored_fields, but not both"
+        | Some source, None -> `Source source
+        | None, Some fields -> `Fields fields
+        | None, None -> `Nothing
+      in
+      Get { id; return; }
     | _ -> fail "only variable id supported for get request"
     | exception _ ->
       let conf = extract_conf json in

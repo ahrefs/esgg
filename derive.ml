@@ -8,11 +8,14 @@ let derive_stored_fields mapping fields =
 
 let output mapping query =
   match Query.extract query with
-  | Get (_,Some filter) -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
-  | Get (_,None) -> Hit.doc_no_source
+  | Get { id = _; return = `Source filter; } -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
+  | Get { id = _; return = `Fields fields; } ->
+    let fields = derive_stored_fields mapping fields in
+    Hit.doc_no_source ~fields ()
+  | Get { id = _; return = `Nothing; } -> Hit.doc_no_source ()
   | Mget { conf; _ } ->
-    begin match Query.extract_source_static conf with
-      | None -> Dict ["docs",List Hit.doc_no_source]
+    begin match Query.extract_source_static conf with (* should be extracted in Query.extract *)
+      | None -> Dict ["docs",List (Hit.doc_no_source ())]
       | Some filter -> Dict ["docs",List (Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping))]
     end
   | Search { source; highlight; fields; _ } ->
@@ -77,7 +80,7 @@ let source_args source =
     ["_source_includes",includes; "_source_excludes",excludes]
     |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k, String.concat "," v))
 
-let source_args_to_string args =
+let args_to_ocaml_string args =
   sprintf "[%s]" @@ String.concat ";" @@ List.map (fun (a,b) -> sprintf "%S,%S" a b) args
 
 let derive mapping json =
@@ -95,11 +98,16 @@ let derive mapping json =
       let json = Tjson.add json ["query",q.json; "aggregations", agg_json] in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget { ids; json; conf } ->
-      let args = conf |> Query.extract_source_static |> source_args |> source_args_to_string in
+      let args = conf |> Query.extract_source_static |> source_args |> args_to_ocaml_string in
       Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some json)
-    | Get (id,source) ->
-      let args = source |> source_args |> source_args_to_string in
-      let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name,args,None) in (* assuming name *)
+    | Get { id; return; } ->
+      let args =
+        match return with
+        | `Nothing -> [ "_source", "false" ]
+        | `Source source -> source_args @@ Some source
+        | `Fields fields -> [ "stored_fields", String.concat "," fields ]
+      in
+      let http = ("`GET",sprintf "[__esgg_index;__esgg_kind;%s]" id.name, args_to_ocaml_string args, None) in (* assuming name *)
       Query.resolve_get_types id, json, http
   in
   let var_unwrap name =

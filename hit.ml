@@ -116,7 +116,11 @@ let doc_ ?(id=true) ?found ?highlight ?fields source =
   in
   Dict a
 
-let doc_no_source = doc_ ~found:(Simple Bool) None
+(*
+  fields are not allowed together with source
+  https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
+*)
+let doc_no_source ?fields () = doc_ ~found:(Simple Bool) ?fields None
 let doc source = doc_ ~found:(Simple Bool) (Some source)
 let hit ?highlight ?id ?fields source = doc_ ?highlight ?id ?fields (Some source)
 
