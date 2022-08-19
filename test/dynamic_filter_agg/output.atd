@@ -16,11 +16,14 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
+type latest_date = {
+  ?value_as_string: string wrap <ocaml module="Publish_time"> nullable
+}
 type doc_count1 = { doc_count: int }
 type dynamic = { buckets: (string * doc_count1) list <json repr="object"> }
 type words10 = {
   doc_count: int;
-  latest_date: string wrap <ocaml module="Publish_time"> nullable value_agg;
+  latest_date: latest_date;
   dynamic: dynamic;
   dynamic2: doc_count1 buckets
 }

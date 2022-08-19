@@ -47,7 +47,7 @@ let print_reflect name mapping =
 let convert_wire_type = function
 | Int -> sprintf "string_of_int %s"
 | Int64 -> sprintf "Int64.to_string %s"
-| String -> sprintf "Json.to_string (`String %s)"
+| String | Date -> sprintf "Json.to_string (`String %s)"
 | Double -> sprintf "Json.to_string (`Float %s)"
 | Bool -> sprintf "string_of_bool %s"
 | Json -> sprintf "Json.to_string %s"
@@ -56,7 +56,7 @@ let map_wire_type typ =
   sprintf @@ match typ with
   | Int -> "`Int %s"
   | Int64 -> "`String (Int64.to_string %s)"
-  | String -> "`String %s"
+  | String | Date -> "`String %s"
   | Double -> "`Float %s"
   | Bool -> "`Bool %s"
   | Json -> "%s"

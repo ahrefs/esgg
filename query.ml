@@ -286,7 +286,8 @@ let resolve_constraints mapping l =
   | Field_num (Field f) ->
     begin match snd @@ typeof f with
     | Int | Int64 | Double -> ()
-    | String | Bool | Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
+    | String | Date (* FIXME it is actually numeric wrt constraints ? *)
+    | Bool | Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
   | Field_num (Script _) -> ()
   | Field_date _ -> ()

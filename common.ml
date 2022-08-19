@@ -98,12 +98,13 @@ let compare = compare
 
 end
 
-type simple_type = Int | Int64 | String | Double | Bool | Json
+type simple_type = Int | Int64 | String | Date | Double | Bool | Json
 
 let show_simple_type = function
 | Int -> "int"
 | Int64 -> "int64"
 | String -> "string"
+| Date -> "date"
 | Double -> "float"
 | Bool -> "bool"
 | Json -> "json"
@@ -140,7 +141,7 @@ let simple_of_es_type t =
   | "long" -> Int
   | "keyword" | "text" -> String
   | "ip" -> String
-  | "date" -> String
+  | "date" -> Date
   | "double" | "float" -> Double
   | "boolean" -> Bool
   | "int64" | "murmur3" -> Int64

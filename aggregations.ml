@@ -196,7 +196,12 @@ let infer_single mapping ~nested { name; agg; } sub =
           | Simple (Int | Int64 as t) | Ref (_, (Int | Int64 as t)) -> Dict ["override int as float hack", Simple t]
           | _ -> value_type
       in
-      [], sub [ "value", typ ]
+      let key =
+        match value_type with
+        | Simple Date | Ref (_,Date) -> "value_as_string" (* Date is mapped to string, but value in ES is numeric *)
+        | _ -> "value"
+      in
+      [], sub [ key, typ ]
     | Cardinality _value | Value_count _value -> [], sub ["value", int ]
     | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []), buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->

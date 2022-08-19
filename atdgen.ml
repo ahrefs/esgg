@@ -21,7 +21,7 @@ let of_simple_type =
   function
   | Int -> tname "int"
   | Int64 -> tname ~a:["ocaml",["repr","int64"]] "int"
-  | String -> tname "string"
+  | String | Date -> tname "string"
   | Double -> tname "float"
   | Bool -> tname "bool"
   | Json -> tname "basic_json"
@@ -294,6 +294,11 @@ let add_shape t name shape =
   Types.add t @@ ptyp "value_agg'" ["a"] (record [field "value" (tvar "a")]);
   Types.add t @@ ptyp "value_agg" ["a"]
     (wrap (pname "value_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value; } -> value"; "unwrap", "fun value -> { value; }"]);
+(*
+  Types.add t @@ ptyp "value_as_string_agg'" ["a"] (record [field "value" (tvar "a")]);
+  Types.add t @@ ptyp "value_as_string_agg" ["a"]
+    (wrap (pname "value_as_string_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value_as_string = v; } -> v"; "unwrap", "fun v -> { value_as_string = v; }"]);
+*)
   Types.add t @@ basic_json;
   let rec map shape =
     match shape with
@@ -308,6 +313,7 @@ let add_shape t name shape =
     | Dict ["buckets", List t] -> pname "buckets" [map t]
     | Dict ["value", Dict ["override int as float hack", Simple Int]] -> pname "value_agg" [tname "int_as_float"]
     | Dict ["value", t] -> pname "value_agg" [map t]
+(*     | Dict ["value_as_string", t] -> pname "value_as_string_agg" [map t] *)
     | Dict fields -> safe_record map fields
   in
   Types.add t @@ typ name (map shape)
