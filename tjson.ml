@@ -162,7 +162,7 @@ let lift_to_string map (v:t) =
     | `Nothing -> Buffer.contents out
     | _ -> assert false
   in
-  let quote_val f x = let b = Bi_outbuf.create 1 in f b x; quote @@ Bi_outbuf.contents b in
+  let quote_val f x = let b = Buffer.create 1 in f b x; quote @@ Buffer.contents b in
   let rec output_list l =
     let elem = function
     | `Optional ({label;vars},x) ->
