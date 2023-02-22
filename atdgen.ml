@@ -273,11 +273,13 @@ end
 
 let make_abstract ((_loc,annot),init) types =
   let esgg_section_name = "esgg" in
-  let module_name = Atd.Annot.get_opt_field ~parse:(fun s -> Some s) ~sections:[esgg_section_name] ~field:"from" annot in
-  let annot =
-    annot
-    |> List.filter (fun (section_name, _) -> section_name <> esgg_section_name)
-    |> Atd.Annot.set_field ~loc ~section:"ocaml" ~field:"from" module_name
+  let module_name_opt = Atd.Annot.get_opt_field ~parse:(fun s -> Some s) ~sections:[esgg_section_name] ~field:"from" annot in
+  let annot = 
+    let annot' = match module_name_opt with
+    | Some module_name ->  Atd.Annot.set_field ~loc ~section:"ocaml" ~field:"from" (Some module_name) annot
+    | None -> annot
+    in 
+    List.filter (fun (section_name, _) -> section_name <> esgg_section_name) annot'
   in
   types |> List.map begin fun t ->
     match List.find (fun i -> type_def_name i = type_def_name t) init with (* match by name, because initial types are not renamed *)
