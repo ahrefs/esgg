@@ -71,6 +71,21 @@ Syntax for variables in template json files is as follows:
   - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
   - full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
+## Reusing shared ATD definitions
+
+To reuse shared definitions using the `-shared <file.atd>` option, the `atd` file must have the `<esgg from="...">` annotation at the top of the file.
+The value of the annotation must correspond to the OCaml module containing the shared definitions.
+
+Example:
+```
+# file.atd
+
+<esgg from="Your_ocaml_module_name">
+
+...atd type definitions...
+```
+
+
 ## Elasticsearch features
 
 TODO document what is supported
