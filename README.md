@@ -138,6 +138,7 @@ to discourage fragile code.
   - top_hits
   - nested
   - reverse_nested
+  - [bucket_sort](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-sort-aggregation.html)
 
 #### dynamic
 

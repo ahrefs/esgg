@@ -1,0 +1,7 @@
+{
+  "properties": {
+    "date": { "type": "date" },
+    "price": { "type": "long"},
+    "item": { "type": "text" }
+  }
+}

@@ -22,6 +22,7 @@ type agg_type =
 | Date_range of { on : value; format : bool; keys : string list option; ranges : range list; }
 | Nested of string
 | Reverse_nested of string option
+| Bucket_sort of { from : Tjson.t; size : Tjson.t; }
 
 type single = { name : string; agg : agg_type or_var; }
 type t = { this : single; sub : t list; }
@@ -109,6 +110,7 @@ let analyze_single name agg_type json =
       Date_range { on = value (); keys; format; ranges }
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
+    | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
     | _ -> fail "unknown aggregation type %S" agg_type
   in
   json, { name; agg = Static agg; }
@@ -168,6 +170,8 @@ let derive_fields mapping fields =
 let derive_highlight mapping hl =
   try Maybe (Dict (derive_fields mapping hl)) with Failure s -> fail "derive_highlight: %s" s
 
+let dummy_expunge = Dict ["dummy_expunge", Simple Json]
+
 let infer_single mapping ~nested { name; agg; } sub =
   let int = Simple Int in
   let double = Simple Double in
@@ -178,6 +182,7 @@ let infer_single mapping ~nested { name; agg; } sub =
     let d = doc_count () in
     Dict [ "buckets", Dict (List.map (fun k -> k, d) keys)]
   in
+  let on_int_var = function `Var var -> [On_var (var, Eq_type Int)] | _ -> [] in
   let (cstr,shape) =
     match agg with
     | Dynamic _ -> [], Simple Json
@@ -203,15 +208,15 @@ let infer_single mapping ~nested { name; agg; } sub =
       in
       [], sub [ key, typ ]
     | Cardinality _value | Value_count _value -> [], sub ["value", int ]
-    | Terms { term; size } -> (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []), buckets (typeof_value mapping term)
+    | Terms { term; size } -> on_int_var size, buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->
-      (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []),
+      on_int_var size,
       Dict [
         "doc_count", int;
         "bg_count", int;
         "buckets", List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", int) :: ("bg_count", int) :: ("score", double) ::[]) ]
     | Significant_text { term; size } ->
-      (match size with `Var var -> [On_var (var, Eq_type Int)] | _ -> []),
+      on_int_var size,
       Dict [
         "doc_count", int;
         "buckets", List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", int) :: ("bg_count", int) :: ("score", double) ::[]) ]
@@ -234,6 +239,9 @@ let infer_single mapping ~nested { name; agg; } sub =
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->
       [Field_date on], (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
+    | Bucket_sort { from; size } ->
+      on_int_var from @ on_int_var size,
+      dummy_expunge (* lazy hack to not wrap all results in option *)
   in
   cstr, (name, shape)
 
@@ -245,6 +253,7 @@ let rec infer mapping ~nested { this; sub } =
     | _ -> nested
   in
   let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
+  let subs = List.filter (fun (_,shape) -> shape <> dummy_expunge) subs in
   let sub l = Dict (l @ subs) in
   let (cstr,desc) = infer_single mapping ~nested this sub in
   List.flatten (cstr::constraints), desc
