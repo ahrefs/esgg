@@ -139,6 +139,7 @@ to discourage fragile code.
   - nested
   - reverse_nested
   - [bucket_sort](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-sort-aggregation.html)
+  - [cumulative_sum](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-cumulative-sum-aggregation.html)
 
 #### dynamic
 
@@ -176,4 +177,3 @@ This project is distributed under the terms of GPL Version 2. See LICENSE file f
 NB the output of esgg, i.e. the generated code, is all yours of course :)
 
 ----
-2019-10-29

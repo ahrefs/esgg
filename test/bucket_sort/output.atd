@@ -13,7 +13,8 @@ type hits = { total: int }
 type sales_per_month = {
   key: int;
   doc_count: int;
-  total_sales: int_as_float value_agg
+  total_sales: int_as_float value_agg;
+  cumulative_sales: int_as_float value_agg
 }
 type aggregations = { sales_per_month: sales_per_month buckets }
 type result = { hits: hits; aggregations: aggregations }

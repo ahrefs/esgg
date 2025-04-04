@@ -23,6 +23,7 @@ type agg_type =
 | Nested of string
 | Reverse_nested of string option
 | Bucket_sort of { from : Tjson.t; size : Tjson.t; }
+| Cumulative_sum of string
 
 type single = { name : string; agg : agg_type or_var; }
 type t = { this : single; sub : t list; }
@@ -42,7 +43,7 @@ let analyze_single name agg_type json =
 (*     | `Var v -> Variable v *)
     | `Null ->
       begin match U.assoc "script" json with
-      | exception exn -> fail ~exn "failed to get aggregation field"
+      | exception exn -> fail ~exn "failed to get aggregation field (neither `field` nor `script` present)"
       | script ->
         try
           match var_or U.to_string script with
@@ -85,6 +86,7 @@ let analyze_single name agg_type json =
     match agg_type with
     | "max" | "min" -> Simple_metric (`MinMax, value ())
     | "sum" -> Simple_metric (`Sum, value ())
+    | "cumulative_sum" -> Cumulative_sum U.(get "buckets_path" to_string json)
     | "avg" -> Simple_metric (`Avg, value ())
     | "value_count" -> Value_count (value ())
     | "cardinality" -> Cardinality (value ())
@@ -172,7 +174,7 @@ let derive_highlight mapping hl =
 
 let dummy_expunge = Dict ["dummy_expunge", Simple Json]
 
-let infer_single mapping ~nested { name; agg; } sub =
+let infer_single mapping ~nested { name; agg; } sibling sub =
   let int = Simple Int in
   let double = Simple Double in
   let string = Simple String in
@@ -207,6 +209,12 @@ let infer_single mapping ~nested { name; agg; } sub =
         | _ -> "value"
       in
       [], sub [ key, typ ]
+    | Cumulative_sum path ->
+      (* TODO https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline.html#buckets-path-syntax *)
+      begin match List.assoc_opt path sibling with
+      | None -> fail "cumulative_sum: buckets_path %S not found : available %s" path (String.concat " " @@ List.map fst sibling)
+      | Some v -> [], v
+      end
     | Cardinality _value | Value_count _value -> [], sub ["value", int ]
     | Terms { term; size } -> on_int_var size, buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->
@@ -245,19 +253,21 @@ let infer_single mapping ~nested { name; agg; } sub =
   in
   cstr, (name, shape)
 
-let rec infer mapping ~nested { this; sub } =
+let list_map_prev f l = List.rev @@ List.fold_left (fun acc x -> f acc x :: acc) [] l
+
+let rec infer mapping ~nested prev { this; sub } =
   let nested =
     match this.agg with
     | Static (Nested path) -> Some (ES_name.make mapping path)
     | Static (Reverse_nested path) -> (match path with Some path -> Some (ES_name.make mapping path) | None -> None)
     | _ -> nested
   in
-  let (constraints, subs) = List.split @@ List.map (infer mapping ~nested) sub in
+  let (constraints, subs) = List.split @@ list_map_prev (infer mapping ~nested) sub in
   let subs = List.filter (fun (_,shape) -> shape <> dummy_expunge) subs in
   let sub l = Dict (l @ subs) in
-  let (cstr,desc) = infer_single mapping ~nested this sub in
+  let (cstr,desc) = infer_single mapping ~nested this (List.map snd prev) sub in
   List.flatten (cstr::constraints), desc
 
 let analyze mapping query =
   let (json,sub) = get query in
-  json, List.map (infer mapping ~nested:None) sub
+  json, list_map_prev (infer mapping ~nested:None) sub
