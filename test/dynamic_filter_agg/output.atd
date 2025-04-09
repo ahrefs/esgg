@@ -14,7 +14,11 @@ type _source = {
   words: int wrap <ocaml module="Words">;
   publish_time: string wrap <ocaml module="Publish_time">
 }
-type hit = { _id: string; _source: _source }
+type hit = {
+  _id: string;
+  _source: _source;
+  ?matched_queries: string list nullable
+}
 type hits = { total: int; ~hits: hit list }
 type latest_date = {
   ?value_as_string: string wrap <ocaml module="Publish_time"> nullable

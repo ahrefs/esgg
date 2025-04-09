@@ -9,6 +9,10 @@ type 'a value_agg =
     <ocaml
        t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
 type basic_json <ocaml module="Json" t="t"> = abstract
-type hit = { _id: string; _source: basic_json }
+type hit = {
+  _id: string;
+  _source: basic_json;
+  ?matched_queries: string list nullable
+}
 type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }
