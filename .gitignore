@@ -1,5 +1,6 @@
 _build
 .merlin
 esgg.install
+_opam
 
 /test/*/query.ml
