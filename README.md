@@ -34,12 +34,12 @@ impossible to store extended mapping back into ES which is a pity), as follows:
 
 Supported `_meta` attributes:
 
-* `{"list":true}` - property is an array (mapped to `list`)
-* `{"list":"sometimes"}` - property is either an array or single element (mapped to json with custom ocaml module wrap that will need to be provided in scope)
-* `{"optional":<true|false>}` - property may be missing (mapped to `option`)
-* `{"ignore":true}` - skip property altogether
-* `{"fields_default_optional":true}` - any subfield may be missing (can be overriden by per-field `optional:false`)
-* `{"repr":"int64"}` - override ES `type`, currently the only possible value is `"int64"` to ensure no bits are lost (by default `long` is mapped to OCaml `int`)
+- `{"list":true}` - property is an array (mapped to `list`)
+- `{"list":"sometimes"}` - property is either an array or single element (mapped to json with custom ocaml module wrap that will need to be provided in scope)
+- `{"optional":<true|false>}` - property may be missing (mapped to `option`)
+- `{"ignore":true}` - skip property altogether
+- `{"fields_default_optional":true}` - any subfield may be missing (can be overriden by per-field `optional:false`)
+- `{"repr":"int64"}` - override ES `type`, currently the only possible value is `"int64"` to ensure no bits are lost (by default `long` is mapped to OCaml `int`)
 
 ### Host types mapping
 
@@ -67,9 +67,9 @@ will generate the following, which should be edited manually as needed, e.g. by 
 
 Syntax for variables in template json files is as follows:
 
-  - `$var` for regular required variable
-  - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
-  - full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
+- `$var` for regular required variable
+- `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
+- full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
 ## Reusing shared ATD definitions
 
@@ -77,6 +77,7 @@ To reuse shared definitions using the `-shared <file.atd>` option, the `atd` fil
 The value of the annotation must correspond to the OCaml module containing the shared definitions.
 
 Example:
+
 ```
 # file.atd
 
@@ -84,7 +85,6 @@ Example:
 
 ...atd type definitions...
 ```
-
 
 ## Elasticsearch features
 
@@ -96,55 +96,113 @@ Some notes follow:
 
 The following aggregation types are supported:
 
-#### [filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
+#### Metric Aggregations
 
-  - [x] named
-  - [x] anonymous
-  - [x] dynamic (i.e. a variable)
-  - [x] partial dynamic (i.e. containing variables)
-  - [x] other_bucket and other_bucket_key
-  - [ ] other_bucket with anonymous filters (ignored, user is responsible to treat last element of result specially)
+- [x] [avg](https://www.elastic.co/docs/reference/aggregations/search-aggregations-metrics-avg-aggregation) - Average of numeric values
+- [x] [sum](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-sum-aggregation.html) - Sum of numeric values
+- [x] [min](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-min-aggregation.html) - Minimum value
+- [x] [max](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-max-aggregation.html) - Maximum value
+- [x] [value_count](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-valuecount-aggregation.html) - Count of values
+- [x] [cardinality](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-cardinality-aggregation.html) - Approximate count of distinct values
+- [x] [top_hits](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-top-hits-aggregation.html) - Top matching documents per bucket
+- [ ] [stats](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-stats-aggregation.html) - Basic statistics (count, min, max, avg, sum)
+- [ ] [extended_stats](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-extendedstats-aggregation.html) - Extended statistics (variance, std deviation, etc.)
+- [ ] [percentiles](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-percentile-aggregation.html) - Percentile calculations
+- [ ] [percentile_ranks](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-percentile-rank-aggregation.html) - Percentile ranks
+- [ ] [median_absolute_deviation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-median-absolute-deviation-aggregation.html) - MAD calculation
+- [ ] [weighted_avg](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-weight-avg-aggregation.html) - Weighted average
+- [ ] [geo_bounds](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-geobounds-aggregation.html) - Geographic bounding box
+- [ ] [scripted_metric](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-scripted-metric-aggregation.html) - Custom scripted metrics
+
+#### Bucket Aggregations
+
+- [x] [terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-terms-aggregation.html) - Buckets by field values
+- [x] [histogram](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-histogram-aggregation.html) - Fixed-size numeric interval buckets
+- [x] [date_histogram](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-datehistogram-aggregation.html) - Fixed calendar/time interval buckets
+- [x] [range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-range-aggregation.html) - Numeric range buckets
+- [x] [date_range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-daterange-aggregation.html) - Date range buckets
+- [x] [filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filter-aggregation.html) - Single filter bucket
+- [x] [filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html) - Multiple filter buckets
+- [x] [nested](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-nested-aggregation.html) - Nested document aggregation
+- [x] [reverse_nested](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-reverse-nested-aggregation.html) - Reverse nested aggregation
+- [x] [significant_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-significantterms-aggregation.html) - Significant terms analysis
+- [x] [significant_text](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-significanttext-aggregation.html) - Significant text analysis
+- [ ] [auto_date_histogram](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-autodatehistogram-aggregation.html) - Automatic date histogram interval
+- [ ] [ip_range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-iprange-aggregation.html) - IP address range buckets
+- [ ] [geo_distance](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geodistance-aggregation.html) - Geographic distance buckets
+- [ ] [geohash_grid](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geohashgrid-aggregation.html) - Geohash grid buckets
+- [ ] [geotile_grid](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geotilegrid-aggregation.html) - Geotile grid buckets
+- [ ] [geohex_grid](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geohexgrid-aggregation.html) - Geohex grid buckets
+- [ ] [global](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-global-aggregation.html) - Global aggregation (all documents)
+- [ ] [missing](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-missing-aggregation.html) - Missing field values
+- [ ] [children](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-children-aggregation.html) - Child documents aggregation
+- [ ] [parent](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-parent-aggregation.html) - Parent documents aggregation
+- [ ] [sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-sampler-aggregation.html) - Sampler aggregation
+- [ ] [diversified_sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-diversified-sampler-aggregation.html) - Diversified sampler
+- [ ] [composite](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html) - Composite aggregation for pagination
+- [ ] [multi_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-multi-terms-aggregation.html) - Multi-field terms aggregation
+- [ ] [adjacency_matrix](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-adjacency-matrix-aggregation.html) - Adjacency matrix
+- [ ] [categorize_text](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-categorize-text-aggregation.html) - Text categorization
+- [ ] [frequent_item_sets](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-frequent-item-sets-aggregation.html) - Frequent item sets
+- [ ] [random_sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-random-sampler-aggregation.html) - Random sampling
+
+#### Pipeline Aggregations
+
+- [x] [cumulative_sum](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-cumulative-sum-aggregation.html) - Cumulative sum across buckets
+- [x] [bucket_sort](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-sort-aggregation.html) - Sort and limit buckets
+- [ ] [avg_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-avg-bucket-aggregation.html) - Average of bucket values
+- [ ] [max_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-max-bucket-aggregation.html) - Maximum bucket value
+- [ ] [min_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-min-bucket-aggregation.html) - Minimum bucket value
+- [ ] [sum_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-sum-bucket-aggregation.html) - Sum of bucket values
+- [ ] [stats_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-stats-bucket-aggregation.html) - Statistics on bucket values
+- [ ] [extended_stats_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-extended-stats-bucket-aggregation.html) - Extended statistics on buckets
+- [ ] [percentiles_bucket](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-percentiles-bucket-aggregation.html) - Percentiles of bucket values
+- [ ] [moving_avg](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-movavg-aggregation.html) - Moving average (deprecated)
+- [ ] [moving_fn](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-movfn-aggregation.html) - Moving function
+- [ ] [derivative](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-derivative-aggregation.html) - Derivative calculation
+- [ ] [bucket_script](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-script-aggregation.html) - Custom bucket calculations
+- [ ] [bucket_selector](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-selector-aggregation.html) - Filter buckets by script
+- [ ] [serial_diff](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-serialdiff-aggregation.html) - Serial differencing
+
+#### Matrix Aggregations
+
+- [ ] [matrix_stats](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-matrix-stats-aggregation.html) - Matrix statistics
+
+---
+
+#### Aggregation-specific notes
+
+##### [filters](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-filters-aggregation.html)
+
+- [x] named
+- [x] anonymous
+- [x] dynamic (i.e. a variable)
+- [x] partial dynamic (i.e. containing variables)
+- [x] other_bucket and other_bucket_key
+- [ ] other_bucket with anonymous filters (ignored, user is responsible to treat last element of result specially)
 
 Dynamic (defined at runtime) filters are supported, as follows `{ "filters": { "filters": $x } }`.
 In this case corresponding part of output will be quite untyped. `$x` is assumed to be a dictionary and result will be represented with
 dictionaries. For anonymous filters (ie array of filters) use `$(x:list)`.
 
-#### date_histogram
+##### date_histogram
 
 `key_as_string` is returned in output only when `format` is
 [explicitly specified](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/search-aggregations-bucket-datehistogram-aggregation.html#_keys),
 to discourage fragile code.
 
-#### [range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-range-aggregation.html)
+##### range
 
-  Keyed aggregation expects explicit `key` for each range. `from`/`to` fields in response are not extracted.
+Keyed aggregation expects explicit `key` for each range. `from`/`to` fields in response are not extracted.
 
-#### [date_range](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-daterange-aggregation.html)
+##### date_range
 
-  same as for range aggregation
+Same as for range aggregation.
 
-#### others
+##### dynamic
 
-  - min
-  - max
-  - avg
-  - sum
-  - value_count
-  - cardinality
-  - terms
-  - significant_terms
-  - significant_text
-  - histogram
-  - top_hits
-  - nested
-  - reverse_nested
-  - [bucket_sort](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-bucket-sort-aggregation.html)
-  - [cumulative_sum](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline-cumulative-sum-aggregation.html)
-
-#### dynamic
-
-  Specifying aggregation as variable (`$var`) will lead to an untyped json in place of aggregation output, this can be used as temporary
-  workaround for unsupported aggregation types or for truly dynamic usecase (aggregation built at run-time).
+Specifying aggregation as variable (`$var`) will lead to an untyped json in place of aggregation output, this can be used as temporary
+workaround for unsupported aggregation types or for truly dynamic usecase (aggregation built at run-time).
 
 ### [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html)
 
@@ -165,8 +223,8 @@ Tests are easy to add and fast to run.
 
 TODO tests to verify that:
 
-  * code generated for query application of input variables does actually compile and produce correct query when run
-  * atd description of output (generated from query) can indeed unserialize ES output from that actual query
+- code generated for query application of input variables does actually compile and produce correct query when run
+- atd description of output (generated from query) can indeed unserialize ES output from that actual query
 
 ## Conditions
 
@@ -176,4 +234,4 @@ This project is distributed under the terms of GPL Version 2. See LICENSE file f
 
 NB the output of esgg, i.e. the generated code, is all yours of course :)
 
-----
+---
