@@ -14,11 +14,6 @@ type fields = {
   ~content_text_en <json name="content.text.en">:
     string wrap <ocaml module="Content.Text.En"> list
 }
-type hit = {
-  _id: string;
-  _source: _source;
-  fields: fields;
-  ?matched_queries: string list nullable
-}
+type hit = { _id: string; _source: _source; fields: fields }
 type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }

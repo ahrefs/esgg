@@ -21,8 +21,8 @@ let output mapping query =
   | Search { source; highlight; fields; _ } ->
     let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
     let fields = Option.map (derive_stored_fields mapping) fields in
-    let matched_queries = Maybe (List (Simple String)) in
-    let hits = Hit.hits mapping ~highlight ?fields ~matched_queries source in
+    let matched_queries = if Query.has_named_queries query then Some (Maybe (List (Simple String))) else None in
+    let hits = Hit.hits mapping ~highlight ?fields ?matched_queries source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
     Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 

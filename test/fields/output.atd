@@ -26,11 +26,6 @@ type highlight = {
   ~content_text_fr <json name="content.text.fr">:
     string wrap <ocaml module="Content.Text.Fr"> list
 }
-type hit = {
-  _id: string;
-  _source: _source;
-  ?highlight: highlight nullable;
-  ?matched_queries: string list nullable
-}
+type hit = { _id: string; _source: _source; ?highlight: highlight nullable }
 type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }

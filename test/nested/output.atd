@@ -17,10 +17,6 @@ type _source = {
   name: string wrap <ocaml module="Name">;
   ~obj: obj_elem list
 }
-type hit = {
-  _id: string;
-  _source: _source;
-  ?matched_queries: string list nullable
-}
+type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }

@@ -235,6 +235,16 @@ let extract_stored_fields json =
   | Some (`List l) -> Some (List.map U.to_string l)
   | _ -> fail "stored_fields expected to be a list of strings"
 
+let has_named_queries json =
+  let rec check = function
+    | `Assoc l -> List.exists (fun (k, v) -> k = "_name" || check v) l
+    | `List l -> List.exists check l
+    | _ -> false
+  in
+  match U.opt "query" id json with
+  | None -> false
+  | Some q -> check q
+
 (** Filter out the [_esgg] field from the json if it exist. *)
 let filter_out_conf json =
   match json with
