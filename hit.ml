@@ -151,8 +151,10 @@ let inner_hits_result mapping ~nested ~highlight ?fields source_type =
     | Some (Dynamic _) -> Simple Json
   in
   Dict [
-    "total", Simple Int;
-    "hits", List (inner_hit ~nested ~highlight ?fields source_for_inner_hit);
+    "hits", Dict [
+      "total", Simple Int;
+      "hits", List (inner_hit ~nested ~highlight ?fields source_for_inner_hit);
+    ]
   ]
 
 let hits_ mapping ?nested ~highlight ?fields source =

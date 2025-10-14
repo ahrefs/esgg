@@ -18,13 +18,14 @@ type _source = {
   ~comments: comment list
 }
 type _nested = { field: string; offset: int }
-type hit = { _id: string; _nested: _nested; _source: comment }
-type comments = { total: int; ~hits: hit list }
+type inner_hit = { _id: string; _nested: _nested; _source: comment }
+type comments_hits = { total: int; ~hits: inner_hit list }
+type comments = { hits: comments_hits }
 type inner_hits = { comments: comments }
-type hit1 = {
+type hit = {
   _id: string;
   _source: _source;
   ?inner_hits: inner_hits nullable
 }
-type hits = { total: int; ~hits: hit1 list }
+type hits = { total: int; ~hits: hit list }
 type result = { hits: hits }
