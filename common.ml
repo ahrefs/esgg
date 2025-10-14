@@ -126,6 +126,15 @@ type constraint_t = On_var of Tjson.var * var_eq | Field_num of value | Field_da
 type source_filter = { excludes : string list option; includes : string list option }
 let empty_filter = { excludes = None; includes = None }
 
+type inner_hits_spec = {
+  name : string option;
+  size : Tjson.t option;
+  from : Tjson.t option;
+  source : source_filter option;
+  fields : string list option;
+  highlight : string list option;
+}
+
 type result_type =
   | List of result_type
   | List_or_single of result_type
