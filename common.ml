@@ -17,6 +17,8 @@ let var_or conv x =
   | _ ->
     try Static (conv x) with Failure s -> fail "expected var or %s" s
 
+type order = [ `Asc | `Desc ]
+
 module U = struct
 
 (** @return specified [name] from [json] dict or [`Null] when [name] is absent.
