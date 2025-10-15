@@ -251,7 +251,7 @@ let rec extract_inner_hits_from_query query =
   | Nested { inner_hits = None; _ } -> []
   | Bool clauses ->
     clauses |> List.map snd |> List.flatten |> List.concat_map extract_inner_hits_from_query
-  | _ -> []
+  | Field _ | Var _ | Strings _ | Nothing -> []
 
 let record_single_var typ (v:Tjson.var) =
   let vars = Hashtbl.create 3 in
