@@ -250,7 +250,7 @@ let rec extract_inner_hits_from_query query =
     [path, spec]
   | Nested { inner_hits = None; _ } -> []
   | Bool clauses ->
-    clauses |> List.map snd |> List.concat_map extract_inner_hits_from_query |> List.flatten
+    clauses |> List.map snd |> List.flatten |> List.concat_map extract_inner_hits_from_query
   | _ -> []
 
 let record_single_var typ (v:Tjson.var) =
