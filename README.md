@@ -118,7 +118,7 @@ The following aggregation types are supported:
 
 #### Metric Aggregations
 
-- [x] [avg](https://www.elastic.co/docs/reference/aggregations/search-aggregations-metrics-avg-aggregation) - Average of numeric values
+- [x] [avg](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-avg-aggregation.html) - Average of numeric values
 - [x] [sum](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-sum-aggregation.html) - Sum of numeric values
 - [x] [min](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-min-aggregation.html) - Minimum value
 - [x] [max](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-metrics-max-aggregation.html) - Maximum value
