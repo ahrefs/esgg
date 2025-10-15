@@ -8,6 +8,7 @@ type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
 | Value_count of value
 | Cardinality of value
+| Weighted_avg of { value : value; weight : value }
 | Terms of { term : value; size : Tjson.t }
 | Significant_terms of { term : value; size : Tjson.t }
 | Significant_text of { term : value; size : Tjson.t }
@@ -37,7 +38,7 @@ let analyze_filter json =
   | _ -> fail "filter: expecting either dict or variable"
 
 let analyze_single name agg_type json =
-  let value () =
+  let value json =
     match U.member "field" json with
     | `String s -> Field s
 (*     | `Var v -> Variable v *)
@@ -84,22 +85,26 @@ let analyze_single name agg_type json =
     | _ ->
     json,
     match agg_type with
-    | "max" | "min" -> Simple_metric (`MinMax, value ())
-    | "sum" -> Simple_metric (`Sum, value ())
+    | "max" | "min" -> Simple_metric (`MinMax, value json)
+    | "sum" -> Simple_metric (`Sum, value json)
     | "cumulative_sum" -> Cumulative_sum U.(get "buckets_path" to_string json)
-    | "avg" -> Simple_metric (`Avg, value ())
-    | "value_count" -> Value_count (value ())
-    | "cardinality" -> Cardinality (value ())
-    | "terms" -> Terms { term = value (); size = U.member "size" json }
-    | "significant_terms" -> Significant_terms { term = value (); size = U.member "size" json }
-    | "significant_text" -> Significant_text { term = value (); size = U.member "size" json }
-    | "histogram" -> Histogram (value ())
-    | "date_histogram" -> Date_histogram { on = value (); format = `Null <> U.member "format" json }
+    | "avg" -> Simple_metric (`Avg, value json)
+    | "value_count" -> Value_count (value json)
+    | "cardinality" -> Cardinality (value json)
+    | "weighted_avg" ->
+      let value_field = value (U.member "value" json) in
+      let weight_field = value (U.member "weight" json) in
+      Weighted_avg { value = value_field; weight = weight_field }
+    | "terms" -> Terms { term = value json; size = U.member "size" json }
+    | "significant_terms" -> Significant_terms { term = value json; size = U.member "size" json }
+    | "significant_text" -> Significant_text { term = value json; size = U.member "size" json }
+    | "histogram" -> Histogram (value json)
+    | "date_histogram" -> Date_histogram { on = value json; format = `Null <> U.member "format" json }
     | "top_hits" -> Top_hits { source = Query.extract_source json; highlight = Query.extract_highlight json; }
     | "range" when U.(opt "keyed" to_bool json) = Some true ->
       let keys = U.(get "ranges" (to_list (get "key" to_string))) json in
-      Range_keyed (value (), keys)
-    | "range" -> Range (value ())
+      Range_keyed (value json, keys)
+    | "range" -> Range (value json)
     | "date_range" ->
       let ranges k = U.(get "ranges" (to_list k)) json in
       let keys =
@@ -109,7 +114,7 @@ let analyze_single name agg_type json =
       in
       let ranges = ranges (fun x -> { _from = U.mem "from" x; _to_ = U.mem "to" x; }) in
       let format = U.mem "format" json in
-      Date_range { on = value (); keys; format; ranges }
+      Date_range { on = value json; keys; format; ranges }
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
@@ -216,6 +221,7 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       | Some v -> [], v
       end
     | Cardinality _value | Value_count _value -> [], sub ["value", int ]
+    | Weighted_avg { value=_; weight=_ } -> [], sub ["value", Maybe double]
     | Terms { term; size } -> on_int_var size, buckets (typeof_value mapping term)
     | Significant_terms { term; size } ->
       on_int_var size,

@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "grade": {
+      "type": "long"
+    },
+    "weight": {
+      "type": "long"
+    }
+  }
+}
