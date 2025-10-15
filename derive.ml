@@ -41,21 +41,7 @@ let output mapping query =
     let fields = Option.map (derive_stored_fields mapping) fields in
     let inner_hits_specs = Query.extract_inner_hits_from_query q in
     let inner_hits_type = generate_inner_hits mapping source inner_hits_specs in
-    let hits =
-      match inner_hits_type with
-      | None -> Hit.hits mapping ~highlight ?fields source
-      | Some inner_hits_type ->
-        let hit_with_inner_hits source_type = Hit.hit ?highlight ?fields ~inner_hits:inner_hits_type source_type in
-        Dict [
-          "total", Simple Int;
-          "hits", List (
-            match source with
-            | None -> hit_with_inner_hits (Simple Json)
-            | Some (Static filter) -> hit_with_inner_hits (Hit.of_mapping ~filter mapping)
-            | Some (Dynamic _) -> hit_with_inner_hits (Simple Json)
-          )
-        ]
-    in
+    let hits = Hit.hits mapping ?inner_hits:inner_hits_type ~highlight ?fields source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
     Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 

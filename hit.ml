@@ -157,16 +157,18 @@ let inner_hits_result mapping ~nested ~highlight ?fields source_type =
     ]
   ]
 
-let hits_ mapping ?nested ~highlight ?fields source =
+let hits_ mapping ?nested ?inner_hits ~highlight ?fields source =
   let hit x =
     match nested with
-    | None -> hit ?highlight ?fields x
-    | Some nested -> hit ~id:false ?highlight ?fields (get_nested nested x)
+    | None -> hit ?highlight ?fields ?inner_hits x
+    | Some nested -> hit ~id:false ?highlight ?fields ?inner_hits (get_nested nested x)
   in
   List.concat [
-      ["total", Simple Int];
-      (match source with None -> [] | Some source ->
-        ["hits", List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ ->  Simple Json)]);
-    ]
+    ["total", Simple Int];
+    (match source with
+    | None -> ["hits", List (hit (Simple Json))]
+    | Some (Static filter) -> ["hits", List (hit (of_mapping ~filter mapping))]
+    | Some (Dynamic _) -> ["hits", List (hit (Simple Json))]);
+  ]
 
-let hits mapping ?nested ~highlight ?fields source = Dict (hits_ mapping ?nested ~highlight ?fields source)
+let hits mapping ?nested ?inner_hits ~highlight ?fields source = Dict (hits_ mapping ?nested ?inner_hits ~highlight ?fields source)
