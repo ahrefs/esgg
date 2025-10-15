@@ -133,13 +133,14 @@ let nested_meta () =
 
 let inner_hit ~nested ~highlight ?fields source =
   let source_type = get_nested nested source in
-  let a = [
+  let a = 
+    (match highlight with None -> [] | Some h -> ["highlight", h]) @
+    (match fields with None -> [] | Some f -> ["fields", f])
+    @ [
     "_id", Simple String;
     "_nested", nested_meta ();
     "_source", source_type;
-  ] @
-  (match highlight with None -> [] | Some h -> ["highlight", h]) @
-  (match fields with None -> [] | Some f -> ["fields", f])
+  ]
   in
   Dict a
 
