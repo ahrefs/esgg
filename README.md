@@ -159,7 +159,7 @@ The following aggregation types are supported:
 - [ ] [parent](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-parent-aggregation.html) - Parent documents aggregation
 - [ ] [sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-sampler-aggregation.html) - Sampler aggregation
 - [ ] [diversified_sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-diversified-sampler-aggregation.html) - Diversified sampler
-- [ ] [composite](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html) - Composite aggregation for pagination
+- [x] [composite](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html) - Composite aggregation for pagination (terms sources only)
 - [ ] [multi_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-multi-terms-aggregation.html) - Multi-field terms aggregation
 - [ ] [adjacency_matrix](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-adjacency-matrix-aggregation.html) - Adjacency matrix
 - [ ] [categorize_text](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-categorize-text-aggregation.html) - Text categorization
