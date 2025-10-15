@@ -10,7 +10,8 @@
           "field": "grade"
         },
         "weight": {
-          "field": "weight"
+          "field": "weight",
+          "missing": 1
         }
       }
     }

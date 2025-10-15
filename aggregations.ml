@@ -8,7 +8,7 @@ type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
 | Value_count of value
 | Cardinality of value
-| Weighted_avg of { value : value; weight : value }
+| Weighted_avg of { value : value_with_missing; weight : value_with_missing }
 | Terms of { term : value; size : Tjson.t }
 | Significant_terms of { term : value; size : Tjson.t }
 | Significant_text of { term : value; size : Tjson.t }
@@ -92,9 +92,18 @@ let analyze_single name agg_type json =
     | "value_count" -> Value_count (value json)
     | "cardinality" -> Cardinality (value json)
     | "weighted_avg" ->
-      let value_field = value (U.member "value" json) in
-      let weight_field = value (U.member "weight" json) in
-      Weighted_avg { value = value_field; weight = weight_field }
+      let value_obj = U.member "value" json in
+      let weight_obj = U.member "weight" json in
+      Weighted_avg {
+        value = {
+          value = value value_obj;
+          missing = U.member "missing" value_obj
+        };
+        weight = {
+          value = value weight_obj;
+          missing = U.member "missing" weight_obj
+        }
+      }
     | "terms" -> Terms { term = value json; size = U.member "size" json }
     | "significant_terms" -> Significant_terms { term = value json; size = U.member "size" json }
     | "significant_text" -> Significant_text { term = value json; size = U.member "size" json }

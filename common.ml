@@ -19,6 +19,8 @@ let var_or conv x =
 
 type value = Field of string | Script of [`Painless|`Id] * string or_var [@@deriving show]
 
+type value_with_missing = { value : value; missing : Tjson.t }
+
 module U = struct
 
 (** @return specified [name] from [json] dict or [`Null] when [name] is absent.
