@@ -6,6 +6,24 @@ open Common
 let derive_stored_fields mapping fields =
   try Dict (Aggregations.derive_fields mapping fields) with Failure s -> fail "derive_stored_fields: %s" s
 
+let generate_inner_hits mapping full_source inner_hits_list =
+  match inner_hits_list with
+  | [] -> None
+  | specs ->
+    let inner_hits_dict = specs |> List.map (fun (path, spec) ->
+      let nested_name = ES_name.make mapping path in
+      let highlight = Option.map (Aggregations.derive_highlight mapping) spec.highlight in
+      let fields = Option.map (derive_stored_fields mapping) spec.fields in
+      let source_type =
+        match spec.source with
+        | None -> full_source
+        | Some filter -> Some (Static filter)
+      in
+      let key = Option.default path spec.name in
+      key, Hit.inner_hits_result mapping ~nested:nested_name ~highlight ?fields source_type
+    ) in
+    Some (Maybe (Dict inner_hits_dict))
+
 let output mapping query =
   match Query.extract query with
   | Get { id = _; return = `Source filter; } -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
@@ -18,11 +36,13 @@ let output mapping query =
       | None -> Dict ["docs",List (Hit.doc_no_source ())]
       | Some filter -> Dict ["docs",List (Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping))]
     end
-  | Search { source; highlight; fields; _ } ->
+  | Search { q; source; highlight; fields; _ } ->
     let highlight = Option.map (Aggregations.derive_highlight mapping) highlight in
     let fields = Option.map (derive_stored_fields mapping) fields in
+    let inner_hits_specs = Query.extract_inner_hits_from_query q in
+    let inner_hits_type = generate_inner_hits mapping source inner_hits_specs in
     let matched_queries = if Query.has_matched_queries query then Some (Maybe (List (Simple String))) else None in
-    let hits = Hit.hits mapping ~highlight ?fields ?matched_queries source in
+    let hits = Hit.hits mapping ?inner_hits:inner_hits_type ~highlight ?fields ?matched_queries source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
     Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 

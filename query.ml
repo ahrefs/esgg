@@ -15,6 +15,7 @@ type query_t =
 | Field of { field : string; cardinality : cardinality; values : Tjson.t list }
 | Var of Tjson.var
 | Strings of var_list
+| Nested of { path : string; inner_query : query; inner_hits : inner_hits_spec option }
 | Nothing
 and query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 
@@ -50,6 +51,54 @@ let lookup json x = try Some (U.assoc x json) with _ -> None
 
 let cardinality_of_qt = function "terms" -> Many | _ -> One
 
+let extract_highlight json =
+  match U.opt "highlight" id json with
+  | None -> None
+  | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
+
+let extract_stored_fields json =
+  match U.opt "stored_fields" id json with
+  | None -> None
+  | Some (`List l) -> Some (List.map U.to_string l)
+  | _ -> fail "stored_fields expected to be a list of strings"
+
+let extract_source json =
+  let source = U.member "_source" json in
+  match U.member "size" json = `Int 0 || source = `Bool false with
+  | true -> None
+  | false ->
+    let filter =
+      match source with
+      | `Var v -> Dynamic v
+      | _ ->
+        let (excludes,includes) =
+          match source with
+          | `List l -> None, Some (List.map U.to_string l)
+          | `String s -> None, Some [s]
+          | _ -> source_fields "excludes" json, source_fields "includes" json
+        in
+        Static { excludes; includes; }
+    in
+    Some filter
+
+let extract_source_static json =
+  match extract_source json with
+  | None -> None
+  | Some (Static f) -> Some f
+  | Some (Dynamic _) -> fail "dynamic source not supported here" (* because source_args *)
+
+let extract_inner_hits json : inner_hits_spec option =
+  match U.member "inner_hits" json with
+  | `Null -> None
+  | ih_json ->
+    let name = U.opt "name" U.to_string ih_json in
+    let size = match U.member "size" ih_json with `Null -> None | x -> Some x in
+    let from = match U.member "from" ih_json with `Null -> None | x -> Some x in
+    let source = extract_source_static ih_json in
+    let fields = extract_stored_fields ih_json in
+    let highlight = extract_highlight ih_json in
+    Some { name; size; from; source; fields; highlight }
+
 let rec extract_clause (clause,json) =
   try match clause with
   | "must" | "must_not" | "should" | "filter" ->
@@ -77,13 +126,23 @@ and extract_query json =
     | `Var v -> json, [], Var v
     | `Assoc [qt,qv] ->
       begin match qt, qv with
-      | ("function_score"|"nested"), `Assoc l ->
+      | "function_score", `Assoc l ->
         begin match List.assoc "query" l with
-        | exception _ when qt = "nested" -> fail "nested query requires query, duh"
-        | exception _ when qt = "function_score" -> json, [], Nothing
+        | exception _ -> json, [], Nothing
         | q ->
           let { json; query; cstrs } = extract_query q in
-          `Assoc [qt, Tjson.replace qv "query" json], cstrs, query
+          `Assoc ["function_score", Tjson.replace qv "query" json], cstrs, query
+        end
+      | "nested", `Assoc l ->
+        begin match List.assoc "query" l, List.assoc "path" l with
+        | exception _ -> fail "nested query requires query and path"
+        | q, `String path ->
+          let inner_query = extract_query q in
+          let inner_hits = extract_inner_hits qv in
+          let json_nested = Tjson.replace qv "query" inner_query.json in
+          let json_reconstructed = `Assoc ["nested", json_nested] in
+          json_reconstructed, inner_query.cstrs, Nested { path; inner_query; inner_hits }
+        | _, _ -> fail "nested query path must be a string"
         end
       | "bool", `Assoc l ->
         let bool = List.map extract_clause l in
@@ -170,12 +229,29 @@ let infer' c0 query =
     | Var var -> tuck constraints (On_var (var, Eq_any))
     | Strings (`Var var) -> tuck constraints (On_var (var, Eq_list String))
     | Strings (`List l) -> l |> List.iter (function var -> tuck constraints (On_var (var, Eq_type String)))
+    | Nested { path=_; inner_query; inner_hits } ->
+      iter inner_query;
+      begin match inner_hits with
+      | None -> ()
+      | Some ih ->
+        (match ih.size with Some (`Var v) -> tuck constraints (On_var (v, Eq_type Int)) | _ -> ());
+        (match ih.from with Some (`Var v) -> tuck constraints (On_var (v, Eq_type Int)) | _ -> ());
+      end
     | Nothing -> ()
   in
   iter query;
   !constraints
 
 let infer = infer' []
+
+let rec extract_inner_hits_from_query query =
+  match query.query with
+  | Nested { path; inner_hits = Some spec; _ } ->
+    [path, spec]
+  | Nested { inner_hits = None; _ } -> []
+  | Bool clauses ->
+    clauses |> List.map snd |> List.flatten |> List.concat_map extract_inner_hits_from_query
+  | Field _ | Var _ | Strings _ | Nothing -> []
 
 let record_single_var typ (v:Tjson.var) =
   let vars = Hashtbl.create 3 in
@@ -198,42 +274,6 @@ let extract_conf json =
   match U.member "_esgg" json with
   | `Null -> `Assoc []
   | j -> j
-
-let extract_source json =
-  let source = U.member "_source" json in
-  match U.member "size" json = `Int 0 || source = `Bool false with
-  | true -> None
-  | false ->
-    let filter =
-      match source with
-      | `Var v -> Dynamic v
-      | _ ->
-        let (excludes,includes) =
-          match source with
-          | `List l -> None, Some (List.map U.to_string l)
-          | `String s -> None, Some [s]
-          | _ -> source_fields "excludes" json, source_fields "includes" json
-        in
-        Static { excludes; includes; }
-    in
-    Some filter
-
-let extract_source_static json =
-  match extract_source json with
-  | None -> None
-  | Some (Static f) -> Some f
-  | Some (Dynamic _) -> fail "dynamic source not supported here" (* because source_args *)
-
-let extract_highlight json =
-  match U.opt "highlight" id json with
-  | None -> None
-  | Some json -> Some (U.get "fields" U.to_assoc json |> List.map fst)
-
-let extract_stored_fields json =
-  match U.opt "stored_fields" id json with
-  | None -> None
-  | Some (`List l) -> Some (List.map U.to_string l)
-  | _ -> fail "stored_fields expected to be a list of strings"
 
 let has_matched_queries json =
   let rec check = function

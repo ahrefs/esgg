@@ -1,0 +1,15 @@
+{
+  "query": {
+    "nested": {
+      "path": "comments",
+      "query": {
+        "match": {
+          "comments.text": $search_term
+        }
+      },
+      "inner_hits": {
+        "size": 5
+      }
+    }
+  }
+}

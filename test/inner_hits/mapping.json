@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "title": {
+      "type": "text"
+    },
+    "comments": {
+      "type": "nested",
+      "properties": {
+        "author": {
+          "type": "keyword"
+        },
+        "text": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
