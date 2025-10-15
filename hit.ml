@@ -100,7 +100,7 @@ let get_nested path x =
   in
   loop (ES_name.get_path path) x
 
-let doc_ ?(id=true) ?found ?highlight ?fields ?inner_hits source =
+let doc_ ?(id=true) ?found ?highlight ?fields ?matched_queries ?inner_hits source =
   let a = [
     "_id", if id then Some (Simple String) else None;
   (*
@@ -113,6 +113,7 @@ let doc_ ?(id=true) ?found ?highlight ?fields ?inner_hits source =
     "highlight", highlight;
     "fields", fields;
     "inner_hits", inner_hits;
+    "matched_queries", matched_queries;
   ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
   in
   Dict a
@@ -123,7 +124,6 @@ let doc_ ?(id=true) ?found ?highlight ?fields ?inner_hits source =
 *)
 let doc_no_source ?fields () = doc_ ~found:(Simple Bool) ?fields None
 let doc source = doc_ ~found:(Simple Bool) (Some source)
-let hit ?highlight ?id ?fields ?inner_hits source = doc_ ?highlight ?id ?fields ?inner_hits (Some source)
 
 let nested_meta () =
   Dict [
@@ -133,7 +133,7 @@ let nested_meta () =
 
 let inner_hit ~nested ~highlight ?fields source =
   let source_type = get_nested nested source in
-  let a = 
+  let a =
     (match highlight with None -> [] | Some h -> ["highlight", h]) @
     (match fields with None -> [] | Some f -> ["fields", f])
     @ [
@@ -158,11 +158,13 @@ let inner_hits_result mapping ~nested ~highlight ?fields source_type =
     ]
   ]
 
-let hits_ mapping ?nested ?inner_hits ~highlight ?fields source =
+let hit ?highlight ?id ?fields ?matched_queries ?inner_hits source = doc_ ?highlight ?id ?fields ?matched_queries ?inner_hits (Some source)
+
+let hits_ mapping ?nested ~highlight ?fields ?matched_queries ?inner_hits source =
   let hit x =
     match nested with
-    | None -> hit ?highlight ?fields ?inner_hits x
-    | Some nested -> hit ~id:false ?highlight ?fields ?inner_hits (get_nested nested x)
+    | None -> hit ?highlight ?fields ?matched_queries ?inner_hits x
+    | Some nested -> hit ~id:false ?highlight ?fields ?matched_queries ?inner_hits (get_nested nested x)
   in
   List.concat [
     ["total", Simple Int];
@@ -172,4 +174,4 @@ let hits_ mapping ?nested ?inner_hits ~highlight ?fields source =
     | Some (Dynamic _) -> ["hits", List (hit (Simple Json))]);
   ]
 
-let hits mapping ?nested ?inner_hits ~highlight ?fields source = Dict (hits_ mapping ?nested ?inner_hits ~highlight ?fields source)
+let hits mapping ?nested ~highlight ?fields ?matched_queries ?inner_hits source = Dict (hits_ mapping ?nested ~highlight ?fields ?matched_queries ?inner_hits source)

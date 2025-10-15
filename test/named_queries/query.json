@@ -1,0 +1,33 @@
+{
+  "query": {
+    "bool": {
+      "must": {
+        "query_string": {
+          "query": $query,
+          "default_operator": "AND",
+          "_name": "main_query"
+        }
+      },
+      "filter": [
+        {
+          "range": {
+            "publish_time": {
+              "gte": $min_stamp?,
+              "lte": $max_stamp?,
+              "_name": "date_filter"
+            }
+          }
+        },
+        {
+          "range": {
+            "words": {
+              "gte": "0",
+              "lte": $max_words?,
+              "_name": "word_count_filter"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

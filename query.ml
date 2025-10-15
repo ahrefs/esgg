@@ -275,6 +275,25 @@ let extract_conf json =
   | `Null -> `Assoc []
   | j -> j
 
+let has_matched_queries json =
+  let rec check = function
+    | `Assoc l -> List.exists (fun (k, v) -> k = "_name" || check v) l
+    | `List l -> List.exists check l
+    | _ -> false
+  in
+  let has_name =
+    match U.opt "query" id json with
+    | None -> false
+    | Some q -> check q
+  in
+  let has_config =
+    let conf = extract_conf json in
+    match U.opt "matched_queries" U.to_bool conf with
+    | Some true -> true
+    | _ -> false
+  in
+  has_name || has_config
+
 (** Filter out the [_esgg] field from the json if it exist. *)
 let filter_out_conf json =
   match json with
