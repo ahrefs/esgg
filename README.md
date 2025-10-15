@@ -71,6 +71,26 @@ Syntax for variables in template json files is as follows:
   - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
   - full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
 
+## Configuration via `_esgg`
+
+The `_esgg` field can be added to query templates to configure code generation behavior. This field is automatically filtered out before sending queries to Elasticsearch.
+
+Supported configuration options:
+
+- `{"matched_queries": true}` - Include `matched_queries` field in output types even when `_name` is not explicitly present in the query template. This is useful when `_name` is defined inside query variables.
+
+Example:
+
+```json
+{
+  "_esgg": {
+    "matched_queries": true
+  },
+  "query": $query,
+  "size": 10
+}
+```
+
 ## Reusing shared ATD definitions
 
 To reuse shared definitions using the `-shared <file.atd>` option, the `atd` file must have the `<esgg from="...">` annotation at the top of the file.
