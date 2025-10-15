@@ -108,9 +108,154 @@ Example:
 
 ## Elasticsearch features
 
-TODO document what is supported
+### [Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
 
-Some notes follow:
+The following query types are supported:
+
+#### Full Text Queries
+
+- [x] [match](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html) - Standard full text query
+- [x] [match_phrase](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query-phrase.html) - Match exact phrase
+- [x] [match_phrase_prefix](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query-phrase-prefix.html) - Match phrase with prefix on last term
+- [x] [match_bool_prefix](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-bool-prefix-query.html) - Match with boolean prefix
+- [ ] [multi_match](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html) - Match query on multiple fields
+- [x] [query_string](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html) - Query string with full Lucene syntax
+- [ ] [simple_query_string](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html) - Simplified query string syntax
+- [x] [common](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-common-terms-query.html) - Common terms query (deprecated)
+- [ ] [combined_fields](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-combined-fields-query.html) - Combined fields query
+- [ ] [intervals](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-intervals-query.html) - Intervals query for fine-grained proximity
+
+#### Term Level Queries
+
+- [x] [term](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html) - Exact term match
+- [x] [terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html) - Match any of multiple terms
+- [ ] [terms_set](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-set-query.html) - Match minimum number of terms
+- [x] [range](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html) - Range query (gte, gt, lte, lt)
+- [x] [exists](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html) - Field exists with non-null value
+- [x] [prefix](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-prefix-query.html) - Term prefix match
+- [x] [wildcard](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-wildcard-query.html) - Wildcard pattern match
+- [x] [regexp](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-regexp-query.html) - Regular expression match
+- [x] [fuzzy](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-fuzzy-query.html) - Fuzzy match with edit distance
+- [x] [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) - Match documents by ID
+- [x] [type](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-type-query.html) - Match documents by type (deprecated)
+
+#### Compound Queries
+
+- [x] [bool](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-bool-query.html) - Boolean combination (must, must_not, should, filter)
+- [ ] [boosting](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-boosting-query.html) - Positive/negative query boosting
+- [ ] [constant_score](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-constant-score-query.html) - Wrap filter with constant score
+- [ ] [dis_max](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-dis-max-query.html) - Disjunction max query
+- [x] [function_score](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-function-score-query.html) - Modify scores with functions
+
+#### Joining Queries
+
+- [x] [nested](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html) - Query nested objects
+- [ ] [has_child](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-has-child-query.html) - Query child documents
+- [ ] [has_parent](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-has-parent-query.html) - Query parent documents
+- [ ] [parent_id](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-parent-id-query.html) - Query by parent ID
+
+#### Geo Queries
+
+- [ ] [geo_bounding_box](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-bounding-box-query.html) - Geo bounding box filter
+- [ ] [geo_distance](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-distance-query.html) - Geo distance filter
+- [ ] [geo_polygon](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-polygon-query.html) - Geo polygon filter (deprecated)
+- [ ] [geo_shape](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-shape-query.html) - Geo shape query
+
+#### Specialized Queries
+
+- [ ] [more_like_this](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html) - Find similar documents
+- [ ] [percolate](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-percolate-query.html) - Match stored queries
+- [ ] [rank_feature](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-rank-feature-query.html) - Query rank features
+- [ ] [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-query.html) - Filter with custom script
+- [ ] [script_score](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-script-score-query.html) - Modify scores with script
+- [ ] [wrapper](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-wrapper-query.html) - Wrap serialized query
+- [ ] [pinned](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-pinned-query.html) - Pin specific documents
+
+#### Span Queries
+
+- [ ] [span_term](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-term-query.html) - Span term query
+- [ ] [span_multi](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-multi-term-query.html) - Span multi-term query
+- [ ] [span_first](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-first-query.html) - Span first query
+- [ ] [span_near](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-near-query.html) - Span near query
+- [ ] [span_or](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-or-query.html) - Span or query
+- [ ] [span_not](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-not-query.html) - Span not query
+- [ ] [span_containing](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-containing-query.html) - Span containing query
+- [ ] [span_within](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-within-query.html) - Span within query
+- [ ] [span_field_masking](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-span-field-masking-query.html) - Span field masking query
+
+#### Vector/ML Queries
+
+- [ ] [semantic](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-semantic-query.html) - Semantic search query
+- [ ] [sparse_vector](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-sparse-vector-query.html) - Sparse vector query
+- [ ] [text_expansion](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-text-expansion-query.html) - Text expansion query
+- [ ] [weighted_tokens](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-weighted-tokens-query.html) - Weighted tokens query
+- [ ] [rule](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-rule-query.html) - Rule-based query
+
+#### Other Queries
+
+- [x] [match_all](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-all-query.html) - Match all documents
+- [x] match_none - Match no documents
+
+---
+
+### Search Operations
+
+The following search operations are supported:
+
+- [x] [search](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html) - Execute search with query and aggregations
+- [x] [get](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html) - Retrieve single document by ID
+- [x] [mget](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html) - Retrieve multiple documents by IDs
+- [ ] [msearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html) - Execute multiple search requests
+- [ ] [count](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-count.html) - Count documents matching query
+- [ ] [explain](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-explain.html) - Explain score calculation
+- [ ] [field_caps](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-field-caps.html) - Get field capabilities
+
+---
+
+### Additional Features
+
+#### Source Filtering
+
+- [x] [\_source includes/excludes](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#source-filtering) - Filter returned source fields
+- [x] Dynamic source filtering - Source filter as variable
+- [ ] Wildcard patterns in source filtering
+
+#### Highlighting
+
+- [x] [highlight](https://www.elastic.co/guide/en/elasticsearch/reference/current/highlighting.html) - Highlight matching terms in results
+- [x] Field-specific highlighting configuration
+
+#### Sorting
+
+- [ ] [sort](https://www.elastic.co/guide/en/elasticsearch/reference/current/sort-search-results.html) - Sort search results
+- [ ] Field sorting
+- [ ] Script-based sorting
+- [ ] Geo-distance sorting
+
+#### Scripting
+
+- [x] [script](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html) - Scripts are supported as opaque JSON
+
+#### Fields Retrieval
+
+- [x] [stored_fields](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#stored-fields) - Retrieve stored fields
+- [ ] [docvalue_fields](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#docvalue-fields) - Retrieve doc value fields
+- [ ] [fields](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#search-fields-param) - Retrieve fields with runtime mapping
+
+#### Inner Hits
+
+- [x] [inner_hits](https://www.elastic.co/guide/en/elasticsearch/reference/current/inner-hits.html) - Return nested/parent-child hits with search results
+- [x] Inner hits with source filtering
+- [x] Inner hits with highlighting
+- [x] Inner hits with stored_fields
+- [x] Inner hits with size/from parameters
+
+#### Named Queries
+
+- [x] [\_name](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#request-body-search-queries-and-filters) - Named queries for matched_queries tracking
+- [x] `_esgg.matched_queries` configuration for variables containing `_name`
+
+---
 
 ### [aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html)
 
