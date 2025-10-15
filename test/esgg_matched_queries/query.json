@@ -1,0 +1,7 @@
+{
+  "_esgg": {
+    "matched_queries": true
+  },
+  "query": $query,
+  "size": 10
+}

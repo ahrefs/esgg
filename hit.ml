@@ -100,7 +100,7 @@ let get_nested path x =
   in
   loop (ES_name.get_path path) x
 
-let doc_ ?(id=true) ?found ?highlight ?fields source =
+let doc_ ?(id=true) ?found ?highlight ?fields ?matched_queries source =
   let a = [
     "_id", if id then Some (Simple String) else None;
   (*
@@ -112,6 +112,7 @@ let doc_ ?(id=true) ?found ?highlight ?fields source =
     "_source", source;
     "highlight", highlight;
     "fields", fields;
+    "matched_queries", matched_queries;
   ] |> List.filter_map (function (_,None) -> None | (k,Some v) -> Some (k,v))
   in
   Dict a
@@ -122,13 +123,13 @@ let doc_ ?(id=true) ?found ?highlight ?fields source =
 *)
 let doc_no_source ?fields () = doc_ ~found:(Simple Bool) ?fields None
 let doc source = doc_ ~found:(Simple Bool) (Some source)
-let hit ?highlight ?id ?fields source = doc_ ?highlight ?id ?fields (Some source)
+let hit ?highlight ?id ?fields ?matched_queries source = doc_ ?highlight ?id ?fields ?matched_queries (Some source)
 
-let hits_ mapping ?nested ~highlight ?fields source =
+let hits_ mapping ?nested ~highlight ?fields ?matched_queries source =
   let hit x =
     match nested with
-    | None -> hit ?highlight ?fields x
-    | Some nested -> hit ~id:false ?highlight ?fields (get_nested nested x)
+    | None -> hit ?highlight ?fields ?matched_queries x
+    | Some nested -> hit ~id:false ?highlight ?fields ?matched_queries (get_nested nested x)
   in
   List.concat [
       ["total", Simple Int];
@@ -136,4 +137,4 @@ let hits_ mapping ?nested ~highlight ?fields source =
         ["hits", List (hit @@ match source with Static filter -> of_mapping ~filter mapping | Dynamic _ ->  Simple Json)]);
     ]
 
-let hits mapping ?nested ~highlight ?fields source = Dict (hits_ mapping ?nested ~highlight ?fields source)
+let hits mapping ?nested ~highlight ?fields ?matched_queries source = Dict (hits_ mapping ?nested ~highlight ?fields ?matched_queries source)
