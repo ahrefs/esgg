@@ -113,7 +113,7 @@ let derive mapping json =
       let c1 = List.concat @@ fst @@ List.split aggs in
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
-      let json = Tjson.(remove "query" @@ remove "aggregations" @@ remove "aggs" @@ remove "_esgg" json) in
+      let json = Tjson.(remove "query" @@ remove "aggregations" @@ remove "aggs" json) in
       (* handle optional variables outside of aggregation and query parts *)
       let json = Tjson.(map (function `Var var when var.optional -> `Optional ({label=var.name;vars=[var.name]}, `Var var) | x -> x) json) in
       let json = Tjson.add json ["query",q.json; "aggregations", agg_json] in

@@ -301,6 +301,8 @@ let filter_out_conf json =
   | j -> j
 
 let extract json =
+  let conf = extract_conf json in
+  let json = filter_out_conf json in
   match U.assoc "query" json with
   | q ->
     let extra = List.map (fun v -> On_var (v, Eq_type Int)) @@ List.filter_map (get_var json) ["size";"from"] in
@@ -318,8 +320,6 @@ let extract json =
       Get { id; return; }
     | _ -> fail "only variable id supported for get request"
     | exception _ ->
-      let conf = extract_conf json in
-      let json = filter_out_conf json in
       let ids =
         match U.assoc "docs" json with
         | `List l -> var_list_of_json ~desc:"mget docs" (`List (List.map U.(assoc "_id") l))
