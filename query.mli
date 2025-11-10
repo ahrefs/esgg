@@ -6,9 +6,9 @@ type query_t
 type var_list
 type query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; json: Tjson.t }
 | Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t }
-| Get of { id : Tjson.var; return : [ `Source of source_filter | `Fields of string list | `Nothing ] }
+| Get of { id : Tjson.var; return : [ `Source of source_filter | `Fields of string list | `Nothing ]; json: Tjson.t }
 
 module Variable : sig
 

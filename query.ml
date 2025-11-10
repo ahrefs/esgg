@@ -20,9 +20,9 @@ type query_t =
 and query = { json : Tjson.t; query : query_t; cstrs : constraint_t list; }
 
 type t =
-| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; }
+| Search of { q : query; extra : constraint_t list; source : source_filter or_var option; fields : string list option; highlight : string list option; json: Tjson.t }
 | Mget of { ids: var_list; json: Tjson.t; conf: Tjson.t } (* get and mget probably can/should share most of the type? *)
-| Get of { id : Tjson.var; return : [ `Source of source_filter | `Fields of string list | `Nothing ] }
+| Get of { id : Tjson.var; return : [ `Source of source_filter | `Fields of string list | `Nothing ]; json: Tjson.t }
 
 module Variable = struct
 
@@ -306,7 +306,7 @@ let extract json =
   match U.assoc "query" json with
   | q ->
     let extra = List.map (fun v -> On_var (v, Eq_type Int)) @@ List.filter_map (get_var json) ["size";"from"] in
-    Search { q = extract_query q; extra; source = extract_source json; fields = extract_stored_fields json; highlight = extract_highlight json; }
+    Search { q = extract_query q; extra; source = extract_source json; fields = extract_stored_fields json; highlight = extract_highlight json; json }
   | exception _ ->
     match U.assoc "id" json with
     | `Var id ->
@@ -317,7 +317,7 @@ let extract json =
         | None, Some fields -> `Fields fields
         | None, None -> `Nothing
       in
-      Get { id; return; }
+      Get { id; return; json }
     | _ -> fail "only variable id supported for get request"
     | exception _ ->
       let ids =
