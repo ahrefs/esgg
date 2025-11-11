@@ -26,11 +26,11 @@ let generate_inner_hits mapping full_source inner_hits_list =
 
 let output mapping query =
   match Query.extract query with
-  | Get { id = _; return = `Source filter; } -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
-  | Get { id = _; return = `Fields fields; } ->
+  | Get { id = _; return = `Source filter; json = _ } -> Hit.doc @@ Maybe (Hit.of_mapping ~filter mapping)
+  | Get { id = _; return = `Fields fields; json = _ } ->
     let fields = derive_stored_fields mapping fields in
     Hit.doc_no_source ~fields ()
-  | Get { id = _; return = `Nothing; } -> Hit.doc_no_source ()
+  | Get { id = _; return = `Nothing; json = _ } -> Hit.doc_no_source ()
   | Mget { conf; _ } ->
     begin match Query.extract_source_static conf with (* should be extracted in Query.extract *)
       | None -> Dict ["docs",List (Hit.doc_no_source ())]
@@ -108,7 +108,7 @@ let derive mapping json =
   let query = Query.extract json in
   let (vars,json,http) =
     match query with
-    | Search { q; extra; source=_; highlight=_; fields=_; } ->
+    | Search { q; extra; source=_; highlight=_; fields=_; json} ->
       let (agg_json, aggs) = Aggregations.analyze mapping json in
       let c1 = List.concat @@ fst @@ List.split aggs in
       let c2 = Query.infer' extra q in
@@ -121,7 +121,7 @@ let derive mapping json =
     | Mget { ids; json; conf } ->
       let args = conf |> Query.extract_source_static |> source_args |> args_to_ocaml_string in
       Query.resolve_mget_types ids, json, ("`POST","[__esgg_index;\"_mget\"]",args,Some json)
-    | Get { id; return; } ->
+    | Get { id; return; json } ->
       let args =
         match return with
         | `Nothing -> [ "_source", "false" ]
