@@ -78,6 +78,7 @@ The `_esgg` field can be added to query templates to configure code generation b
 Supported configuration options:
 
 - `{"matched_queries": true}` - Include `matched_queries` field in output types even when `_name` is not explicitly present in the query template. This is useful when `_name` is defined inside query variables.
+- `{"inner_hits": [ ... ]}` - Declare inner hits to include in output types even if the corresponding `nested` queries are provided via base/shared queries. Each entry describes one nested path.
 
 Example:
 
@@ -88,6 +89,31 @@ Example:
   },
   "query": $query,
   "size": 10
+}
+```
+
+### `_esgg.inner_hits` specification
+
+When inner hits are defined inside a base/shared query (not visible in this template), declare them explicitly so esgg can generate typed `inner_hits` in the output:
+
+```json
+{
+  "_esgg": {
+    "inner_hits": [
+      {
+        "path": "comments",            // required: nested path in the mapping
+        "name": "comments",            // optional: key under inner_hits (defaults to path)
+        "size": 100,                   // optional
+        "from": 0,                     // optional
+        "_source": ["fieldA","fieldB"],// optional: standard ES source filtering for inner hits
+        "stored_fields": ["storedA"],  // optional
+        "highlight": {                 // optional: ES highlight shape; fields keys are collected
+          "fields": { "comments.text": {} }
+        }
+      }
+    ]
+  },
+  "query": $query
 }
 ```
 
