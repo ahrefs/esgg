@@ -300,6 +300,26 @@ let filter_out_conf json =
   | `Assoc l -> `Assoc (List.filter (fun (k, _v) -> k <> "_esgg") l)
   | j -> j
 
+(** Extract inner_hits specifications declared via [_esgg.inner_hits] config. *)
+let extract_inner_hits_from_conf json : (string * inner_hits_spec) list =
+  let conf = extract_conf json in
+  match U.member "inner_hits" conf with
+  | `Null -> []
+  | `List specs ->
+    specs |> List.map (function
+      | `Assoc _ as ih_json ->
+        let path = U.get "path" U.to_string ih_json in
+        let name = U.opt "name" U.to_string ih_json in
+        let size = match U.member "size" ih_json with `Null -> None | x -> Some x in
+        let from = match U.member "from" ih_json with `Null -> None | x -> Some x in
+        let source = extract_source_static ih_json in
+        let fields = extract_stored_fields ih_json in
+        let highlight = extract_highlight ih_json in
+        path, { name; size; from; source; fields; highlight }
+      | _ -> fail "inner_hits entry must be a dict"
+    )
+  | _ -> fail "inner_hits must be a list"
+
 let extract json =
   let conf = extract_conf json in
   let json = filter_out_conf json in

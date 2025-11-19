@@ -1,0 +1,13 @@
+{
+    "_esgg": {
+        "inner_hits": [
+            {
+                "path": "comments",
+                "name": "comments",
+                "size": 5
+            }
+        ]
+    },
+    "query": $query,
+    "size": 10
+}
