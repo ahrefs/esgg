@@ -6,7 +6,7 @@ open Common
 let derive_stored_fields mapping fields =
   try Dict (Aggregations.derive_fields mapping fields) with Failure s -> fail "derive_stored_fields: %s" s
 
-let generate_inner_hits mapping full_source inner_hits_list =
+let generate_inner_hits mapping full_source ?matched_queries inner_hits_list =
   match inner_hits_list with
   | [] -> None
   | specs ->
@@ -20,7 +20,7 @@ let generate_inner_hits mapping full_source inner_hits_list =
         | Some filter -> Some (Static filter)
       in
       let key = Option.default path spec.name in
-      key, Hit.inner_hits_result mapping ~nested:nested_name ~highlight ?fields source_type
+      key, Hit.inner_hits_result mapping ~nested:nested_name ~highlight ?fields ?matched_queries source_type
     ) in
     Some (Maybe (Dict inner_hits_dict))
 
@@ -44,8 +44,8 @@ let output mapping query =
       let from_conf = Query.extract_inner_hits_from_conf query in
       from_query @ from_conf
     in
-    let inner_hits_type = generate_inner_hits mapping source inner_hits_specs in
     let matched_queries = if Query.has_matched_queries query then Some (Maybe (List (Simple String))) else None in
+    let inner_hits_type = generate_inner_hits mapping source ?matched_queries inner_hits_specs in
     let hits = Hit.hits mapping ?inner_hits:inner_hits_type ~highlight ?fields ?matched_queries source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
     Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))

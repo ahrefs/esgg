@@ -131,11 +131,12 @@ let nested_meta () =
     "offset", Simple Int;
   ]
 
-let inner_hit ~nested ~highlight ?fields source =
+let inner_hit ~nested ~highlight ?fields ?matched_queries source =
   let source_type = get_nested nested source in
   let a =
     (match highlight with None -> [] | Some h -> ["highlight", h]) @
-    (match fields with None -> [] | Some f -> ["fields", f])
+    (match fields with None -> [] | Some f -> ["fields", f]) @
+    (match matched_queries with None -> [] | Some mq -> ["matched_queries", mq])
     @ [
     "_id", Simple String;
     "_nested", nested_meta ();
@@ -144,7 +145,7 @@ let inner_hit ~nested ~highlight ?fields source =
   in
   Dict a
 
-let inner_hits_result mapping ~nested ~highlight ?fields source_type =
+let inner_hits_result mapping ~nested ~highlight ?fields ?matched_queries source_type =
   let source_for_inner_hit =
     match source_type with
     | None -> of_mapping mapping
@@ -154,7 +155,7 @@ let inner_hits_result mapping ~nested ~highlight ?fields source_type =
   Dict [
     "hits", Dict [
       "total", Simple Int;
-      "hits", List (inner_hit ~nested ~highlight ?fields source_for_inner_hit);
+      "hits", List (inner_hit ~nested ~highlight ?fields ?matched_queries source_for_inner_hit);
     ]
   ]
 
