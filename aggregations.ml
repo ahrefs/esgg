@@ -4,6 +4,9 @@ open Common
 
 type range = { _from : bool; _to_ : bool }
 
+type composite_source =
+| Composite_terms of { name : string; term : value; order : order; }
+
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
 | Value_count of value
@@ -24,6 +27,7 @@ type agg_type =
 | Reverse_nested of string option
 | Bucket_sort of { from : Tjson.t; size : Tjson.t; }
 | Cumulative_sum of string
+| Composite of { sources : composite_source list; size : Tjson.t; after : Tjson.t; }
 
 type single = { name : string; agg : agg_type or_var; }
 type t = { this : single; sub : t list; }
@@ -113,6 +117,33 @@ let analyze_single name agg_type json =
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
+    | "composite" ->
+      let source source_json =
+        match U.to_assoc source_json with
+        | [(source_name, source_def)] ->
+          begin match U.to_assoc source_def with
+          | [("terms", terms_def)] ->
+            let field = match U.member "field" terms_def with
+            | `String s -> Field s
+            | `Null -> fail "composite source: field is required"
+            | _ -> fail "composite source: bad field"
+            in
+            let order = match U.member "order" terms_def with
+            | `Null | `String "asc" -> `Asc
+            | `String "desc" -> `Desc
+            | `String s -> fail "composite source: invalid order %S (expected 'asc' or 'desc')" s
+            | _ -> fail "composite source: bad order"
+            in
+            Composite_terms { name = source_name; term = field; order; }
+          | [(source_type, _)] -> fail "composite source type %S not supported yet (only 'terms' is supported)" source_type
+          | _ -> fail "composite source: expected single source type"
+          end
+        | _ -> fail "composite source: expected single named source"
+      in
+      let sources = U.(get "sources" (to_list source)) json in
+      let size = U.member "size" json in
+      let after = U.member "after" json in
+      Composite { sources; size; after; }
     | _ -> fail "unknown aggregation type %S" agg_type
   in
   json, { name; agg = Static agg; }
@@ -247,6 +278,20 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->
       [Field_date on], (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
+    | Composite { sources; size; after } ->
+      let key_fields = List.map (function
+        | Composite_terms { name; term; order=_ } -> name, typeof_value mapping term
+      ) sources in
+      let bucket_content = sub (("key", Dict key_fields) :: ("doc_count", int) :: []) in
+      let after_constraint = match after with
+        | `Var var -> [On_var (var, Eq_object)]
+        | _ -> []
+      in
+      on_int_var size @ after_constraint,
+      Dict [
+        "after_key", Maybe (Dict key_fields);
+        "buckets", List bucket_content
+      ]
     | Bucket_sort { from; size } ->
       on_int_var from @ on_int_var size,
       dummy_expunge (* lazy hack to not wrap all results in option *)
