@@ -48,7 +48,8 @@ let output mapping query =
     let inner_hits_type = generate_inner_hits mapping source ?matched_queries inner_hits_specs in
     let hits = Hit.hits mapping ?inner_hits:inner_hits_type ~highlight ?fields ?matched_queries source in
     let aggs = List.map snd @@ snd @@ Aggregations.analyze mapping query in (* XXX discarding constraints *)
-    Dict (("hits", hits) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
+    let shards = Maybe (Dict ["total", Simple Int; "successful", Simple Int; "skipped", Simple Int; "failed", Simple Int]) in
+    Dict (("hits", hits) :: ("_shards", shards) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in
