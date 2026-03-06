@@ -28,4 +28,5 @@ type hit1 = {
   ?inner_hits: inner_hits nullable
 }
 type hits1 = { total: int; ~hits: hit1 list }
-type result = { hits: hits1 }
+type _shards = { total: int; successful: int; skipped: int; failed: int }
+type result = { hits: hits1; ?_shards: _shards nullable }
