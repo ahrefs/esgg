@@ -1,0 +1,7 @@
+{
+  "properties": {
+    "genre": { "type": "keyword" },
+    "product": { "type": "keyword" },
+    "quantity": { "type": "long" }
+  }
+}

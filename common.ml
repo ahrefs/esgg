@@ -141,6 +141,7 @@ type result_type =
   | List of result_type
   | List_or_single of result_type
   | Object of result_type
+  | Tuple of result_type list
   | Dict of (string * result_type) list
   | Ref of (ES_name.t * simple_type)
   | Maybe of result_type

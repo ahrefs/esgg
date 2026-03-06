@@ -24,6 +24,7 @@ type agg_type =
 | Nested of string
 | Reverse_nested of string option
 | Bucket_sort of { from : Tjson.t; size : Tjson.t; }
+| Multi_terms of { terms : value list; size : Tjson.t }
 | Cumulative_sum of string
 
 type single = { name : string; agg : agg_type or_var; }
@@ -105,6 +106,9 @@ let analyze_single name agg_type json =
         }
       }
     | "terms" -> Terms { term = value json; size = U.member "size" json }
+    | "multi_terms" ->
+      let terms = U.(get "terms" (to_list value)) json in
+      Multi_terms { terms; size = U.member "size" json }
     | "significant_terms" -> Significant_terms { term = value json; size = U.member "size" json }
     | "significant_text" -> Significant_text { term = value json; size = U.member "size" json }
     | "histogram" -> Histogram (value json)
@@ -177,7 +181,7 @@ let derive_fields mapping fields =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some fields} mapping with
   | Dict l ->
     l |> linearize_dict |> List.map begin function
-    | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "expected simple type for %S" k
+    | (k, (List _ | List_or_single _ | Dict _ | Object _ | Tuple _)) -> fail "expected simple type for %S" k
     | (k, Maybe t) -> k, List t (* what will ES do? but seems safe either way *)
     | (k, ((Ref _ | Simple _) as t)) -> k, List t
     end
@@ -232,6 +236,8 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Cardinality _value | Value_count _value -> [], sub ["value", int ]
     | Weighted_avg { value=_; weight=_ } -> [], sub ["value", Maybe double]
     | Terms { term; size } -> on_int_var size, buckets (typeof_value mapping term)
+    | Multi_terms { terms; size } ->
+      on_int_var size, buckets (Tuple (List.map (typeof_value mapping) terms))
     | Significant_terms { term; size } ->
       on_int_var size,
       Dict [
