@@ -12,4 +12,5 @@ type basic_json <ocaml module="Json" t="t"> = abstract
 type _source = { content: string wrap <ocaml module="Content"> }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type result = { hits: hits }
+type _shards = { total: int; successful: int; skipped: int; failed: int }
+type result = { hits: hits; ?_shards: _shards nullable }

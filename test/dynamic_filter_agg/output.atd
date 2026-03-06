@@ -16,6 +16,7 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
+type _shards = { total: int; successful: int; skipped: int; failed: int }
 type latest_date = {
   ?value_as_string: string wrap <ocaml module="Publish_time"> nullable
 }
@@ -30,4 +31,8 @@ type words10 = {
 type buckets1 = { words10: words10; wordsn: words10 }
 type target = { buckets: buckets1 }
 type aggregations = { target: target }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}

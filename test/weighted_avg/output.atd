@@ -11,5 +11,10 @@ type 'a value_agg =
 type basic_json <ocaml module="Json" t="t"> = abstract
 type hit = { _id: string; _source: basic_json }
 type hits = { total: int; ~hits: hit list }
+type _shards = { total: int; successful: int; skipped: int; failed: int }
 type aggregations = { weighted_grade: float nullable value_agg }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}
