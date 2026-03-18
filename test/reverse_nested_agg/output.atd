@@ -21,7 +21,21 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
-type _shards = { total: int; successful: int; skipped: int; failed: int }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
 type name = { name: string wrap <ocaml module="Name"> }
 type hit1 = { _id: string; _source: name }
 type hits1 = { total: int; ~hits: hit1 list }
