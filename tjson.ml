@@ -6,7 +6,7 @@ open Prelude
 
 let debug_dump = false
 
-type var = { optional : bool; list : bool; name : string } [@@deriving show]
+type var = { optional : bool; list : bool; name : string; field_type : string option } [@@deriving show]
 type group = { label : string; vars : string list } [@@deriving show]
 
 type t = [
@@ -56,18 +56,25 @@ let make_var s =
   try
     let s = try Scanf.sscanf s "$(%s@)%!" id with _ -> Scanf.sscanf s "$%s%!" id in
     let (s,optional) = test_optional s in
-    let (name,list) =
-      match String.split s ":" with
-      | (n,"list") -> n, true
-      | (_,hint) -> fail "unrecognized part %S after colon, only 'list' hint is allowed" hint
-      | exception _ -> s, false
+    let (name,list,field_type) =
+      match String.nsplit s ":" with
+      | [name] -> name, false, None
+      | [name; "list"] -> name, true, None
+      | [name; "field"; typ] -> name, false, Some typ
+      | _ -> fail "unrecognized variable format, expected $var, $(var:list), or $(var:field:<type>)"
     in
-    { optional; name = var_name name; list; }
+    { optional; name = var_name name; list; field_type; }
   with
     exn -> fail ~exn "unrecognized variable %S" s
 
-let show_var { optional; list; name } =
-  (if list then sprintf "$(%s:list)" else sprintf "$%s") (name ^ if optional then "?" else "")
+let show_var { optional; list; name; field_type } =
+  let opt_suffix = if optional then "?" else "" in
+  let name_s = name ^ opt_suffix in
+  match field_type with
+  | Some ft -> sprintf "$(%s:field:%s)" name_s ft
+  | None ->
+    if list then sprintf "$(%s:list)" name_s
+    else sprintf "$%s" name_s
 
 let show_decoded_range ((l1,c1),(l2,c2)) = sprintf "%d,%d-%d,%d" l1 c1 l2 c2
 
@@ -191,7 +198,7 @@ let lift_to_string map (v:t) =
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
   | `Optional (g,_) -> fail "Error: optional group %S not as list element" g.label
-  | `Var { optional=_; list=_; name } -> splice @@ map name (* TODO assert scope for optional=true? *)
+  | `Var { optional=_optional; list=_list; name; field_type=_ft } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l ->
     list [
       quote "[";
@@ -237,6 +244,7 @@ let var_equal v1 v2 =
   | true ->
     if (v1.list:bool) <> v2.list then fail "var %S list or not, huh?" v1.name;
     if (v1.optional:bool) <> v2.optional then fail "var %S optional or not, huh?" v1.name;
+    if v1.field_type <> v2.field_type then fail "var %S field_type mismatch" v1.name;
     true
 
 module SS = Set.Make(String)

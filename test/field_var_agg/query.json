@@ -1,0 +1,14 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {}
+  },
+  "aggs": {
+    "grouped": {
+      "terms": {
+        "field": $(group_by:field:string),
+        "size": 10
+      }
+    }
+  }
+}
