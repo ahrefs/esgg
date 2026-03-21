@@ -198,7 +198,7 @@ let lift_to_string map (v:t) =
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
   | `Optional (g,_) -> fail "Error: optional group %S not as list element" g.label
-  | `Var { optional=_; list=_; name; field_type=_ } -> splice @@ map name (* TODO assert scope for optional=true? *)
+  | `Var { optional=_optional; list=_list; name; field_type=_ft } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l ->
     list [
       quote "[";

@@ -197,8 +197,9 @@ let derive_highlight mapping hl =
 let dummy_expunge = Dict ["dummy_expunge", Simple Json]
 
 let field_var_constraints = function
-  | Field_var (v, _) -> [On_var (v, Eq_type String)]
-  | Field _ | Script _ -> []
+  | Field_var (v, _typ) -> [On_var (v, Eq_type String)]
+  | Field _name -> []
+  | Script (_lang, _src) -> []
 
 let infer_single mapping ~nested { name; agg; } sibling sub =
   let int = Simple Int in
@@ -281,17 +282,25 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       dummy_expunge (* lazy hack to not wrap all results in option *)
   in
   let field_var_cstrs = match agg with
-    | Dynamic _ -> []
+    | Dynamic _dv -> []
     | Static agg ->
       let vs = match agg with
-        | Simple_metric (_, v) | Value_count v | Cardinality v
-        | Histogram v | Range v | Range_keyed (v, _) -> [v]
+        | Simple_metric (_metric, v) -> [v]
+        | Value_count v | Cardinality v
+        | Histogram v | Range v -> [v]
+        | Range_keyed (v, _keys) -> [v]
         | Terms { term; _ } | Significant_terms { term; _ } | Significant_text { term; _ } -> [term]
         | Date_histogram { on; _ } | Date_range { on; _ } -> [on]
         | Multi_terms { terms; _ } -> terms
         | Weighted_avg { value; weight } -> [value.value; weight.value]
-        | Filter _ | Filters _ | Filters_dynamic _ | Top_hits _
-        | Nested _ | Reverse_nested _ | Bucket_sort _ | Cumulative_sum _ -> []
+        | Filter _q -> []
+        | Filters _fs -> []
+        | Filters_dynamic _dv -> []
+        | Top_hits _th -> []
+        | Nested _path -> []
+        | Reverse_nested _rpath -> []
+        | Bucket_sort _bs -> []
+        | Cumulative_sum _cp -> []
       in
       List.concat_map field_var_constraints vs
   in

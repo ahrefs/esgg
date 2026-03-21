@@ -195,7 +195,7 @@ and extract_query json =
     | _ -> fail "bad query"
   in
   let json =
-    match List.filter_map (fun {Tjson.optional;list=_;name;field_type=_} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
+    match List.filter_map (fun {Tjson.optional;list=_list;name;field_type=_ft} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
     | [] -> json
     | vars ->
       if Tjson.debug_dump then printfn "introducing optional scope for : %s" (String.concat " " vars);
@@ -377,7 +377,7 @@ let resolve_constraints mapping l =
     | Bool | Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
   | Field_num (Script _) -> ()
-  | Field_num (Field_var _) -> () (* cannot validate dynamic field type *)
+  | Field_num (Field_var (_v, _typ)) -> () (* cannot validate dynamic field type *)
   | Field_date _ -> ()
   end;
   vars
