@@ -42,7 +42,11 @@ let analyze_single name agg_type json =
   let value json =
     match U.member "field" json with
     | `String s -> Field s
-(*     | `Var v -> Variable v *)
+    | `Var v ->
+      begin match v.Tjson.field_type with
+      | Some ft -> Field_var (v, parse_field_type ft)
+      | None -> fail "variable in aggregation field requires type annotation, use $(var:field:<type>)"
+      end
     | `Null ->
       begin match U.assoc "script" json with
       | exception exn -> fail ~exn "failed to get aggregation field (neither `field` nor `script` present)"
@@ -192,6 +196,10 @@ let derive_highlight mapping hl =
 
 let dummy_expunge = Dict ["dummy_expunge", Simple Json]
 
+let field_var_constraints = function
+  | Field_var (v, _) -> [On_var (v, Eq_type String)]
+  | Field _ | Script _ -> []
+
 let infer_single mapping ~nested { name; agg; } sibling sub =
   let int = Simple Int in
   let double = Simple Double in
@@ -272,7 +280,22 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       on_int_var from @ on_int_var size,
       dummy_expunge (* lazy hack to not wrap all results in option *)
   in
-  cstr, (name, shape)
+  let field_var_cstrs = match agg with
+    | Dynamic _ -> []
+    | Static agg ->
+      let vs = match agg with
+        | Simple_metric (_, v) | Value_count v | Cardinality v
+        | Histogram v | Range v | Range_keyed (v, _) -> [v]
+        | Terms { term; _ } | Significant_terms { term; _ } | Significant_text { term; _ } -> [term]
+        | Date_histogram { on; _ } | Date_range { on; _ } -> [on]
+        | Multi_terms { terms; _ } -> terms
+        | Weighted_avg { value; weight } -> [value.value; weight.value]
+        | Filter _ | Filters _ | Filters_dynamic _ | Top_hits _
+        | Nested _ | Reverse_nested _ | Bucket_sort _ | Cumulative_sum _ -> []
+      in
+      List.concat_map field_var_constraints vs
+  in
+  field_var_cstrs @ cstr, (name, shape)
 
 let list_map_prev f l = List.rev @@ List.fold_left (fun acc x -> f acc x :: acc) [] l
 
