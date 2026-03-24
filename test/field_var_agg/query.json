@@ -6,7 +6,7 @@
   "aggs": {
     "grouped": {
       "terms": {
-        "field": $(group_by:field:keyword),
+        "field": $(group_by:keyword),
         "size": 10
       }
     }

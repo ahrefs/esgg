@@ -60,8 +60,8 @@ let make_var s =
       match String.nsplit s ":" with
       | [name] -> name, false, None
       | [name; "list"] -> name, true, None
-      | [name; "field"; typ] -> name, false, Some typ
-      | _ -> fail "unrecognized variable format, expected $var, $(var:list), or $(var:field:<type>)"
+      | [name; typ] -> name, false, Some typ
+      | _ -> fail "unrecognized variable format, expected $var, $(var:list), or $(var:<type>)"
     in
     { optional; name = var_name name; list; field_type; }
   with
@@ -71,7 +71,7 @@ let show_var { optional; list; name; field_type } =
   let opt_suffix = if optional then "?" else "" in
   let name_s = name ^ opt_suffix in
   match field_type with
-  | Some ft -> sprintf "$(%s:field:%s)" name_s ft
+  | Some ft -> sprintf "$(%s:%s)" name_s ft
   | None ->
     if list then sprintf "$(%s:list)" name_s
     else sprintf "$%s" name_s

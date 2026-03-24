@@ -45,7 +45,7 @@ let analyze_single name agg_type json =
     | `Var v ->
       begin match v.Tjson.field_type with
       | Some ft -> Field_var (v, simple_of_es_type ft)
-      | None -> fail "variable in aggregation field requires type annotation, use $(var:field:<type>)"
+      | None -> fail "variable in aggregation field requires type annotation, use $(var:<type>)"
       end
     | `Null ->
       begin match U.assoc "script" json with

@@ -70,17 +70,17 @@ Syntax for variables in template json files is as follows:
 - `$var` for regular required variable
 - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
 - `$(var:list)` for list variable
-- `$(var:field:<type>)` for aggregation field variable with explicit type annotation (see below)
+- `$(var:<type>)` for typed variable with explicit type annotation (see below)
 
-### Field variables in aggregations
+### Typed variables in aggregations
 
-When you need the same aggregation query against different fields, use a field variable instead of duplicating the query template:
+When you need the same aggregation query against different fields, use a typed variable instead of duplicating the query template:
 
 ```json
 "aggregations": {
   "grouped_keywords": {
     "terms": {
-      "field": $(group_by:field:string),
+      "field": $(group_by:keyword),
       "size": 10
     }
   }
@@ -89,7 +89,7 @@ When you need the same aggregation query against different fields, use a field v
 
 The type annotation determines the output bucket key type. The variable itself becomes a `string` input parameter — the caller passes the ES field name at runtime (e.g., `"keyword_en"`).
 
-Supported type annotations: `string`, `int`, `float`, `int64`.
+Supported type annotations: any ES type accepted by `simple_of_es_type` (`keyword`, `text`, `long`, `double`, `float`, `boolean`, `date`, `int64`, `ip`, `murmur3`).
 
 ## Configuration via `_esgg`
 
