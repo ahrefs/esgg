@@ -377,7 +377,12 @@ let resolve_constraints mapping l =
     | Bool | Json as t -> eprintfn "W: field %S expected to be numeric, but has type %s" f (show_simple_type t)
     end
   | Field_num (Script _) -> ()
-  | Field_num (Field_var (_v, _typ)) -> () (* cannot validate dynamic field type *)
+  | Field_num (Field_var (_v, typ)) ->
+    begin match typ with
+    | Int | Int64 | Double -> ()
+    | String | Date
+    | Bool | Json as t -> eprintfn "W: field variable expected to be numeric, but annotated as %s" (show_simple_type t)
+    end
   | Field_date _ -> ()
   end;
   vars
