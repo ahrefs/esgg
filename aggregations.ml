@@ -44,7 +44,7 @@ let analyze_single name agg_type json =
     | `String s -> Field s
     | `Var v ->
       begin match v.Tjson.field_type with
-      | Some ft -> Field_var (v, parse_field_type ft)
+      | Some ft -> Field_var (v, simple_of_es_type ft)
       | None -> fail "variable in aggregation field requires type annotation, use $(var:field:<type>)"
       end
     | `Null ->

@@ -159,12 +159,6 @@ let simple_of_es_type t =
   | "int64" | "murmur3" -> Int64
   | _ -> fail "simple_of_es_type: cannot handle %S" t
 
-let parse_field_type = function
-  | "string" -> String
-  | "int" -> Int
-  | "float" -> Double
-  | "int64" -> Int64
-  | s -> fail "unsupported field type annotation %S, expected: string, int, float, int64" s
 
 let get_meta json =
   match U.member "_meta" json with
