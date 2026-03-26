@@ -11,10 +11,29 @@ type 'a value_agg =
 type basic_json <ocaml module="Json" t="t"> = abstract
 type hit = { _id: string; _source: basic_json }
 type hits = { total: int; ~hits: hit list }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
 type after_key = { product: string wrap <ocaml module="Product"> }
 type my_buckets = {
   ?after_key: after_key nullable;
   ~buckets: after_key doc_count list
 }
 type aggregations = { my_buckets: my_buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}
