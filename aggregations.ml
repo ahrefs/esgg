@@ -197,7 +197,7 @@ let derive_highlight mapping hl =
 let dummy_expunge = Dict ["dummy_expunge", Simple Json]
 
 let field_var_constraints = function
-  | Field_var (v, _typ) -> [On_var (v, Eq_type String)]
+  | Field_var (v, _typ) -> [On_var (v, Eq_type String)] (* String is the type of the variable value (field name), not the aggregation result *)
   | Field _name -> []
   | Script (_lang, _src) -> []
 
