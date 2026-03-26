@@ -145,8 +145,8 @@ let analyze_single name agg_type json =
     | "composite" ->
       let parse_order def =
         match U.member "order" def with
-        | `Null | `String "asc" -> `Asc
-        | `String "desc" -> `Desc
+        | `Null | `String "asc" -> Asc
+        | `String "desc" -> Desc
         | `String s -> fail "composite source: invalid order %S" s
         | _ -> fail "composite source: bad order"
       in
