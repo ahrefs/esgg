@@ -89,7 +89,7 @@ When you need the same aggregation query against different fields, use a typed v
 
 The type annotation determines the output bucket key type. The variable itself becomes a `string` input parameter — the caller passes the ES field name at runtime (e.g., `"keyword_en"`).
 
-Supported type annotations: any ES type accepted by `simple_of_es_type` (`keyword`, `text`, `long`, `double`, `float`, `boolean`, `date`, `int64`, `ip`, `murmur3`).
+Type can be any ES type - `keyword`, `text`, `long`, `double`, `float`, `boolean`, `date`, `int64`, `ip`, `murmur3`.
 
 ## Configuration via `_esgg`
 
