@@ -195,7 +195,7 @@ and extract_query json =
     | _ -> fail "bad query"
   in
   let json =
-    match List.filter_map (fun {Tjson.optional;list=_list;name;field_type=_ft} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
+    match List.filter_map (fun {Tjson.optional;list=_list;name;type_=_ft} -> if optional then Some name else None) @@ Tjson.get_vars ~optional:false json with
     | [] -> json
     | vars ->
       if Tjson.debug_dump then printfn "introducing optional scope for : %s" (String.concat " " vars);

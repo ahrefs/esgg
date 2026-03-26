@@ -6,7 +6,7 @@ open Prelude
 
 let debug_dump = false
 
-type var = { optional : bool; list : bool; name : string; field_type : string option } [@@deriving show]
+type var = { optional : bool; list : bool; name : string; type_ : string option } [@@deriving show]
 type group = { label : string; vars : string list } [@@deriving show]
 
 type t = [
@@ -56,21 +56,21 @@ let make_var s =
   try
     let s = try Scanf.sscanf s "$(%s@)%!" id with _ -> Scanf.sscanf s "$%s%!" id in
     let (s,optional) = test_optional s in
-    let (name,list,field_type) =
+    let (name,list,type_) =
       match String.nsplit s ":" with
       | [name] -> name, false, None
       | [name; "list"] -> name, true, None
       | [name; typ] -> name, false, Some typ
       | _ -> fail "unrecognized variable format, expected $var, $(var:list), or $(var:<type>)"
     in
-    { optional; name = var_name name; list; field_type; }
+    { optional; name = var_name name; list; type_; }
   with
     exn -> fail ~exn "unrecognized variable %S" s
 
-let show_var { optional; list; name; field_type } =
+let show_var { optional; list; name; type_ } =
   let opt_suffix = if optional then "?" else "" in
   let name_s = name ^ opt_suffix in
-  match field_type with
+  match type_ with
   | Some ft -> sprintf "$(%s:%s)" name_s ft
   | None ->
     if list then sprintf "$(%s:list)" name_s
@@ -198,7 +198,7 @@ let lift_to_string map (v:t) =
   | `Float f -> quote_val J.write_float f
   | `Int i -> quote_val J.write_int i
   | `Optional (g,_) -> fail "Error: optional group %S not as list element" g.label
-  | `Var { optional=_optional; list=_list; name; field_type=_ft } -> splice @@ map name (* TODO assert scope for optional=true? *)
+  | `Var { optional=_optional; list=_list; name; type_=_ft } -> splice @@ map name (* TODO assert scope for optional=true? *)
   | `List l when List.exists (function `Optional _ -> true | _ -> false) l ->
     list [
       quote "[";
@@ -244,7 +244,7 @@ let var_equal v1 v2 =
   | true ->
     if (v1.list:bool) <> v2.list then fail "var %S list or not, huh?" v1.name;
     if (v1.optional:bool) <> v2.optional then fail "var %S optional or not, huh?" v1.name;
-    if v1.field_type <> v2.field_type then fail "var %S field_type mismatch" v1.name;
+    if v1.type_ <> v2.type_ then fail "var %S type_ mismatch" v1.name;
     true
 
 module SS = Set.Make(String)
