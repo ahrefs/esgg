@@ -1,0 +1,7 @@
+{
+  "properties": {
+    "keyword_en": { "type": "keyword" },
+    "keyword_fr": { "type": "keyword" },
+    "count": { "type": "long" }
+  }
+}

@@ -17,10 +17,6 @@ let var_or conv x =
   | _ ->
     try Static (conv x) with Failure s -> fail "expected var or %s" s
 
-type value = Field of string | Script of [`Painless|`Id] * string or_var [@@deriving show]
-
-type value_with_missing = { value : value; missing : Tjson.t }
-
 module U = struct
 
 (** @return specified [name] from [json] dict or [`Null] when [name] is absent.
@@ -113,6 +109,10 @@ let show_simple_type = function
 
 let pp_simple_type ppf x = Format.pp_print_text ppf (show_simple_type x)
 
+type value = Field of string | Field_var of Tjson.var * simple_type | Script of [`Painless|`Id] * string or_var [@@deriving show]
+
+type value_with_missing = { value : value; missing : Tjson.t }
+
 type cardinality = One | Many
 
 type var_type = { cardinality : cardinality; ref : ES_name.t option; typ : simple_type; }
@@ -159,6 +159,7 @@ let simple_of_es_type t =
   | "int64" | "murmur3" -> Int64
   | _ -> fail "simple_of_es_type: cannot handle %S" t
 
+
 let get_meta json =
   match U.member "_meta" json with
   | `Null -> `Assoc []
@@ -192,6 +193,7 @@ let typeof_value mapping value =
   match value with
   | Script (`Painless, Static "_score") -> Simple Double
   | Script _ -> Simple Json
+  | Field_var (_v, typ) -> Simple typ
   | Field f ->
     let name = ES_name.make mapping f in
     let t = typeof mapping name in
