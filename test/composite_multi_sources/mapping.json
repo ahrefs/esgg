@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "shop": {
+      "type": "keyword"
+    },
+    "product": {
+      "type": "keyword"
+    },
+    "timestamp": {
+      "type": "date"
+    }
+  }
+}
