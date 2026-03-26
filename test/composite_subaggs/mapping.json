@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "timestamp": {
+      "type": "date"
+    },
+    "product": {
+      "type": "keyword"
+    },
+    "price": {
+      "type": "double"
+    }
+  }
+}

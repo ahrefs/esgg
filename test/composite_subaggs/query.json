@@ -1,0 +1,39 @@
+{
+  "size": 0,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_buckets": {
+      "composite": {
+        "size": $(size:int),
+        "sources": [
+          {
+            "date": {
+              "date_histogram": {
+                "field": "timestamp",
+                "calendar_interval": "1d",
+                "order": "desc"
+              }
+            }
+          },
+          {
+            "product": {
+              "terms": {
+                "field": "product"
+              }
+            }
+          }
+        ],
+        "after": $(after)
+      },
+      "aggregations": {
+        "the_avg": {
+          "avg": {
+            "field": "price"
+          }
+        }
+      }
+    }
+  }
+}
