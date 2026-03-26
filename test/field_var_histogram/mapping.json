@@ -1,0 +1,6 @@
+{
+  "properties": {
+    "price": { "type": "double" },
+    "quantity": { "type": "long" }
+  }
+}
