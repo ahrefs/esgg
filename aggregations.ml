@@ -5,7 +5,9 @@ open Common
 type range = { _from : bool; _to_ : bool }
 
 type composite_source =
-| Composite_terms of { name : string; term : value; order : order; }
+  | Composite_terms of { name : string; term : value; order : order; missing_bucket : bool; }
+  | Composite_histogram of { name : string; term : value; interval : Tjson.t; order : order; missing_bucket : bool; }
+  | Composite_date_histogram of { name : string; term : value; calendar_interval : string; format : bool; time_zone : string option; order : order; missing_bucket : bool; }
 
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
@@ -140,24 +142,60 @@ let analyze_single name agg_type json =
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
     | "composite" ->
+      let parse_order def =
+        match U.member "order" def with
+        | `Null | `String "asc" -> `Asc
+        | `String "desc" -> `Desc
+        | `String s -> fail "composite source: invalid order %S" s
+        | _ -> fail "composite source: bad order"
+      in
+      let parse_missing_bucket def =
+        match U.member "missing_bucket" def with
+        | `Bool b -> b
+        | `Null -> false
+        | _ -> fail "composite source: bad missing_bucket"
+      in
+      let parse_field def =
+        match U.member "field" def with
+        | `String s -> Field s
+        | `Null -> fail "composite source: field is required"
+        | _ -> fail "composite source: bad field"
+      in
       let source source_json =
         match U.to_assoc source_json with
         | [(source_name, source_def)] ->
           begin match U.to_assoc source_def with
           | [("terms", terms_def)] ->
-            let field = match U.member "field" terms_def with
-            | `String s -> Field s
-            | `Null -> fail "composite source: field is required"
-            | _ -> fail "composite source: bad field"
+            Composite_terms {
+              name = source_name;
+              term = parse_field terms_def;
+              order = parse_order terms_def;
+              missing_bucket = parse_missing_bucket terms_def;
+            }
+          | [("histogram", hist_def)] ->
+            Composite_histogram {
+              name = source_name;
+              term = parse_field hist_def;
+              interval = U.member "interval" hist_def;
+              order = parse_order hist_def;
+              missing_bucket = parse_missing_bucket hist_def;
+            }
+          | [("date_histogram", dh_def)] ->
+            let calendar_interval =
+              match U.member "calendar_interval" dh_def, U.member "fixed_interval" dh_def with
+              | `String s, _ | _, `String s -> s
+              | _ -> fail "composite date_histogram: calendar_interval or fixed_interval required"
             in
-            let order = match U.member "order" terms_def with
-            | `Null | `String "asc" -> `Asc
-            | `String "desc" -> `Desc
-            | `String s -> fail "composite source: invalid order %S (expected 'asc' or 'desc')" s
-            | _ -> fail "composite source: bad order"
-            in
-            Composite_terms { name = source_name; term = field; order; }
-          | [(source_type, _)] -> fail "composite source type %S not supported yet (only 'terms' is supported)" source_type
+            Composite_date_histogram {
+              name = source_name;
+              term = parse_field dh_def;
+              calendar_interval;
+              format = `Null <> U.member "format" dh_def;
+              time_zone = U.(opt "time_zone" to_string dh_def);
+              order = parse_order dh_def;
+              missing_bucket = parse_missing_bucket dh_def;
+            }
+          | [(source_type, _)] -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram)" source_type
           | _ -> fail "composite source: expected single source type"
           end
         | _ -> fail "composite source: expected single named source"
@@ -309,8 +347,16 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Date_range { on; format=_; keys; ranges=_ } ->
       Field_date on :: field_var_constraints on, (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
     | Composite { sources; size; after } ->
-      let key_fields = List.map (function
-        | Composite_terms { name; term; order=_ } -> name, typeof_value mapping term
+      let key_fields = List.map (fun source ->
+        let (name, typ, mb) = match source with
+          | Composite_terms { name; term; missing_bucket; _ } ->
+            name, typeof_value mapping term, missing_bucket
+          | Composite_histogram { name; missing_bucket; _ } ->
+            name, double, missing_bucket
+          | Composite_date_histogram { name; format; missing_bucket; _ } ->
+            name, (if format then string else int), missing_bucket
+        in
+        name, (if mb then Maybe typ else typ)
       ) sources in
       let bucket_content = sub (("key", Dict key_fields) :: ("doc_count", int) :: []) in
       let after_constraint = match after with
