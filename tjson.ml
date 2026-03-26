@@ -63,6 +63,7 @@ let make_var s =
       | [name; typ] -> name, false, Some typ
       | _ -> fail "unrecognized variable format, expected $var, $(var:list), or $(var:<type>)"
     in
+    if list && type_ <> None then fail "variable %S cannot be both list and typed" name;
     { optional; name = var_name name; list; type_; }
   with
     exn -> fail ~exn "unrecognized variable %S" s
