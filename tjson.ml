@@ -212,6 +212,29 @@ let lift_to_string map (v:t) =
       list @@ intersperse (quote ",") (List.map output l);
       quote "]";
     ]
+  | `Assoc a when List.exists (fun (_,v) -> match v with `Optional _ -> true | _ -> false) a ->
+    let required = List.filter (fun (_,v) -> match v with `Optional _ -> false | _ -> true) a in
+    let optional = List.filter_map (fun (k,v) -> match v with `Optional ({label;vars},x) -> Some (k,label,vars,x) | _ -> None) a in
+    let required_json = intersperse (quote ",") (List.map (fun (k,v) -> list [quote_val J.write_string k; quote ":"; output v]) required) in
+    let optional_parts = List.map (fun (k,label,vars,x) ->
+      let match_vars =
+        match vars with
+        | [] -> assert false
+        | [x] -> x
+        | l -> sprintf "{%s}" (String.concat ";" l)
+      in
+      list [
+        splice @@ sprintf "(match %s with None -> \"\" | Some %s -> \",\" ^ " label match_vars;
+        splice @@ stringify @@ list [quote_val J.write_string k; quote ":"; output x];
+        splice ")";
+      ]
+    ) optional in
+    list [
+      quote "{";
+      list required_json;
+      list optional_parts;
+      quote "}"
+    ]
   | `Assoc a ->
     list [
       quote "{";

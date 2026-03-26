@@ -373,7 +373,7 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       ) sources in
       let bucket_content = sub (("key", Dict key_fields) :: ("doc_count", int) :: []) in
       let after_constraint = match after with
-        | `Var var -> [On_var (var, Eq_object)]
+        | `Var var when not var.optional -> [On_var (var, Eq_object)]
         | _ -> []
       in
       on_int_var size @ after_constraint,

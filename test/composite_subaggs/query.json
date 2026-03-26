@@ -25,7 +25,7 @@
             }
           }
         ],
-        "after": $(after)
+        "after": $(after?)
       },
       "aggregations": {
         "the_avg": {
