@@ -8,6 +8,7 @@ type composite_source =
   | Composite_terms of { name : string; term : value; order : order; missing_bucket : bool; }
   | Composite_histogram of { name : string; term : value; interval : Tjson.t; order : order; missing_bucket : bool; }
   | Composite_date_histogram of { name : string; term : value; calendar_interval : string; format : bool; time_zone : string option; order : order; missing_bucket : bool; }
+  | Composite_geotile_grid of { name : string; term : value; precision : Tjson.t; order : order; missing_bucket : bool; }
 
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
@@ -195,7 +196,15 @@ let analyze_single name agg_type json =
               order = parse_order dh_def;
               missing_bucket = parse_missing_bucket dh_def;
             }
-          | [(source_type, _)] -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram)" source_type
+          | [("geotile_grid", gt_def)] ->
+            Composite_geotile_grid {
+              name = source_name;
+              term = parse_field gt_def;
+              precision = U.member "precision" gt_def;
+              order = parse_order gt_def;
+              missing_bucket = parse_missing_bucket gt_def;
+            }
+          | [(source_type, _)] -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram, geotile_grid)" source_type
           | _ -> fail "composite source: expected single source type"
           end
         | _ -> fail "composite source: expected single named source"
@@ -355,6 +364,10 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
             name, double, missing_bucket
           | Composite_date_histogram { name; format; missing_bucket; _ } ->
             name, (if format then string else int), missing_bucket
+          | Composite_geotile_grid { name; missing_bucket; _ } ->
+            (* key is always "zoom/x/y" string regardless of geo_point field type,
+               so we don't resolve through typeof_value/simple_of_es_type *)
+            name, string, missing_bucket
         in
         name, (if mb then Maybe typ else typ)
       ) sources in

@@ -209,7 +209,7 @@ The following aggregation types are supported:
   - [x] `terms` source
   - [x] `histogram` source
   - [x] `date_histogram` source
-  - [ ] `geotile_grid` source
+  - [x] `geotile_grid` source
 - [x] [multi_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-multi-terms-aggregation.html) - Multi-field terms aggregation
 - [ ] [adjacency_matrix](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-adjacency-matrix-aggregation.html) - Adjacency matrix
 - [ ] [categorize_text](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-categorize-text-aggregation.html) - Text categorization
