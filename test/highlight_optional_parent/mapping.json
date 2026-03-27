@@ -1,0 +1,49 @@
+{
+  "properties": {
+    "content": {
+      "_meta": {
+        "optional": true
+      },
+      "properties": {
+        "text": {
+          "_meta": {
+            "fields_default_optional": true
+          },
+          "properties": {
+            "en": {
+              "type": "text",
+              "term_vector": "with_positions_offsets"
+            },
+            "fr": {
+              "type": "text",
+              "term_vector": "with_positions_offsets"
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "_meta": {
+        "fields_default_optional": true
+      },
+      "properties": {
+        "text": {
+          "properties": {
+            "en": {
+              "type": "text",
+              "term_vector": "with_positions_offsets"
+            },
+            "fr": {
+              "type": "text",
+              "term_vector": "with_positions_offsets"
+            }
+          }
+        }
+      }
+    },
+    "title": {
+      "type": "text",
+      "term_vector": "with_positions_offsets"
+    }
+  }
+}
