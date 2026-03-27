@@ -20,4 +20,19 @@ type hit = {
   ?matched_queries: string list nullable
 }
 type hits = { total: int; ~hits: hit list }
-type result = { hits: hits }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
+type result = { hits: hits; ?_shards: _shards nullable }

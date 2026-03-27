@@ -24,6 +24,7 @@ type agg_type =
 | Nested of string
 | Reverse_nested of string option
 | Bucket_sort of { from : Tjson.t; size : Tjson.t; }
+| Multi_terms of { terms : value list; size : Tjson.t }
 | Cumulative_sum of string
 
 type single = { name : string; agg : agg_type or_var; }
@@ -41,7 +42,11 @@ let analyze_single name agg_type json =
   let value json =
     match U.member "field" json with
     | `String s -> Field s
-(*     | `Var v -> Variable v *)
+    | `Var v ->
+      begin match v.Tjson.type_ with
+      | Some ft -> Field_var (v, simple_of_es_type ft)
+      | None -> fail "variable in aggregation field requires type annotation, use $(var:<type>)"
+      end
     | `Null ->
       begin match U.assoc "script" json with
       | exception exn -> fail ~exn "failed to get aggregation field (neither `field` nor `script` present)"
@@ -105,6 +110,9 @@ let analyze_single name agg_type json =
         }
       }
     | "terms" -> Terms { term = value json; size = U.member "size" json }
+    | "multi_terms" ->
+      let terms = U.(get "terms" (to_list value)) json in
+      Multi_terms { terms; size = U.member "size" json }
     | "significant_terms" -> Significant_terms { term = value json; size = U.member "size" json }
     | "significant_text" -> Significant_text { term = value json; size = U.member "size" json }
     | "histogram" -> Histogram (value json)
@@ -177,7 +185,7 @@ let derive_fields mapping fields =
   match Hit.of_mapping ~filter:{excludes=None;includes=Some fields} mapping with
   | Dict l ->
     l |> linearize_dict |> List.map begin function
-    | (k, (List _ | List_or_single _ | Dict _ | Object _)) -> fail "expected simple type for %S" k
+    | (k, (List _ | List_or_single _ | Dict _ | Object _ | Tuple _)) -> fail "expected simple type for %S" k
     | (k, Maybe t) -> k, List t (* what will ES do? but seems safe either way *)
     | (k, ((Ref _ | Simple _) as t)) -> k, List t
     end
@@ -187,6 +195,11 @@ let derive_highlight mapping hl =
   try Maybe (Dict (derive_fields mapping hl)) with Failure s -> fail "derive_highlight: %s" s
 
 let dummy_expunge = Dict ["dummy_expunge", Simple Json]
+
+let field_var_constraints = function
+  | Field_var (v, _typ) -> [On_var (v, Eq_type String)] (* String is the type of the variable value (field name), not the aggregation result *)
+  | Field _name -> []
+  | Script (_lang, _src) -> []
 
 let infer_single mapping ~nested { name; agg; } sibling sub =
   let int = Simple Int in
@@ -222,29 +235,31 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
         | Simple Date | Ref (_,Date) -> "value_as_string" (* Date is mapped to string, but value in ES is numeric *)
         | _ -> "value"
       in
-      [], sub [ key, typ ]
+      field_var_constraints value, sub [ key, typ ]
     | Cumulative_sum path ->
       (* TODO https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-pipeline.html#buckets-path-syntax *)
       begin match List.assoc_opt path sibling with
       | None -> fail "cumulative_sum: buckets_path %S not found : available %s" path (String.concat " " @@ List.map fst sibling)
       | Some v -> [], v
       end
-    | Cardinality _value | Value_count _value -> [], sub ["value", int ]
-    | Weighted_avg { value=_; weight=_ } -> [], sub ["value", Maybe double]
-    | Terms { term; size } -> on_int_var size, buckets (typeof_value mapping term)
+    | Cardinality value | Value_count value -> field_var_constraints value, sub ["value", int ]
+    | Weighted_avg { value; weight } -> field_var_constraints value.value @ field_var_constraints weight.value, sub ["value", Maybe double]
+    | Terms { term; size } -> field_var_constraints term @ on_int_var size, buckets (typeof_value mapping term)
+    | Multi_terms { terms; size } ->
+      List.concat_map field_var_constraints terms @ on_int_var size, buckets (Tuple (List.map (typeof_value mapping) terms))
     | Significant_terms { term; size } ->
-      on_int_var size,
+      field_var_constraints term @ on_int_var size,
       Dict [
         "doc_count", int;
         "bg_count", int;
         "buckets", List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", int) :: ("bg_count", int) :: ("score", double) ::[]) ]
     | Significant_text { term; size } ->
-      on_int_var size,
+      field_var_constraints term @ on_int_var size,
       Dict [
         "doc_count", int;
         "buckets", List (sub @@ ("key", typeof_value mapping term) :: ("doc_count", int) :: ("bg_count", int) :: ("score", double) ::[]) ]
-    | Histogram value -> [Field_num value], buckets double
-    | Date_histogram { on; format } -> [Field_date on], buckets int ~extra:(if format then ["key_as_string", string] else [])
+    | Histogram value -> Field_num value :: field_var_constraints value, buckets double
+    | Date_histogram { on; format } -> Field_date on :: field_var_constraints on, buckets int ~extra:(if format then ["key_as_string", string] else [])
     | Nested _ | Reverse_nested _ -> [], doc_count ()
     | Filter q -> dynamic_default [] Query.infer q, doc_count ()
     | Filters { filters = `Assoc filters; other_bucket } ->
@@ -258,10 +273,10 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Top_hits { source; highlight; } ->
       let highlight = Option.map (derive_highlight mapping) highlight in
       [], Dict [ "hits", sub ((Hit.hits_ mapping ~highlight ?nested source)) ]
-    | Range value -> [Field_num value], buckets string
-    | Range_keyed (value,keys) -> [Field_num value], keyed_buckets keys
+    | Range value -> Field_num value :: field_var_constraints value, buckets string
+    | Range_keyed (value,keys) -> Field_num value :: field_var_constraints value, keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->
-      [Field_date on], (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
+      Field_date on :: field_var_constraints on, (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
     | Bucket_sort { from; size } ->
       on_int_var from @ on_int_var size,
       dummy_expunge (* lazy hack to not wrap all results in option *)

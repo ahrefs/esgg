@@ -1,0 +1,26 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {}
+  },
+  "aggs": {
+    "genres_and_products": {
+      "multi_terms": {
+        "terms": [
+          { "field": "genre" },
+          { "field": "product" }
+        ],
+        "size": 10
+      }
+    },
+    "products_and_quantities": {
+      "multi_terms": {
+        "terms": [
+          { "field": "product" },
+          { "field": "quantity" }
+        ],
+        "size": $n
+      }
+    }
+  }
+}

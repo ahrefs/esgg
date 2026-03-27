@@ -317,6 +317,7 @@ let add_shape t name shape =
     | List t -> list (map t)
     | List_or_single (Ref (ref,_)) -> wrap_ref (ES_name.append ref "list_or_single") (tname "basic_json");
     | List_or_single t -> fail "cannot handle mixed_multi of %s" (show_result_type t)
+    | Tuple ts -> tuple (List.map map ts)
     | Object t -> list ~a:["json",["repr","object"]] (tuple [map (Simple String); map t])
     | Dict ["key",k; "doc_count", Simple Int] -> pname "doc_count" [map k]
     | Dict ["buckets", List t] -> pname "buckets" [map t]

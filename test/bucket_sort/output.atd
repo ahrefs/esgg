@@ -11,6 +11,21 @@ type 'a value_agg =
 type basic_json <ocaml module="Json" t="t"> = abstract
 type hit = { _id: string; _source: basic_json }
 type hits = { total: int; ~hits: hit list }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
 type sales_per_month = {
   key: int;
   doc_count: int;
@@ -18,4 +33,8 @@ type sales_per_month = {
   cumulative_sales: int_as_float value_agg
 }
 type aggregations = { sales_per_month: sales_per_month buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}

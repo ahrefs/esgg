@@ -69,7 +69,27 @@ Syntax for variables in template json files is as follows:
 
 - `$var` for regular required variable
 - `$var?` for optional variable (minimal surrounding scope is conditionally expunged)
-- full form `$(var:hint)` where `hint` can be either `list` or `list?` currently
+- `$(var:list)` for list variable
+- `$(var:<type>)` for typed variable with explicit type annotation (see below)
+
+### Typed variables in aggregations
+
+When you need the same aggregation query against different fields, use a typed variable instead of duplicating the query template:
+
+```json
+"aggregations": {
+  "grouped_keywords": {
+    "terms": {
+      "field": $(group_by:keyword),
+      "size": 10
+    }
+  }
+}
+```
+
+The type annotation determines the output bucket key type. The variable itself becomes a `string` input parameter — the caller passes the ES field name at runtime (e.g., `"keyword_en"`).
+
+Type can be any ES type - `keyword`, `text`, `long`, `double`, `float`, `boolean`, `date`, `int64`, `ip`, `murmur3`.
 
 ## Configuration via `_esgg`
 
@@ -186,7 +206,7 @@ The following aggregation types are supported:
 - [ ] [sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-sampler-aggregation.html) - Sampler aggregation
 - [ ] [diversified_sampler](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-diversified-sampler-aggregation.html) - Diversified sampler
 - [ ] [composite](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-composite-aggregation.html) - Composite aggregation for pagination
-- [ ] [multi_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-multi-terms-aggregation.html) - Multi-field terms aggregation
+- [x] [multi_terms](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-multi-terms-aggregation.html) - Multi-field terms aggregation
 - [ ] [adjacency_matrix](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-adjacency-matrix-aggregation.html) - Adjacency matrix
 - [ ] [categorize_text](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-categorize-text-aggregation.html) - Text categorization
 - [ ] [frequent_item_sets](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-frequent-item-sets-aggregation.html) - Frequent item sets

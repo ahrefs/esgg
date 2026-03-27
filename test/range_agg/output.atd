@@ -16,6 +16,21 @@ type _source = {
 }
 type hit = { _id: string; _source: _source }
 type hits = { total: int; ~hits: hit list }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
 type bucket = {
   key: string wrap <ocaml module="Content">;
   doc_count: int;
@@ -34,4 +49,8 @@ type buckets1 = {
 type w = { buckets: buckets1 }
 type w_over_time = { key: int; doc_count: int; key_as_string: string; w: w }
 type aggregations = { keywords: keywords; w_over_time: w_over_time buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}

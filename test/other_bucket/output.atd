@@ -11,8 +11,23 @@ type 'a value_agg =
 type basic_json <ocaml module="Json" t="t"> = abstract
 type hit = { _id: string; _source: basic_json }
 type hits = { total: int; ~hits: hit list }
-type failure = { doc_count: int; count: int_as_float value_agg }
-type buckets1 = { failure: failure; success: failure }
+type reason = { type_ <json name="type">: string; ?reason: string nullable }
+type failure = {
+  reason: reason;
+  ?index: string nullable;
+  ?node: string nullable;
+  ?shard: int nullable;
+  ?status: string nullable
+}
+type _shards = {
+  total: int;
+  successful: int;
+  skipped: int;
+  failed: int;
+  ?failures: failure list nullable
+}
+type failure1 = { doc_count: int; count: int_as_float value_agg }
+type buckets1 = { failure: failure1; success: failure1 }
 type by_result = { buckets: buckets1 }
 type by_event = {
   key: string wrap <ocaml module="Event">;
@@ -20,4 +35,8 @@ type by_event = {
   by_result: by_result
 }
 type aggregations = { by_event: by_event buckets }
-type result = { hits: hits; aggregations: aggregations }
+type result = {
+  hits: hits;
+  ?_shards: _shards nullable;
+  aggregations: aggregations
+}
