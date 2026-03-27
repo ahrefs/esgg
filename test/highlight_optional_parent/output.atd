@@ -25,8 +25,14 @@ type _source = {
   title: string wrap <ocaml module="Title">
 }
 type highlight = {
-  ~content: content list;
-  ~summary_text <json name="summary.text">: text1 list;
+  ~content_text_en <json name="content.text.en">:
+    string wrap <ocaml module="Content.Text.En"> list;
+  ~content_text_fr <json name="content.text.fr">:
+    string wrap <ocaml module="Content.Text.Fr"> list;
+  ~summary_text_en <json name="summary.text.en">:
+    string wrap <ocaml module="Summary.Text.En"> list;
+  ~summary_text_fr <json name="summary.text.fr">:
+    string wrap <ocaml module="Summary.Text.Fr"> list;
   ~title: string wrap <ocaml module="Title"> list
 }
 type hit = { _id: string; _source: _source; ?highlight: highlight nullable }

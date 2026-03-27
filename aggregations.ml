@@ -177,7 +177,7 @@ let get x =
 
 let linearize_dict a =
   let rec apply prefix a =
-    List.map (function (k, Dict l) -> apply (prefix^k^".") l | (k,v) -> [prefix^k, v]) a |> List.flatten
+    List.map (function (k, Dict l) | (k, Maybe (Dict l)) -> apply (prefix^k^".") l | (k,v) -> [prefix^k, v]) a |> List.flatten
   in
   apply "" a
 
