@@ -50,7 +50,8 @@ let var_name s =
   | exception _ -> fail "bad var name %S" s
   | () -> s
 
-let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
+let test_optional s =
+  if String.ends_with s ~suffix:"?" then String.slice ~last:(-1) s, true else s, false
 
 let make_var s =
   try

@@ -240,7 +240,8 @@ end = struct
       | List (loc, ty, annot) ->
         let name =
           match name with
-          | Some name when String.ends_with name "s" && String.length name > 1 -> Some (String.slice ~last:(-1) name)
+          | Some name when String.ends_with name ~suffix:"s" && String.length name > 1 ->
+            Some (String.slice ~last:(-1) name)
           | Some name -> Some (name ^ "_elem")
           | None -> None
         in
