@@ -3,6 +3,8 @@ open ExtLib
 open Common
 
 let loc = Atd.Ast.dummy_loc
+
+type atd_module = Atd.Ast.module_head * Atd.Ast.module_body
 let annot section l = (section, (loc, List.map (fun (k,v) -> k, (loc, Some v)) l))
 let annots a = Atd.Annot.merge @@ List.map (fun (s,l) -> annot s l) a
 let list ?(a=[]) t = Atd.Ast.List (loc,t,annots a)
@@ -354,7 +356,7 @@ let add_vars t (l:input_vars) =
   in
   Types.add t @@ typ "input" (map l)
 
-let make_module ~init f : Atd.Ast.full_module =
+let make_module ~init f : Atd.Ast.module_head * Atd.Ast.module_body =
   let t = Types.empty () in
   List.iter (Types.add t) (snd init);
   f t;
