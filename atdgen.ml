@@ -17,6 +17,12 @@ let tvar t = Atd.Ast.Tvar (loc,t)
 let ptyp ?(a=[]) name params t = Atd.Ast.Type (loc, (name,params,annots a), t)
 let typ ?a name t = ptyp ?a name [] t
 
+let ends_with s suffix =
+  let s_len = Stdlib.String.length s in
+  let suffix_len = Stdlib.String.length suffix in
+  s_len >= suffix_len
+  && Stdlib.String.sub s (s_len - suffix_len) suffix_len = suffix
+
 let of_simple_type =
   function
   | Int -> tname "int"
@@ -240,7 +246,7 @@ end = struct
       | List (loc, ty, annot) ->
         let name =
           match name with
-          | Some name when String.ends_with name ~suffix:"s" && String.length name > 1 ->
+          | Some name when ends_with name "s" && String.length name > 1 ->
             Some (String.slice ~last:(-1) name)
           | Some name -> Some (name ^ "_elem")
           | None -> None
