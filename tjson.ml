@@ -50,7 +50,14 @@ let var_name s =
   | exception _ -> fail "bad var name %S" s
   | () -> s
 
-let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
+let ends_with s suffix =
+  let s_len = Stdlib.String.length s in
+  let suffix_len = Stdlib.String.length suffix in
+  s_len >= suffix_len
+  && Stdlib.String.sub s (s_len - suffix_len) suffix_len = suffix
+
+let test_optional s =
+  if ends_with s "?" then String.slice ~last:(-1) s, true else s, false
 
 let make_var s =
   try
