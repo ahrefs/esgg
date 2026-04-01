@@ -4,11 +4,18 @@ open Common
 
 type range = { _from : bool; _to_ : bool }
 
-type composite_source =
-  | Composite_terms of { name : string; term : value; order : order; missing_bucket : bool; }
-  | Composite_histogram of { name : string; term : value; interval : Tjson.t; order : order; missing_bucket : bool; }
-  | Composite_date_histogram of { name : string; term : value; calendar_interval : string; format : bool; time_zone : string option; order : order; missing_bucket : bool; }
-  | Composite_geotile_grid of { name : string; term : value; precision : Tjson.t; order : order; missing_bucket : bool; }
+type composite_source_type =
+  | Composite_terms
+  | Composite_histogram of { interval : Tjson.t }
+  | Composite_date_histogram of { calendar_interval : string; format : bool }
+  | Composite_geotile_grid of { precision : Tjson.t }
+
+type composite_source = {
+  name : string;
+  term : value;
+  missing_bucket : bool;
+  source_type : composite_source_type;
+}
 
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
@@ -143,68 +150,32 @@ let analyze_single name agg_type json =
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
     | "composite" ->
-      let parse_order def =
-        match U.member "order" def with
-        | `Null | `String "asc" -> Asc
-        | `String "desc" -> Desc
-        | `String s -> fail "composite source: invalid order %S" s
-        | _ -> fail "composite source: bad order"
-      in
-      let parse_missing_bucket def =
-        match U.member "missing_bucket" def with
-        | `Bool b -> b
-        | `Null -> false
-        | _ -> fail "composite source: bad missing_bucket"
-      in
-      let parse_field def =
-        match U.member "field" def with
-        | `String s -> Field s
-        | `Null -> fail "composite source: field is required"
-        | _ -> fail "composite source: bad field"
-      in
       let source source_json =
         match U.to_assoc source_json with
         | [(source_name, source_def)] ->
-          begin match U.to_assoc source_def with
-          | [("terms", terms_def)] ->
-            Composite_terms {
-              name = source_name;
-              term = parse_field terms_def;
-              order = parse_order terms_def;
-              missing_bucket = parse_missing_bucket terms_def;
-            }
-          | [("histogram", hist_def)] ->
-            Composite_histogram {
-              name = source_name;
-              term = parse_field hist_def;
-              interval = U.member "interval" hist_def;
-              order = parse_order hist_def;
-              missing_bucket = parse_missing_bucket hist_def;
-            }
-          | [("date_histogram", dh_def)] ->
-            let calendar_interval =
-              match U.member "calendar_interval" dh_def, U.member "fixed_interval" dh_def with
-              | `String s, _ | _, `String s -> s
-              | _ -> fail "composite date_histogram: calendar_interval or fixed_interval required"
+          let parse_source source_type_name def =
+            let term = match U.member "field" def with
+              | `String s -> Field s
+              | _ -> fail "composite source %S: field is required" source_name
             in
-            Composite_date_histogram {
-              name = source_name;
-              term = parse_field dh_def;
-              calendar_interval;
-              format = `Null <> U.member "format" dh_def;
-              time_zone = U.(opt "time_zone" to_string dh_def);
-              order = parse_order dh_def;
-              missing_bucket = parse_missing_bucket dh_def;
-            }
-          | [("geotile_grid", gt_def)] ->
-            Composite_geotile_grid {
-              name = source_name;
-              term = parse_field gt_def;
-              precision = U.member "precision" gt_def;
-              order = parse_order gt_def;
-              missing_bucket = parse_missing_bucket gt_def;
-            }
-          | [(source_type, _)] -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram, geotile_grid)" source_type
+            let missing_bucket = Option.default false @@ U.(opt "missing_bucket" to_bool def) in
+            let source_type = match source_type_name with
+              | "terms" -> Composite_terms
+              | "histogram" -> Composite_histogram { interval = U.member "interval" def }
+              | "date_histogram" ->
+                let calendar_interval =
+                  match U.member "calendar_interval" def, U.member "fixed_interval" def with
+                  | `String s, _ | _, `String s -> s
+                  | _ -> fail "composite date_histogram: calendar_interval or fixed_interval required"
+                in
+                Composite_date_histogram { calendar_interval; format = U.mem "format" def }
+              | "geotile_grid" -> Composite_geotile_grid { precision = U.member "precision" def }
+              | t -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram, geotile_grid)" t
+            in
+            { name = source_name; term; missing_bucket; source_type }
+          in
+          begin match U.to_assoc source_def with
+          | [(source_type_name, def)] -> parse_source source_type_name def
           | _ -> fail "composite source: expected single source type"
           end
         | _ -> fail "composite source: expected single named source"
@@ -356,20 +327,15 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Date_range { on; format=_; keys; ranges=_ } ->
       Field_date on :: field_var_constraints on, (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
     | Composite { sources; size; after } ->
-      let key_fields = List.map (fun source ->
-        let (name, typ, mb) = match source with
-          | Composite_terms { name; term; missing_bucket; _ } ->
-            name, typeof_value mapping term, missing_bucket
-          | Composite_histogram { name; missing_bucket; _ } ->
-            name, double, missing_bucket
-          | Composite_date_histogram { name; format; missing_bucket; _ } ->
-            name, (if format then string else int), missing_bucket
-          | Composite_geotile_grid { name; missing_bucket; _ } ->
-            (* key is always "zoom/x/y" string regardless of geo_point field type,
-               so we don't resolve through typeof_value/simple_of_es_type *)
-            name, string, missing_bucket
+      let key_fields = List.map (fun { name; term; missing_bucket; source_type } ->
+        let typ = match source_type with
+          | Composite_terms -> typeof_value mapping term
+          | Composite_histogram _ -> double
+          | Composite_date_histogram { format; _ } -> if format then string else int
+          (* geotile_grid key is always "zoom/x/y" string regardless of field type *)
+          | Composite_geotile_grid _ -> string
         in
-        name, (if mb then Maybe typ else typ)
+        name, (if missing_bucket then Maybe typ else typ)
       ) sources in
       let bucket_content = sub (("key", Dict key_fields) :: ("doc_count", int) :: []) in
       let after_constraint = match after with
