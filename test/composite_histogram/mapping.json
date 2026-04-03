@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "price": {
+      "type": "integer"
+    },
+    "product": {
+      "type": "keyword"
+    }
+  }
+}

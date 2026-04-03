@@ -1,0 +1,23 @@
+{
+  "size": 0,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_buckets": {
+      "composite": {
+        "sources": [
+          {
+            "date": {
+              "date_histogram": {
+                "field": "timestamp",
+                "calendar_interval": "1d",
+                "format": "yyyy-MM-dd"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

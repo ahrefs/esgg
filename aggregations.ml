@@ -4,6 +4,19 @@ open Common
 
 type range = { _from : bool; _to_ : bool }
 
+type composite_source_type =
+  | Composite_terms
+  | Composite_histogram of { interval : Tjson.t }
+  | Composite_date_histogram of { calendar_interval : string; format : bool }
+  | Composite_geotile_grid of { precision : Tjson.t }
+
+type composite_source = {
+  name : string;
+  term : value;
+  missing_bucket : bool;
+  source_type : composite_source_type;
+}
+
 type agg_type =
 | Simple_metric of [`MinMax | `Avg | `Sum ] * value
 | Value_count of value
@@ -26,6 +39,7 @@ type agg_type =
 | Bucket_sort of { from : Tjson.t; size : Tjson.t; }
 | Multi_terms of { terms : value list; size : Tjson.t }
 | Cumulative_sum of string
+| Composite of { sources : composite_source list; size : Tjson.t; after : Tjson.t; }
 
 type single = { name : string; agg : agg_type or_var; }
 type t = { this : single; sub : t list; }
@@ -135,6 +149,38 @@ let analyze_single name agg_type json =
     | "nested" -> Nested U.(get "path" to_string json)
     | "reverse_nested" -> Reverse_nested U.(opt "path" to_string json)
     | "bucket_sort" -> Bucket_sort { from = U.member "from" json; size = U.member "size" json; }
+    | "composite" ->
+      let source source_json =
+        match U.to_assoc source_json with
+        | [(source_name, source_def)] ->
+          let parse_source source_type_name def =
+            let term = Field U.(get "field" to_string def) in
+            let missing_bucket = Option.default false @@ U.(opt "missing_bucket" to_bool def) in
+            let source_type = match source_type_name with
+              | "terms" -> Composite_terms
+              | "histogram" -> Composite_histogram { interval = U.member "interval" def }
+              | "date_histogram" ->
+                let calendar_interval =
+                  match U.member "calendar_interval" def, U.member "fixed_interval" def with
+                  | `String s, _ | _, `String s -> s
+                  | _ -> fail "composite date_histogram: calendar_interval or fixed_interval required"
+                in
+                Composite_date_histogram { calendar_interval; format = U.mem "format" def }
+              | "geotile_grid" -> Composite_geotile_grid { precision = U.member "precision" def }
+              | t -> fail "composite source type %S not supported (supported: terms, histogram, date_histogram, geotile_grid)" t
+            in
+            { name = source_name; term; missing_bucket; source_type }
+          in
+          begin match U.to_assoc source_def with
+          | [(source_type_name, def)] -> parse_source source_type_name def
+          | _ -> fail "composite source: expected single source type"
+          end
+        | _ -> fail "composite source: expected single named source"
+      in
+      let sources = U.(get "sources" (to_list source)) json in
+      let size = U.member "size" json in
+      let after = U.member "after" json in
+      Composite { sources; size; after; }
     | _ -> fail "unknown aggregation type %S" agg_type
   in
   json, { name; agg = Static agg; }
@@ -277,6 +323,27 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
     | Range_keyed (value,keys) -> Field_num value :: field_var_constraints value, keyed_buckets keys
     | Date_range { on; format=_; keys; ranges=_ } ->
       Field_date on :: field_var_constraints on, (match keys with None -> buckets string | Some keys -> keyed_buckets keys)
+    | Composite { sources; size; after } ->
+      let key_fields = List.map (fun { name; term; missing_bucket; source_type } ->
+        let typ = match source_type with
+          | Composite_terms -> typeof_value mapping term
+          | Composite_histogram _ -> double
+          | Composite_date_histogram { format; _ } -> if format then string else int
+          (* geotile_grid key is always "zoom/x/y" string regardless of field type *)
+          | Composite_geotile_grid _ -> string
+        in
+        name, (if missing_bucket then Maybe typ else typ)
+      ) sources in
+      let bucket_content = sub (("key", Dict key_fields) :: ("doc_count", int) :: []) in
+      let after_constraint = match after with
+        | `Var var when not var.optional -> [On_var (var, Eq_object)]
+        | _ -> []
+      in
+      on_int_var size @ after_constraint,
+      Dict [
+        "after_key", Maybe (Simple Json);
+        "buckets", List bucket_content
+      ]
     | Bucket_sort { from; size } ->
       on_int_var from @ on_int_var size,
       dummy_expunge (* lazy hack to not wrap all results in option *)

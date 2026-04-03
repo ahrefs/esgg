@@ -134,9 +134,8 @@ let derive mapping json =
       let c2 = Query.infer' extra q in
       let vars = Query.resolve_constraints mapping (c1 @ c2) in
       let json = Tjson.(remove "query" @@ remove "aggregations" @@ remove "aggs" json) in
-      (* handle optional variables outside of aggregation and query parts *)
-      let json = Tjson.(map (function `Var var when var.optional -> `Optional ({label=var.name;vars=[var.name]}, `Var var) | x -> x) json) in
       let json = Tjson.add json ["query",q.json; "aggregations", agg_json] in
+      let json = Tjson.(map (function `Var var when var.optional -> `Optional ({label=var.name;vars=[var.name]}, `Var var) | x -> x) json) in
       vars, json, ("`POST","[__esgg_index;\"_search\"]","[]",Some json)
     | Mget { ids; json; conf } ->
       let args = conf |> Query.extract_source_static |> source_args |> args_to_ocaml_string in
