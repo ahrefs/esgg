@@ -26,13 +26,13 @@ type _shards = {
   failed: int;
   ?failures: failure list nullable
 }
-type after_key = {
+type t0 = {
   histo: float;
   ?product_name: string wrap <ocaml module="Product"> nullable
 }
 type my_buckets = {
-  ?after_key: after_key nullable;
-  ~buckets: after_key doc_count list
+  ?after_key: basic_json nullable;
+  ~buckets: t0 doc_count list
 }
 type aggregations = { my_buckets: my_buckets }
 type result = {

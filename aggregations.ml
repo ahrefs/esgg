@@ -154,10 +154,7 @@ let analyze_single name agg_type json =
         match U.to_assoc source_json with
         | [(source_name, source_def)] ->
           let parse_source source_type_name def =
-            let term = match U.member "field" def with
-              | `String s -> Field s
-              | _ -> fail "composite source %S: field is required" source_name
-            in
+            let term = Field U.(get "field" to_string def) in
             let missing_bucket = Option.default false @@ U.(opt "missing_bucket" to_bool def) in
             let source_type = match source_type_name with
               | "terms" -> Composite_terms
@@ -344,7 +341,7 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       in
       on_int_var size @ after_constraint,
       Dict [
-        "after_key", Maybe (Dict key_fields);
+        "after_key", Maybe (Simple Json);
         "buckets", List bucket_content
       ]
     | Bucket_sort { from; size } ->

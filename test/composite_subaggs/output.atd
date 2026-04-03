@@ -26,13 +26,9 @@ type _shards = {
   failed: int;
   ?failures: failure list nullable
 }
-type after_key = { date: int; product: string wrap <ocaml module="Product"> }
-type bucket = {
-  key: after_key;
-  doc_count: int;
-  the_avg: float nullable value_agg
-}
-type my_buckets = { ?after_key: after_key nullable; ~buckets: bucket list }
+type key = { date: int; product: string wrap <ocaml module="Product"> }
+type bucket = { key: key; doc_count: int; the_avg: float nullable value_agg }
+type my_buckets = { ?after_key: basic_json nullable; ~buckets: bucket list }
 type aggregations = { my_buckets: my_buckets }
 type result = {
   hits: hits;
