@@ -1,0 +1,22 @@
+{
+  "size": 0,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_buckets": {
+      "composite": {
+        "sources": [
+          {
+            "tile": {
+              "geotile_grid": {
+                "field": "location",
+                "precision": 8
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

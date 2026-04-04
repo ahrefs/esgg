@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "product": {
+      "type": "keyword"
+    },
+    "timestamp": {
+      "type": "date"
+    }
+  }
+}

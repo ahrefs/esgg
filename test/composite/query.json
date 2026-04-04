@@ -1,0 +1,21 @@
+{
+  "size": 0,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_buckets": {
+      "composite": {
+        "sources": [
+          {
+            "product": {
+              "terms": {
+                "field": "product"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

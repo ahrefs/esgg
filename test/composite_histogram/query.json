@@ -1,0 +1,30 @@
+{
+  "size": 0,
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_buckets": {
+      "composite": {
+        "sources": [
+          {
+            "histo": {
+              "histogram": {
+                "field": "price",
+                "interval": 5
+              }
+            }
+          },
+          {
+            "product_name": {
+              "terms": {
+                "field": "product",
+                "missing_bucket": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
