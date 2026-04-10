@@ -268,7 +268,12 @@ let infer_single mapping ~nested { name; agg; } sibling sub =
       let typ =
         match metric with
 (*         | `MinMax -> `Maybe (`Typeof value) *)
-        | `MinMax -> Maybe value_type (* TODO use Typeof, but need meta annotation to fallback to value_type *)
+        | `MinMax ->
+          (* ES min/max returns doubles even on integer fields, same as sum *)
+          begin match value_type with
+          | Simple (Int | Int64 as t) | Ref (_, (Int | Int64 as t)) -> Maybe (Dict ["override int as float hack", Simple t])
+          | _ -> Maybe value_type
+          end
         | `Avg -> Maybe double
         | `Sum ->
           match value_type with
