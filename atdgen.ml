@@ -322,6 +322,7 @@ let add_shape t name shape =
     | Dict ["key",k; "doc_count", Simple Int] -> pname "doc_count" [map k]
     | Dict ["buckets", List t] -> pname "buckets" [map t]
     | Dict ["value", Dict ["override int as float hack", Simple Int]] -> pname "value_agg" [tname "int_as_float"]
+    | Dict ["value", Maybe (Dict ["override int as float hack", Simple Int])] -> pname "value_agg" [nullable (tname "int_as_float")]
     | Dict ["value", t] -> pname "value_agg" [map t]
 (*     | Dict ["value_as_string", t] -> pname "value_as_string_agg" [map t] *)
     | Dict fields -> safe_record map fields
