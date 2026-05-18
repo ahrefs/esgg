@@ -271,20 +271,27 @@ end = struct
 
 end
 
-let make_abstract ((_loc,annot),init) types =
+let abstract_annot_of_module annot =
   let esgg_section_name = "esgg" in
   let module_name_opt = Atd.Annot.get_opt_field ~parse:(fun s -> Some s) ~sections:[esgg_section_name] ~field:"from" annot in
-  let annot = 
-    let annot' = match module_name_opt with
-    | Some module_name ->  Atd.Annot.set_field ~loc ~section:"ocaml" ~field:"from" (Some module_name) annot
-    | None -> annot
-    in 
-    List.filter (fun (section_name, _) -> section_name <> esgg_section_name) annot'
+  let annot' = match module_name_opt with
+  | Some module_name ->  Atd.Annot.set_field ~loc ~section:"ocaml" ~field:"from" (Some module_name) annot
+  | None -> annot
+  in
+  List.filter (fun (section_name, _) -> section_name <> esgg_section_name) annot'
+
+let make_abstract inits types =
+  let find_init name =
+    List.find_opt (fun ((_loc,_annot),init) ->
+      List.exists (fun i -> type_def_name i = name) init
+    ) inits
   in
   types |> List.map begin fun t ->
-    match List.find (fun i -> type_def_name i = type_def_name t) init with (* match by name, because initial types are not renamed *)
-    | exception Not_found -> t
-    | _ -> Atd.Ast.Type (loc, (type_def_name t,[],annot),tname "abstract")
+    match find_init (type_def_name t) with
+    | None -> t
+    | Some ((_loc,annot),_) ->
+      let annot = abstract_annot_of_module annot in
+      Atd.Ast.Type (loc, (type_def_name t,[],annot),tname "abstract")
   end
 
 let safe_record map fields =
@@ -354,18 +361,22 @@ let add_vars t (l:input_vars) =
   in
   Types.add t @@ typ "input" (map l)
 
-let make_module ~init f : Atd.Ast.full_module =
+let make_module ~inits f : Atd.Ast.full_module =
   let t = Types.empty () in
-  List.iter (Types.add t) (snd init);
+  List.iter (fun init -> List.iter (Types.add t) (snd init)) inits;
   f t;
-  (loc,[]), (make_abstract init (Types.get t))
+  (loc,[]), (make_abstract inits (Types.get t))
 
-let of_shape ~init name shape = make_module ~init (fun t -> add_shape t name shape)
-let of_vars ~init (l:input_vars) = make_module ~init (fun t -> add_vars t l)
-let make ~init l name shape = make_module ~init (fun t -> add_vars t l; add_shape t name shape)
+let of_shape ~inits name shape = make_module ~inits (fun t -> add_shape t name shape)
+let of_vars ~inits (l:input_vars) = make_module ~inits (fun t -> add_vars t l)
+let make ~inits l name shape = make_module ~inits (fun t -> add_vars t l; add_shape t name shape)
+
+let parse_lexbuf lexbuf = Atd.Parser.full_module Atd.Lexer.token lexbuf
 
 let parse_file filename =
-  let open Atd in
   let ch = open_in filename in
-  let lexbuf = Lexing.from_channel ch in
-  Parser.full_module Lexer.token lexbuf
+  let r = parse_lexbuf (Lexing.from_channel ch) in
+  close_in ch;
+  r
+
+let parse_string s = parse_lexbuf (Lexing.from_string s)
