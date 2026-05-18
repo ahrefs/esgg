@@ -17,7 +17,7 @@ type failure = {
   ?status: string nullable
 }
 
-type _shards = {
+type shards = {
   total: int;
   successful: int;
   skipped: int;
