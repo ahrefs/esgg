@@ -2,6 +2,8 @@
 type reason <ocaml from="Esgg_shared"> = abstract
 type failure <ocaml from="Esgg_shared"> = abstract
 type shards <ocaml from="Esgg_shared"> = abstract
+type meta <ocaml from="Esgg_shared"> = abstract
+type 'a t <ocaml from="Esgg_shared"> = abstract
 type 'key doc_count = { key: 'key; doc_count: int }
 type 'a buckets = { buckets: 'a list }
 type int_as_float =

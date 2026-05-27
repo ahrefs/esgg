@@ -24,4 +24,8 @@ type shards = {
   failed: int;
   ?failures: failure list nullable
 }
+
+type meta = { ?shards: shards nullable }
+
+type 'a t = { meta: meta; result: 'a }
 |}

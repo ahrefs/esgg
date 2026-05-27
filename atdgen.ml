@@ -281,17 +281,21 @@ let abstract_annot_of_module annot =
   List.filter (fun (section_name, _) -> section_name <> esgg_section_name) annot'
 
 let make_abstract inits types =
-  let find_init name =
-    List.find_opt (fun ((_loc,_annot),init) ->
-      List.exists (fun i -> type_def_name i = name) init
+  let find_init_type name =
+    List.find_map (fun ((_loc,annot),init) ->
+      match List.find_opt (fun i -> type_def_name i = name) init with
+      | None -> None
+      | Some i -> Some (annot, i)
     ) inits
   in
   types |> List.map begin fun t ->
-    match find_init (type_def_name t) with
+    match find_init_type (type_def_name t) with
     | None -> t
-    | Some ((_loc,annot),_) ->
-      let annot = abstract_annot_of_module annot in
-      Atd.Ast.Type (loc, (type_def_name t,[],annot),tname "abstract")
+    | Some (module_annot, Atd.Ast.Type (_, (name, params, _), _)) ->
+      (* Preserve params from the init type so parametric types emit a valid
+         abstract reference (e.g. [type ('a) t <ocaml from="X"> = abstract]). *)
+      let annot = abstract_annot_of_module module_annot in
+      Atd.Ast.Type (loc, (name, params, annot), tname "abstract")
   end
 
 let safe_record map fields =
