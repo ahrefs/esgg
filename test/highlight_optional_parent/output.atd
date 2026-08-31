@@ -52,4 +52,4 @@ type _shards = {
   failed: int;
   ?failures: failure list nullable
 }
-type result = { hits: hits; ?_shards: _shards nullable }
+type result = { ?took: int nullable; hits: hits; ?_shards: _shards nullable }

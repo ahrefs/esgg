@@ -64,7 +64,11 @@ let output mapping query =
         "status", Maybe (Simple String);
       ]));
     ]) in
-    Dict (("hits", hits) :: ("_shards", shards) :: (if aggs = [] then [] else ["aggregations", Dict aggs]))
+    Dict
+      (("took", Maybe (Simple Int))
+      :: ("hits", hits)
+      :: ("_shards", shards)
+      :: (if aggs = [] then [] else [ "aggregations", Dict aggs ]))
 
 let print_reflect name mapping =
   let extern name = name ^ "_" in

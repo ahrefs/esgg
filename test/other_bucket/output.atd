@@ -36,6 +36,7 @@ type by_event = {
 }
 type aggregations = { by_event: by_event buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

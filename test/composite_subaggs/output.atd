@@ -31,6 +31,7 @@ type bucket = { key: key; doc_count: int; the_avg: float nullable value_agg }
 type my_buckets = { ?after_key: basic_json nullable; ~buckets: bucket list }
 type aggregations = { my_buckets: my_buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

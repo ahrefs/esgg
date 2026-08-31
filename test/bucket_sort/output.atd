@@ -34,6 +34,7 @@ type sales_per_month = {
 }
 type aggregations = { sales_per_month: sales_per_month buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

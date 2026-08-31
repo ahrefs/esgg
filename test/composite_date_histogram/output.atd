@@ -33,6 +33,7 @@ type my_buckets = {
 }
 type aggregations = { my_buckets: my_buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations
