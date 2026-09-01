@@ -1,0 +1,9 @@
+{
+  "query": { "match_all": {} },
+  "collapse": { "field": $collapse_field? },
+  "highlight": {
+    "fields": { "title": {} },
+    "fragment_size": $fragment_size?,
+    "number_of_fragments": $number_of_fragments?
+  }
+}

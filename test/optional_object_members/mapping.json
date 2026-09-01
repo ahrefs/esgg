@@ -1,0 +1,6 @@
+{
+  "properties": {
+    "category": { "type": "keyword" },
+    "title": { "type": "text" }
+  }
+}
