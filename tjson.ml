@@ -171,27 +171,33 @@ let lift_to_string map (v:t) =
     | _ -> assert false
   in
   let quote_val f x = let b = Buffer.create 1 in f b x; quote @@ Buffer.contents b in
-  let rec output_list l =
-    let elem = function
-    | `Optional ({label;vars},x) ->
-      let match_vars =
-        match vars with
-        | [] -> assert false
-        | [x] -> x
-        | l -> sprintf "{%s}" (String.concat ";" l)
-      in
-      list [
-        splice @@ sprintf "begin match %s with None -> None | Some %s -> Some (" label match_vars;
-        splice @@ stringify @@ output x;
-        splice ") end;";
-      ]
-    | x -> list [splice "Some ("; splice @@ stringify @@ output x; splice ");"]
-    in
+  let match_vars vars =
+    match vars with
+    | [] -> assert false
+    | [x] -> x
+    | l -> sprintf "{%s}" (String.concat ";" l)
+  in
+  let emit_optional ~label ~vars body =
+    list [
+      splice @@ sprintf "begin match %s with None -> None | Some %s -> Some (" label (match_vars vars);
+      splice @@ stringify body;
+      splice ") end;";
+    ]
+  in
+  let emit_required body = list [splice "Some ("; splice @@ stringify body; splice ");"] in
+  let concat_present elems =
     list [
       splice "(String.concat \",\" @@ List.map (function Some x -> x | None -> assert false) @@ List.filter (function Some _ -> true | None -> false) [";
-      splice @@ stringify @@ list @@ List.map elem l;
+      splice @@ stringify @@ list elems;
       splice "])"
     ]
+  in
+  let rec output_list l =
+    let elem = function
+    | `Optional ({label;vars},x) -> emit_optional ~label ~vars (output x)
+    | x -> emit_required (output x)
+    in
+    concat_present (List.map elem l)
   and output = function
   | `Null -> quote_val J.write_null ()
   | `Bool b -> quote_val J.write_bool b
@@ -213,26 +219,15 @@ let lift_to_string map (v:t) =
       quote "]";
     ]
   | `Assoc a when List.exists (fun (_,v) -> match v with `Optional _ -> true | _ -> false) a ->
-    let required = List.filter (fun (_,v) -> match v with `Optional _ -> false | _ -> true) a in
-    let optional = List.filter_map (fun (k,v) -> match v with `Optional ({label;vars},x) -> Some (k,label,vars,x) | _ -> None) a in
-    let required_json = intersperse (quote ",") (List.map (fun (k,v) -> list [quote_val J.write_string k; quote ":"; output v]) required) in
-    let optional_parts = List.map (fun (k,label,vars,x) ->
-      let match_vars =
-        match vars with
-        | [] -> assert false
-        | [x] -> x
-        | l -> sprintf "{%s}" (String.concat ";" l)
-      in
-      list [
-        splice @@ sprintf "(match %s with None -> \"\" | Some %s -> \",\" ^ " label match_vars;
-        splice @@ stringify @@ list [quote_val J.write_string k; quote ":"; output x];
-        splice ")";
-      ]
-    ) optional in
+    let member (k,v) =
+      let pair x = list [quote_val J.write_string k; quote ":"; output x] in
+      match v with
+      | `Optional ({label;vars},x) -> emit_optional ~label ~vars (pair x)
+      | x -> emit_required (pair x)
+    in
     list [
       quote "{";
-      list required_json;
-      list optional_parts;
+      concat_present (List.map member a);
       quote "}"
     ]
   | `Assoc a ->
