@@ -28,6 +28,7 @@ type _shards = {
 }
 type aggregations = { distribution: float doc_count buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

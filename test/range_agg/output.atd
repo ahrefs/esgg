@@ -50,6 +50,7 @@ type w = { buckets: buckets1 }
 type w_over_time = { key: int; doc_count: int; key_as_string: string; w: w }
 type aggregations = { keywords: keywords; w_over_time: w_over_time buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

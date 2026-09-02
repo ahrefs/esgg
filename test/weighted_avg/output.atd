@@ -28,6 +28,7 @@ type _shards = {
 }
 type aggregations = { weighted_grade: float nullable value_agg }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

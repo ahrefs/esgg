@@ -28,6 +28,7 @@ type _shards = {
 }
 type aggregations = { grouped: string doc_count buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

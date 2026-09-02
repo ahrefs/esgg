@@ -68,6 +68,7 @@ type into_obj = {
 }
 type aggregations = { into_obj: into_obj }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations

@@ -31,6 +31,7 @@ type buckets1 = { errors: errors; warnings: errors }
 type messages = { buckets: buckets1 }
 type aggregations = { messages: messages; messages_list: errors buckets }
 type result = {
+  ?took: int nullable;
   hits: hits;
   ?_shards: _shards nullable;
   aggregations: aggregations
