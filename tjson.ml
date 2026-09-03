@@ -46,9 +46,16 @@ let sub_decoded d s =
   String.slice ~first ~last s
 
 let var_name s =
-  match Scanf.sscanf s "%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
-  | exception _ -> fail "bad var name %S" s
-  | () -> s
+  let name_char = function 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' -> true | _ -> false in
+  let all_name_chars () = try String.iter (fun c -> if not (name_char c) then raise Exit) s; true with Exit -> false in
+  let ok =
+    match s.[0] with
+    | 'a'..'z' | 'A'..'Z' -> all_name_chars ()
+    | '_' -> String.length s > 1 && all_name_chars () (* bare _ is a wildcard, not a name *)
+    | _ -> false
+    | exception _ -> false
+  in
+  if ok then s else fail "bad var name %S" s
 
 let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
 
