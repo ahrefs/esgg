@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "views": { "type": "integer" },
+    "rank": { "type": "short" },
+    "flags": { "type": "byte" },
+    "ratio": { "type": "half_float" },
+    "price": { "type": "scaled_float" },
+    "count": { "type": "long" },
+    "name": { "type": "keyword" }
+  }
+}
