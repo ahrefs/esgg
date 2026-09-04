@@ -150,11 +150,11 @@ type result_type =
 
 let simple_of_es_type t =
   match t with
-  | "long" -> Int
+  | "long" | "integer" | "short" | "byte" -> Int
   | "keyword" | "text" -> String
   | "ip" -> String
   | "date" -> Date
-  | "double" | "float" -> Double
+  | "double" | "float" | "half_float" | "scaled_float" -> Double
   | "boolean" -> Bool
   | "int64" | "murmur3" -> Int64
   | _ -> fail "simple_of_es_type: cannot handle %S" t
