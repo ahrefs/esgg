@@ -149,7 +149,7 @@ and extract_query json =
         let json = `Assoc ["bool", `Assoc (List.map (fun (json,_cstr,(clause,_)) -> clause, json) bool)] in
         json, List.concat @@ List.map (fun (_,c,_) -> c) bool, Bool (List.map (fun (_json,_cstr,x) -> x) bool)
       | "ids", x -> json, [], Strings (var_list_of_json ~desc:"ids values" (U.assoc "values" x))
-      | "query_string", x -> json, [], (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
+      | ("query_string" | "multi_match" | "simple_query_string"), x -> json, [], (match U.assoc "query" x with `Var x -> Strings (`List [x]) | _ -> Nothing)
       | ("match_all"|"match_none"), _ -> json, [], Nothing
       | _qt, `Var x -> json, [], Var x
       | "range", `Assoc [_f, `Var x] -> json, [], Var x

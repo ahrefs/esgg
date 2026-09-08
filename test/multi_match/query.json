@@ -1,0 +1,13 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "multi_match": { "query": $q, "fields": ["title^3", "body"] } },
+        { "simple_query_string": { "query": "fast + charger", "fields": ["title"] } }
+      ],
+      "filter": [
+        { "term": { "category": $cat } }
+      ]
+    }
+  }
+}
