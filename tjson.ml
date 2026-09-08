@@ -45,10 +45,82 @@ let sub_decoded d s =
   let last = find_line l2 + c2 in
   String.slice ~first ~last s
 
+(* https://ocaml.org/manual/latest/lex.html#sss:keywords *)
+let ocaml_keywords = [
+"and";
+"as";
+"asr";
+"assert";
+"begin";
+"class";
+"constraint";
+"do";
+"done";
+"downto";
+"effect";
+"else";
+"end";
+"exception";
+"external";
+"false";
+"for";
+"fun";
+"function";
+"functor";
+"if";
+"in";
+"include";
+"inherit";
+"initializer";
+"land";
+"lazy";
+"let";
+"lor";
+"lsl";
+"lsr";
+"lxor";
+"match";
+"method";
+"mod";
+"module";
+"mutable";
+"new";
+"nonrec";
+"object";
+"of";
+"open!";
+"open";
+"or";
+"private";
+"rec";
+"sig";
+"struct";
+"then";
+"to";
+"true";
+"try";
+"type";
+"val";
+"virtual";
+"when";
+"while";
+"with";
+]
+
+
 let var_name s =
-  match Scanf.sscanf s "%_[a-zA-Z]%_[0-9_a-zA-Z]%!" () with
-  | exception _ -> fail "bad var name %S" s
-  | () -> s
+  let name_char = function 'a'..'z' | 'A'..'Z' | '0'..'9' | '_' -> true | _ -> false in
+  let all_name_chars () = try String.iter (fun c -> if not (name_char c) then raise Exit) s; true with Exit -> false in
+  let ok =
+    match s.[0] with
+    | 'a'..'z' -> all_name_chars ()
+    | '_' -> String.length s > 1 && all_name_chars () (* bare _ is a wildcard, not a name *)
+    | _ -> false
+    | exception _ -> false
+  in
+  if not ok then fail "bad var name %S" s;
+  if List.mem s ocaml_keywords then fail "bad var name %S : OCaml keyword" s;
+  s
 
 let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
 
