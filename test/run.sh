@@ -8,6 +8,17 @@ cd "${0%/*}"
 
 cmd () { if ! "$@" ; then printf "FAILED: %s\n" "$*" >&2; exit 2; fi }
 
+# generate into a temp file and replace the target only on success,
+# so a failed run does not truncate the previously generated file
+gen () {
+  target=$1; shift
+  if "$@" > "$target.tmp"; then
+    mv "$target.tmp" "$target"
+  else
+    printf "FAILED: %s\n" "$*" >&2; rm -f "$target.tmp"; exit 2
+  fi
+}
+
 function run() {
   dir=$(dirname $1)
   echo -n "$dir ... "
@@ -23,9 +34,9 @@ function run() {
   fi
   (
   set -e
-  cmd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json > $dir/output.atd
-  cmd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json > $dir/input.atd
-  cmd ../_build/default/esgg.exe input_j $dir/mapping.json $dir/query.json > $dir/query.ml
+  gen $dir/output.atd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json
+  gen $dir/input.atd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json
+  gen $dir/query.ml ../_build/default/esgg.exe input_j $dir/mapping.json $dir/query.json
   ) && echo "ok"
 }
 
