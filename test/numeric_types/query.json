@@ -1,0 +1,7 @@
+{
+  "query": { "match_all": {} },
+  "aggregations": {
+    "total_views": { "sum": { "field": "views" } },
+    "avg_price": { "avg": { "field": "price" } }
+  }
+}
