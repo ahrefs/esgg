@@ -1,0 +1,5 @@
+{
+  "query": {
+    "exists": { "field": $required_field, "boost": 1.5 }
+  }
+}
