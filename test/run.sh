@@ -37,7 +37,7 @@ function run() {
   gen $dir/output.atd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json
   gen $dir/input.atd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json
   gen $dir/query.ml ../_build/default/esgg.exe input_j $dir/mapping.json $dir/query.json
-  ) && echo "ok"
+  ) && echo "ok" || exit 2
 }
 
 cmd dune build ../esgg.exe
