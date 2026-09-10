@@ -1,0 +1,11 @@
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "exists": { "field": $required_field } },
+        { "exists": { "field": "category" } }
+      ]
+    }
+  },
+  "size": 0
+}
