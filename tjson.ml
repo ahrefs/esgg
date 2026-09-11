@@ -122,7 +122,7 @@ let var_name s =
   if List.mem s ocaml_keywords then fail "bad var name %S : OCaml keyword" s;
   s
 
-let test_optional s = if String.ends_with s "?" then String.slice ~last:(-1) s, true else s, false
+let test_optional s = if String.ends_with s ~suffix:"?" then String.slice ~last:(-1) s, true else s, false
 
 let make_var s =
   try

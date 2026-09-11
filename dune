@@ -13,7 +13,7 @@
 (rule
  (targets version.ml)
  (deps (universe))
- (action (run ./gen_version.bc %{targets})))
+ (action (run ./gen_version.exe %{targets})))
 
 (library
  (name version)
