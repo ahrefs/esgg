@@ -4,6 +4,9 @@ include Prelude
 
 let () = Printexc.register_printer (function Failure s -> Some s | _ -> None)
 
+(* for consumers whose ES still answers with the pre ES 7 plain int total (ES 6, or rest_total_hits_as_int=true requests) *)
+let total_as_int = ref false
+
 type 'a or_var = Static of 'a | Dynamic of Tjson.var [@@deriving show]
 
 let dynamic_default default f x =

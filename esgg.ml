@@ -63,6 +63,8 @@ let help () = [
   "  output [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive output atd of ES query";
   "  atd [-name <name>] [-shared <file.atd>] <mapping.json> <query.json> # derive input and output atd for the ES query";
   "  reflect <name> <mapping.json> # reflect mapping into OCaml module";
+  "";
+  "  -total-as-int makes output atd type hits.total as plain int (pre ES 7 shape, or rest_total_hits_as_int=true) instead of the {value, relation} object";
   "  tjson lift <file.json> # lift json template to code";
   "  tjson decode <file.json> # debug json template parsing";
   "  tjson show <file.json> # parse and print back json template";
@@ -82,9 +84,10 @@ let () =
     let rec loop = function
     | "-shared"::s::tl -> init := Some s; loop tl
     | "-name"::s::tl -> name := Some s; loop tl
+    | "-total-as-int"::tl -> Common.total_as_int := true; loop tl
     | [m;q] -> f m q
     | [s;m;q] -> name := Some s; f m q
-    | _ -> fail "expected: [-shared <shared.atd>] [-name <mapping>] <mapping.json> <query.template.json>"
+    | _ -> fail "expected: [-shared <shared.atd>] [-name <mapping>] [-total-as-int] <mapping.json> <query.template.json>"
     in
     loop l
   in

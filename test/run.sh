@@ -22,8 +22,10 @@ gen () {
 function run() {
   dir=$(dirname $1)
   echo -n "$dir ... "
+  flags=
+  if [ -e $dir/flags ]; then flags=$(cat $dir/flags); fi
   if [ -e $dir/fail ]; then
-    if out=$(../_build/default/esgg.exe output $dir/mapping.json $dir/query.json 2>&1); then
+    if out=$(../_build/default/esgg.exe output $flags $dir/mapping.json $dir/query.json 2>&1); then
       printf "FAILED: %s: expected esgg to reject this query\n" "$dir" >&2; exit 2
     fi
     if ! grep -qF "$(cat $dir/fail)" <<< "$out"; then
@@ -34,9 +36,9 @@ function run() {
   fi
   (
   set -e
-  gen $dir/output.atd ../_build/default/esgg.exe output $dir/mapping.json $dir/query.json
-  gen $dir/input.atd ../_build/default/esgg.exe vars $dir/mapping.json $dir/query.json
-  gen $dir/query.ml ../_build/default/esgg.exe input_j $dir/mapping.json $dir/query.json
+  gen $dir/output.atd ../_build/default/esgg.exe output $flags $dir/mapping.json $dir/query.json
+  gen $dir/input.atd ../_build/default/esgg.exe vars $flags $dir/mapping.json $dir/query.json
+  gen $dir/query.ml ../_build/default/esgg.exe input_j $flags $dir/mapping.json $dir/query.json
   ) && echo "ok" || exit 2
 }
 

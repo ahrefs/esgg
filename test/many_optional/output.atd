@@ -7,9 +7,12 @@ type 'a value_agg' = { value: 'a }
 type 'a value_agg =
   'a value_agg' wrap
     <ocaml
-       t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
+       t="'a"
+       wrap="fun ({ value; } : _ value_agg') -> value"
+       unwrap="fun value -> ({ value; } : _ value_agg')">
 type basic_json <ocaml module="Json" t="t"> = abstract
-type total_hits = basic_json wrap <ocaml module="Esgg_total">
+type total_relation = [ Eq <json name="eq"> | Gte <json name="gte"> ]
+type total_hits = { value: int; relation: total_relation }
 type _source = {
   content: string wrap <ocaml module="Content">;
   words: int wrap <ocaml module="Words">;

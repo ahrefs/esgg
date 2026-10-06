@@ -14,6 +14,8 @@ let tname ?a t = pname ?a t []
 let nullable ?(a=[]) t = Atd.Ast.Nullable (loc,t,annots a)
 let wrap t ocaml = Atd.Ast.Wrap (loc,t,annots ["ocaml",ocaml])
 let tvar t = Atd.Ast.Tvar (loc,t)
+let variant ?(a=[]) name : Atd.Ast.variant = Variant (loc, (name, annots a), None)
+let sum l = Atd.Ast.Sum (loc, l, [])
 let ptyp ?(a=[]) name params t = Atd.Ast.Type (loc, (name,params,annots a), t)
 let typ ?a name t = ptyp ?a name [] t
 
@@ -203,6 +205,7 @@ end = struct
     in
     match ty with
     | Atd.Ast.Record (loc, fields, annot) -> map_record (loc, fields, annot) (* record type at top-level, no need to unnest *)
+    | Sum _ -> ty (* flat enum at top-level, nothing to unnest *)
     | _ -> map (Some name) ty
 
   let get t =
@@ -242,14 +245,17 @@ let add_shape t name shape =
   Types.add t @@ typ "int_as_float" (wrap (tname "float") ["t","int"; "wrap","int_of_float"; "unwrap","float_of_int"]);
   Types.add t @@ ptyp "value_agg'" ["a"] (record [field "value" (tvar "a")]);
   Types.add t @@ ptyp "value_agg" ["a"]
-    (wrap (pname "value_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value; } -> value"; "unwrap", "fun value -> { value; }"]);
+    (wrap (pname "value_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun ({ value; } : _ value_agg') -> value"; "unwrap", "fun value -> ({ value; } : _ value_agg')"]);
 (*
   Types.add t @@ ptyp "value_as_string_agg'" ["a"] (record [field "value" (tvar "a")]);
   Types.add t @@ ptyp "value_as_string_agg" ["a"]
     (wrap (pname "value_as_string_agg'" [tvar "a"]) [ "t", "'a"; "wrap", "fun { value_as_string = v; } -> v"; "unwrap", "fun v -> { value_as_string = v; }"]);
 *)
   Types.add t @@ basic_json;
-  Types.add t @@ typ "total_hits" (wrap (tname "basic_json") ["module","Esgg_total"]);
+  if not !total_as_int then begin
+    Types.add t @@ typ "total_relation" (sum [variant ~a:["json",["name","eq"]] "Eq"; variant ~a:["json",["name","gte"]] "Gte"]);
+    Types.add t @@ typ "total_hits" (record [field "value" (tname "int"); field "relation" (tname "total_relation")]);
+  end;
   let rec map shape =
     match shape with
     | Simple t -> of_simple_type t
