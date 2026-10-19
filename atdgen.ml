@@ -266,7 +266,7 @@ let add_shape t name shape =
     | List_or_single t -> fail "cannot handle mixed_multi of %s" (show_result_type t)
     | Tuple ts -> tuple (List.map map ts)
     | Object t -> list ~a:["json",["repr","object"]] (tuple [map (Simple String); map t])
-    | Dict ["total is int or object", Simple Int] -> tname "total_hits"
+    | Dict ["total_hits hack", Simple Int] -> tname "total_hits"
     | Dict ["key",k; "doc_count", Simple Int] -> pname "doc_count" [map k]
     | Dict ["buckets", List t] -> pname "buckets" [map t]
     | Dict ["value", Dict ["override int as float hack", Simple Int]] -> pname "value_agg" [tname "int_as_float"]

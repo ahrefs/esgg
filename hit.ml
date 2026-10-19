@@ -145,7 +145,7 @@ let inner_hit ~nested ~highlight ?fields ?matched_queries source =
   in
   Dict a
 
-let total_shape () = if !total_as_int then Simple Int else Dict ["total is int or object", Simple Int]
+let total_shape () = if !total_as_int then Simple Int else Dict ["total_hits hack", Simple Int]
 
 let inner_hits_result mapping ~nested ~highlight ?fields ?matched_queries source_type =
   let source_for_inner_hit =
