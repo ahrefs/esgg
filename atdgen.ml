@@ -254,7 +254,11 @@ let add_shape t name shape =
   Types.add t @@ basic_json;
   if not !total_as_int then begin
     Types.add t @@ typ "total_relation" (sum [variant ~a:["json",["name","eq"]] "Eq"; variant ~a:["json",["name","gte"]] "Gte"]);
-    Types.add t @@ typ "total_hits" (record [field "value" (tname "int"); field "relation" (tname "total_relation")]);
+    Types.add t @@ typ "total_hits'" (record [field "value" (tname "int"); field "relation" (tname "total_relation")]);
+    Types.add t @@ typ "total_hits" (wrap (tname "total_hits'")
+      [ "t", "[ `Eq of int | `Gte of int ]";
+        "wrap", "fun ({ value; relation } : total_hits') -> (match relation with `Eq -> `Eq value | `Gte -> `Gte value)";
+        "unwrap", "fun total -> (match total with `Eq value -> ({ value; relation = `Eq } : total_hits') | `Gte value -> ({ value; relation = `Gte } : total_hits'))" ]);
   end;
   let rec map shape =
     match shape with

@@ -12,7 +12,15 @@ type 'a value_agg =
        unwrap="fun value -> ({ value; } : _ value_agg')">
 type basic_json <ocaml module="Json" t="t"> = abstract
 type total_relation = [ Eq <json name="eq"> | Gte <json name="gte"> ]
-type total_hits = { value: int; relation: total_relation }
+type total_hits' = { value: int; relation: total_relation }
+type total_hits =
+  total_hits' wrap
+    <ocaml
+       t="[ `Eq of int | `Gte of int ]"
+       wrap=
+         "fun ({ value; relation } : total_hits') -> (match relation with `Eq -> `Eq value | `Gte -> `Gte value)"
+       unwrap=
+         "fun total -> (match total with `Eq value -> ({ value; relation = `Eq } : total_hits') | `Gte value -> ({ value; relation = `Gte } : total_hits'))">
 type _source = { keyword: string wrap <ocaml module="Keyword"> }
 type fields = {
   ~content_text_en <json name="content.text.en">:
