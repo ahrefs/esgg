@@ -7,8 +7,20 @@ type 'a value_agg' = { value: 'a }
 type 'a value_agg =
   'a value_agg' wrap
     <ocaml
-       t="'a" wrap="fun { value; } -> value" unwrap="fun value -> { value; }">
+       t="'a"
+       wrap="fun ({ value; } : _ value_agg') -> value"
+       unwrap="fun value -> ({ value; } : _ value_agg')">
 type basic_json <ocaml module="Json" t="t"> = abstract
+type total_relation = [ Eq <json name="eq"> | Gte <json name="gte"> ]
+type total_hits' = { value: int; relation: total_relation }
+type total_hits =
+  total_hits' wrap
+    <ocaml
+       t="[ `Eq of int | `Gte of int ]"
+       wrap=
+         "fun ({ value; relation } : total_hits') -> (match relation with `Eq -> `Eq value | `Gte -> `Gte value)"
+       unwrap=
+         "fun total -> (match total with `Eq value -> ({ value; relation = `Eq } : total_hits') | `Gte value -> ({ value; relation = `Gte } : total_hits'))">
 type role = { role_id: int wrap <ocaml module="Obj.Roles.Role_id"> }
 type obj_elem = {
   user_id: int wrap <ocaml module="Obj.User_id">;
@@ -20,7 +32,7 @@ type _source = {
   ~obj: obj_elem list
 }
 type hit = { _id: string; _source: _source }
-type hits = { total: int; ~hits: hit list }
+type hits = { total: total_hits; ~hits: hit list }
 type reason = { type_ <json name="type">: string; ?reason: string nullable }
 type failure = {
   reason: reason;
@@ -38,7 +50,7 @@ type _shards = {
 }
 type name = { name: string wrap <ocaml module="Name"> }
 type hit1 = { _id: string; _source: name }
-type hits1 = { total: int; ~hits: hit1 list }
+type hits1 = { total: total_hits; ~hits: hit1 list }
 type keyword = { hits: hits1 }
 type users_keywords = {
   key: int <ocaml repr="int64"> wrap <ocaml module="Name.Hash">;
@@ -52,7 +64,7 @@ type users = {
   top_level: top_level
 }
 type _source1 = { _source: obj_elem }
-type hits2 = { total: int; ~hits: _source1 list }
+type hits2 = { total: total_hits; ~hits: _source1 list }
 type roles_user_names = { hits: hits2 }
 type obj_level = { doc_count: int; roles_user_names: roles_user_names }
 type roles = {

@@ -145,6 +145,8 @@ let inner_hit ~nested ~highlight ?fields ?matched_queries source =
   in
   Dict a
 
+let total_shape () = if !total_as_int then Simple Int else Dict ["total_hits hack", Simple Int]
+
 let inner_hits_result mapping ~nested ~highlight ?fields ?matched_queries source_type =
   let source_for_inner_hit =
     match source_type with
@@ -154,7 +156,7 @@ let inner_hits_result mapping ~nested ~highlight ?fields ?matched_queries source
   in
   Dict [
     "hits", Dict [
-      "total", Simple Int;
+      "total", total_shape ();
       "hits", List (inner_hit ~nested ~highlight ?fields ?matched_queries source_for_inner_hit);
     ]
   ]
@@ -168,7 +170,7 @@ let hits_ mapping ?nested ~highlight ?fields ?matched_queries ?inner_hits source
     | Some nested -> hit ~id:false ?highlight ?fields ?matched_queries ?inner_hits (get_nested nested x)
   in
   List.concat [
-    ["total", Simple Int];
+    ["total", total_shape ()];
     (match source with
     | None -> ["hits", List (hit (Simple Json))]
     | Some (Static filter) -> ["hits", List (hit (of_mapping ~filter mapping))]
